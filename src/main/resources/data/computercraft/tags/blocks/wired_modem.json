@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "computercraft:wired_modem",
+    "computercraft:cable",
     "computercraft:wired_modem_full"
   ]
 }
