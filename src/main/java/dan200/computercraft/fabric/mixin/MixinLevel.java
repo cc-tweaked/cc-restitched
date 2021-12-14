@@ -31,7 +31,7 @@ public class MixinLevel
     @Inject( method = "setBlockEntity", at = @At( "HEAD" ) )
     public void setBlockEntity( @Nullable BlockEntity entity, CallbackInfo info )
     {
-        if( entity != null && !entity.isRemoved() && ( (Level) (Object) this ).isInWorldBounds( entity.getBlockPos() ) && tickingBlockEntities )
+        if( entity != null && !entity.isRemoved() && ((Level) (Object) this).isInWorldBounds( entity.getBlockPos() ) && tickingBlockEntities )
         {
             setWorld( entity, this );
         }
