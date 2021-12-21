@@ -212,25 +212,12 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
             case VBO:
             {
-                VertexBuffer vbo = monitor.buffer;
-                if( redraw )
-                {
-                    Tesselator tessellator = Tesselator.getInstance();
-                    BufferBuilder builder = tessellator.getBuilder();
-                    builder.begin( RenderTypes.TERMINAL_WITHOUT_DEPTH.mode(), RenderTypes.TERMINAL_WITHOUT_DEPTH.format() );
-                    FixedWidthFontRenderer.drawTerminalWithoutCursor(
-                        IDENTITY, builder, 0, 0,
-                        terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
-                    );
-
-                    builder.end();
-                    vbo.upload( builder );
-                }
-
-                renderer.getBuffer( RenderTypes.TERMINAL_WITHOUT_DEPTH );
-                RenderTypes.TERMINAL_WITHOUT_DEPTH.setupRenderState();
-                vbo.drawWithShader( matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getTerminalShader() );
-                break;
+                VertexConsumer buffer = renderer.getBuffer( RenderTypes.TERMINAL_WITHOUT_DEPTH );
+                FixedWidthFontRenderer.drawTerminalWithoutCursor(
+                    matrix, buffer, 0, 0,
+                    terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
+                );
+                if( renderer instanceof MultiBufferSource.BufferSource bufferSource ) bufferSource.endBatch();
             }
         }
     }
