@@ -5,6 +5,7 @@
  */
 package dan200.computercraft.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import dan200.computercraft.client.gui.FixedWidthFontRenderer;
@@ -56,10 +57,12 @@ public final class PrintoutRenderer
 
     public static void drawText( Matrix4f transform, MultiBufferSource renderer, int x, int y, int start, int light, TextBuffer[] text, TextBuffer[] colours )
     {
+        PoseStack poseStack = new PoseStack();
+        poseStack.mulPoseMatrix( transform );
         VertexConsumer buffer = renderer.getBuffer( RenderTypes.PRINTOUT_TEXT );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
         {
-            FixedWidthFontRenderer.drawString( transform, buffer,
+            FixedWidthFontRenderer.drawString( poseStack, buffer,
                 x, y + line * FONT_HEIGHT, text[start + line], colours[start + line], null, Palette.DEFAULT,
                 false, 0, 0,
                 light
@@ -69,10 +72,12 @@ public final class PrintoutRenderer
 
     public static void drawText( Matrix4f transform, MultiBufferSource renderer, int x, int y, int start, int light, String[] text, String[] colours )
     {
+        PoseStack poseStack = new PoseStack();
+        poseStack.mulPoseMatrix( transform );
         VertexConsumer buffer = renderer.getBuffer( RenderTypes.PRINTOUT_TEXT );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
         {
-            FixedWidthFontRenderer.drawString( transform, buffer,
+            FixedWidthFontRenderer.drawString( poseStack, buffer,
                 x, y + line * FONT_HEIGHT,
                 new TextBuffer( text[start + line] ), new TextBuffer( colours[start + line] ),
                 null, Palette.DEFAULT, false, 0, 0,

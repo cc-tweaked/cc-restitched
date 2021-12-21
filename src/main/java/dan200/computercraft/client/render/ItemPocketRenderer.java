@@ -16,6 +16,7 @@ import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.util.Colour;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -82,14 +83,13 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         if( computer != null && terminal != null )
         {
             FixedWidthFontRenderer.drawTerminal(
-                matrix, renderer.getBuffer( RenderTypes.TERMINAL_WITHOUT_DEPTH ),
+                transform, renderer.getBuffer( RenderType.entitySolid( FixedWidthFontRenderer.FONT ) ),
                 MARGIN, MARGIN, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN
             );
-            FixedWidthFontRenderer.drawBlocker( transform.last().pose(), renderer, 0, 0, width, height );
         }
         else
         {
-            FixedWidthFontRenderer.drawEmptyTerminal( matrix, 0, 0, width, height );
+            FixedWidthFontRenderer.drawEmptyTerminal( transform, 0, 0, width, height );
         }
 
         transform.popPose();
