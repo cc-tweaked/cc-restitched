@@ -1,11 +1,11 @@
 package dan200.computercraft.shared.network.client;
 
-import javax.annotation.Nonnull;
-
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.network.NetworkMessage;
 import dan200.computercraft.shared.network.PacketContext;
 import net.minecraft.network.FriendlyByteBuf;
+
+import javax.annotation.Nonnull;
 
 /**
  * The terminal and portable computer server-side configured dimensions.
