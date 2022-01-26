@@ -12,6 +12,7 @@ import dan200.computercraft.client.gui.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Palette;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 
 import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT_HEIGHT;
 import static dan200.computercraft.shared.media.items.ItemPrintout.LINES_PER_PAGE;
@@ -59,7 +60,7 @@ public final class PrintoutRenderer
     {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPoseMatrix( transform );
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.PRINTOUT_TEXT );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_PRINTOUT_TEXT );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
         {
             FixedWidthFontRenderer.drawString( poseStack, buffer,
@@ -70,14 +71,12 @@ public final class PrintoutRenderer
         }
     }
 
-    public static void drawText( Matrix4f transform, MultiBufferSource renderer, int x, int y, int start, int light, String[] text, String[] colours )
+    public static void drawText( PoseStack transform, MultiBufferSource renderer, int x, int y, int start, int light, String[] text, String[] colours )
     {
-        PoseStack poseStack = new PoseStack();
-        poseStack.mulPoseMatrix( transform );
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.PRINTOUT_TEXT );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_PRINTOUT_TEXT );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
         {
-            FixedWidthFontRenderer.drawString( poseStack, buffer,
+            FixedWidthFontRenderer.drawString( transform, buffer,
                 x, y + line * FONT_HEIGHT,
                 new TextBuffer( text[start + line] ), new TextBuffer( colours[start + line] ),
                 null, Palette.DEFAULT, false, 0, 0,
@@ -91,7 +90,7 @@ public final class PrintoutRenderer
         int leftPages = page;
         int rightPages = pages - page - 1;
 
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.PRINTOUT_BACKGROUND );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_PRINTOUT_BACKGROUND );
 
         if( isBook )
         {
@@ -167,7 +166,7 @@ public final class PrintoutRenderer
 
     private static void vertex( VertexConsumer buffer, Matrix4f matrix, float x, float y, float z, float u, float v, int light )
     {
-        buffer.vertex( matrix, x, y, z ).color( 255, 255, 255, 255 ).uv( u, v ).uv2( light ).endVertex();
+        buffer.vertex( matrix, x, y, z ).color( 255, 255, 255, 255 ).uv( u, v ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( 0.0f, 0.0f, 1.0f ).endVertex();
     }
 
     public static float offsetAt( int page )

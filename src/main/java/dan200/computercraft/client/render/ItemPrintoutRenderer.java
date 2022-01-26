@@ -6,7 +6,6 @@
 package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import dan200.computercraft.shared.media.items.ItemPrintout;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -37,6 +36,7 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
         matrixStack.translate( 0.0f, 0.0f, -0.001f );
         matrixStack.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
         matrixStack.scale( 0.95f, 0.95f, -0.95f );
+        matrixStack.last().normal().mul( -1.0f );
         matrixStack.translate( -0.5f, -0.5f, 0.0f );
 
         drawPrintout( matrixStack, consumerProvider, stack, light );
@@ -81,10 +81,9 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
         transform.scale( scale, scale, scale );
         transform.translate( (max - width) / 2.0, (max - height) / 2.0, 0.0 );
 
-        Matrix4f matrix = transform.last().pose();
-        drawBorder( matrix, render, 0, 0, -0.01f, 0, pages, book, light );
+        drawBorder( transform.last().pose(), render, 0, 0, -0.01f, 0, pages, book, light );
         drawText(
-            matrix, render, X_TEXT_MARGIN, Y_TEXT_MARGIN, 0, light,
+            transform, render, X_TEXT_MARGIN, Y_TEXT_MARGIN, 0, light,
             ItemPrintout.getText( stack ), ItemPrintout.getColours( stack )
         );
     }

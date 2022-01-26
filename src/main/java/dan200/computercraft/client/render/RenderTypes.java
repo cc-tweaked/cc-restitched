@@ -7,34 +7,31 @@ package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dan200.computercraft.client.gui.FixedWidthFontRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
+
+import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT;
 
 public class RenderTypes
 {
     public static final int FULL_BRIGHT_LIGHTMAP = (0xF << 4) | (0xF << 20);
 
     public static MonitorTextureBufferShader monitorTboShader;
-    public static ShaderInstance terminalShader;
 
-    public static final RenderType TERMINAL_WITHOUT_DEPTH = Types.TERMINAL_WITHOUT_DEPTH;
-    public static final RenderType TERMINAL_BLOCKER = Types.TERMINAL_BLOCKER;
-    public static final RenderType TERMINAL_WITH_DEPTH = Types.TERMINAL_WITH_DEPTH;
+    private static final RenderType ENTITY_CUTOUT_PRINTOUT = RenderType.entityCutout( new ResourceLocation( "computercraft", "textures/gui/printout.png" ) );
+    private static final RenderType ENTITY_CUTOUT_FONT = RenderType.entityCutout( FONT );
+
     public static final RenderType MONITOR_TBO = Types.MONITOR_TBO;
-    public static final RenderType PRINTOUT_TEXT = Types.PRINTOUT_TEXT;
+    public static final RenderType MONITOR = ENTITY_CUTOUT_FONT;
 
-    /**
-     * This looks wrong (it should be POSITION_COLOR_TEX_LIGHTMAP surely!) but the fragment/vertex shader for that
-     * appear to entirely ignore the lightmap.
-     *
-     * Note that vanilla maps do the same, so this isn't unreasonable.
-     */
-    public static final RenderType PRINTOUT_BACKGROUND = RenderType.text( new ResourceLocation( "computercraft", "textures/gui/printout.png" ) );
+    public static final RenderType ITEM_POCKET = ENTITY_CUTOUT_FONT;
+    public static final RenderType ITEM_POCKET_LIGHT = RenderType.text( FONT );
+
+    public static final RenderType ITEM_PRINTOUT_BACKGROUND = ENTITY_CUTOUT_PRINTOUT;
+    public static final RenderType ITEM_PRINTOUT_TEXT = ENTITY_CUTOUT_FONT;
 
     public static final RenderType POSITION_COLOR = Types.POSITION_COLOR;
 
@@ -45,22 +42,12 @@ public class RenderTypes
         return monitorTboShader;
     }
 
-    @Nonnull
-    static ShaderInstance getTerminalShader()
-    {
-        if( terminalShader == null ) throw new NullPointerException( "MonitorTboShader has not been registered" );
-        return terminalShader;
-    }
-
     private static final class Types extends RenderStateShard
     {
         private static final RenderStateShard.TextureStateShard TERM_FONT_TEXTURE = new TextureStateShard(
-            FixedWidthFontRenderer.FONT,
+            FONT,
             false, false // blur, minimap
         );
-        private static final VertexFormat TERM_FORMAT = DefaultVertexFormat.POSITION_COLOR_TEX;
-        private static final VertexFormat.Mode TERM_MODE = VertexFormat.Mode.QUADS;
-        private static final ShaderStateShard TERM_SHADER = new ShaderStateShard( RenderTypes::getTerminalShader );
 
         static final RenderType MONITOR_TBO = RenderType.create(
             "monitor_tbo", DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.TRIANGLE_STRIP, 128,
@@ -69,48 +56,6 @@ public class RenderTypes
                 .setTextureState( TERM_FONT_TEXTURE )
                 .setShaderState( new ShaderStateShard( RenderTypes::getMonitorTextureBufferShader ) )
                 .setWriteMaskState( COLOR_WRITE )
-                .createCompositeState( false )
-        );
-
-        static final RenderType TERMINAL_WITHOUT_DEPTH = RenderType.create(
-            "terminal_without_depth", TERM_FORMAT, TERM_MODE, 1024,
-            false, false, // useDelegate, needsSorting
-            RenderType.CompositeState.builder()
-                .setTextureState( TERM_FONT_TEXTURE )
-                .setShaderState( TERM_SHADER )
-                .setWriteMaskState( COLOR_WRITE )
-                .createCompositeState( false )
-        );
-
-        static final RenderType TERMINAL_BLOCKER = RenderType.create(
-            "terminal_blocker", TERM_FORMAT, TERM_MODE, 256,
-            false, false, // useDelegate, needsSorting
-            RenderType.CompositeState.builder()
-                .setTextureState( TERM_FONT_TEXTURE )
-                .setShaderState( TERM_SHADER )
-                .setWriteMaskState( DEPTH_WRITE )
-                .createCompositeState( false )
-        );
-
-        static final RenderType TERMINAL_WITH_DEPTH = RenderType.create(
-            "terminal_with_depth", TERM_FORMAT, TERM_MODE, 1024,
-            false, false, // useDelegate, needsSorting
-            RenderType.CompositeState.builder()
-                .setTextureState( TERM_FONT_TEXTURE )
-                .setShaderState( TERM_SHADER )
-                .createCompositeState( false )
-        );
-
-        /**
-         * A variant of {@link #TERMINAL_WITH_DEPTH} which uses the lightmap rather than rendering fullbright.
-         */
-        static final RenderType PRINTOUT_TEXT = RenderType.create(
-            "printout_text", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, TERM_MODE, 1024,
-            false, false, // useDelegate, needsSorting
-            RenderType.CompositeState.builder()
-                .setTextureState( TERM_FONT_TEXTURE )
-                .setShaderState( RenderStateShard.RENDERTYPE_TEXT_SHADER )
-                .setLightmapState( RenderStateShard.LIGHTMAP )
                 .createCompositeState( false )
         );
 

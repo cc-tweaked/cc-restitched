@@ -315,11 +315,11 @@ public class WidgetTerminal extends AbstractWidget
         Terminal terminal = computer.getTerminal();
         if( terminal != null )
         {
-            FixedWidthFontRenderer.drawTerminal( transform, innerX, innerY, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN );
+            FixedWidthFontRenderer.drawTerminalImmediate( transform, innerX, innerY, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN );
         }
         else
         {
-            FixedWidthFontRenderer.drawEmptyTerminal( transform, x, y, width, height );
+            FixedWidthFontRenderer.drawEmptyTerminalImmediate( transform, x, y, width, height );
         }
     }
 

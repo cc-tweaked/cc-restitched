@@ -8,14 +8,15 @@ package dan200.computercraft.client.gui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import dan200.computercraft.client.FrameInfo;
-import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
@@ -36,8 +37,6 @@ import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMA
  * </li>
  * <li>{@link #drawTerminal}: Draw a terminal with a cursor. This is used by the various computer GUIs to render the
  * whole term.</li>
- * <li>{@link #drawBlocker}: When rendering a terminal using {@link RenderTypes#TERMINAL_WITHOUT_DEPTH} you need to
- * render an additional "depth blocker" on top of the monitor.</li>
  * </ul>
  */
 public final class FixedWidthFontRenderer
@@ -51,7 +50,7 @@ public final class FixedWidthFontRenderer
     public static final float BACKGROUND_START = (WIDTH - 6.0f) / WIDTH;
     public static final float BACKGROUND_END = (WIDTH - 4.0f) / WIDTH;
 
-    public static final Matrix4f Z_EPSILON = Matrix4f.createTranslateMatrix( 0.0f, 0.0f, 0.001f );
+    public static final float Z_EPSILON = 0.001f;
 
     private FixedWidthFontRenderer()
     {
@@ -78,25 +77,25 @@ public final class FixedWidthFontRenderer
         int xStart = 1 + column * (FONT_WIDTH + 2);
         int yStart = 1 + row * (FONT_HEIGHT + 2);
 
-        transform.pushPose();
-        transform.mulPoseMatrix( Z_EPSILON );
         Matrix4f matrix = transform.last().pose();
-        buffer.vertex( matrix, x, y, 0f ).color( r, g, b, 1.0f ).uv( xStart / WIDTH, yStart / WIDTH ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x, y + FONT_HEIGHT, 0f ).color( r, g, b, 1.0f ).uv( xStart / WIDTH, (yStart + FONT_HEIGHT) / WIDTH ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x + FONT_WIDTH, y + FONT_HEIGHT, 0f ).color( r, g, b, 1.0f ).uv( (xStart + FONT_WIDTH) / WIDTH, (yStart + FONT_HEIGHT) / WIDTH ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x + FONT_WIDTH, y, 0f ).color( r, g, b, 1.0f ).uv( (xStart + FONT_WIDTH) / WIDTH, yStart / WIDTH ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        transform.popPose();
+        Matrix3f normalMatrix = transform.last().normal();
+        vertex( matrix, normalMatrix, buffer, x, y, 2 * Z_EPSILON, r, g, b, xStart / WIDTH, yStart / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x, y + FONT_HEIGHT, 2 * Z_EPSILON, r, g, b, xStart / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y + FONT_HEIGHT, 2 * Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y, 2 * Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, yStart / WIDTH, light );
     }
 
-    private static void drawQuad( Matrix4f matrix, VertexConsumer buffer, float x, float y, float width, float height, float r, float g, float b )
+    private static void drawQuad( PoseStack transform, VertexConsumer buffer, float x, float y, float width, float height, float r, float g, float b, int light )
     {
-        buffer.vertex( matrix, x, y, 0 ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x, y + height, 0 ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x + width, y + height, 0 ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
-        buffer.vertex( matrix, x + width, y, 0 ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( 0.0f, 0.0f, -1.0f ).endVertex();
+        Matrix4f matrix = transform.last().pose();
+        Matrix3f normalMatrix = transform.last().normal();
+        vertex( matrix, normalMatrix, buffer, x, y, Z_EPSILON, r, g, b, BACKGROUND_START, BACKGROUND_START, light );
+        vertex( matrix, normalMatrix, buffer, x, y + height, Z_EPSILON, r, g, b, BACKGROUND_START, BACKGROUND_END, light );
+        vertex( matrix, normalMatrix, buffer, x + width, y + height, Z_EPSILON, r, g, b, BACKGROUND_END, BACKGROUND_END, light );
+        vertex( matrix, normalMatrix, buffer, x + width, y, Z_EPSILON, r, g, b, BACKGROUND_END, BACKGROUND_START, light );
     }
 
-    private static void drawQuad( PoseStack transform, VertexConsumer buffer, float x, float y, float width, float height, Palette palette, boolean greyscale, char colourIndex )
+    private static void drawQuad( PoseStack transform, VertexConsumer buffer, float x, float y, float width, float height, Palette palette, boolean greyscale, char colourIndex, int light )
     {
         double[] colour = palette.getColour( getColour( colourIndex, Colour.BLACK ) );
         float r, g, b;
@@ -111,23 +110,23 @@ public final class FixedWidthFontRenderer
             b = (float) colour[2];
         }
 
-        drawQuad( transform.last().pose(), buffer, x, y, width, height, r, g, b );
+        drawQuad( transform, buffer, x, y, width, height, r, g, b, light );
     }
 
     private static void drawBackground(
         @Nonnull PoseStack transform, @Nonnull VertexConsumer renderer, float x, float y,
         @Nonnull TextBuffer backgroundColour, @Nonnull Palette palette, boolean greyscale,
-        float leftMarginSize, float rightMarginSize, float height
+        float leftMarginSize, float rightMarginSize, float height, int light
     )
     {
         if( leftMarginSize > 0 )
         {
-            drawQuad( transform, renderer, x - leftMarginSize, y, leftMarginSize, height, palette, greyscale, backgroundColour.charAt( 0 ) );
+            drawQuad( transform, renderer, x - leftMarginSize, y, leftMarginSize, height, palette, greyscale, backgroundColour.charAt( 0 ), light );
         }
 
         if( rightMarginSize > 0 )
         {
-            drawQuad( transform, renderer, x + backgroundColour.length() * FONT_WIDTH, y, rightMarginSize, height, palette, greyscale, backgroundColour.charAt( backgroundColour.length() - 1 ) );
+            drawQuad( transform, renderer, x + backgroundColour.length() * FONT_WIDTH, y, rightMarginSize, height, palette, greyscale, backgroundColour.charAt( backgroundColour.length() - 1 ), light );
         }
 
         // Batch together runs of identical background cells.
@@ -140,7 +139,7 @@ public final class FixedWidthFontRenderer
 
             if( blockColour != '\0' )
             {
-                drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (i - blockStart), height, palette, greyscale, blockColour );
+                drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (i - blockStart), height, palette, greyscale, blockColour, light );
             }
 
             blockColour = colourIndex;
@@ -149,7 +148,7 @@ public final class FixedWidthFontRenderer
 
         if( blockColour != '\0' )
         {
-            drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (backgroundColour.length() - blockStart), height, palette, greyscale, blockColour );
+            drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (backgroundColour.length() - blockStart), height, palette, greyscale, blockColour, light );
         }
     }
 
@@ -161,7 +160,7 @@ public final class FixedWidthFontRenderer
     {
         if( backgroundColour != null )
         {
-            drawBackground( transform, renderer, x, y, backgroundColour, palette, greyscale, leftMarginSize, rightMarginSize, FONT_HEIGHT );
+            drawBackground( transform, renderer, x, y, backgroundColour, palette, greyscale, leftMarginSize, rightMarginSize, FONT_HEIGHT, light );
         }
 
         for( int i = 0; i < text.length(); i++ )
@@ -190,7 +189,7 @@ public final class FixedWidthFontRenderer
     public static void drawTerminalWithoutCursor(
         @Nonnull PoseStack transform, @Nonnull VertexConsumer buffer, float x, float y,
         @Nonnull Terminal terminal, boolean greyscale,
-        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize, int light
     )
     {
         Palette palette = terminal.getPalette();
@@ -200,13 +199,13 @@ public final class FixedWidthFontRenderer
         drawBackground(
             transform, buffer, x, y - topMarginSize,
             terminal.getBackgroundColourLine( 0 ), palette, greyscale,
-            leftMarginSize, rightMarginSize, topMarginSize
+            leftMarginSize, rightMarginSize, topMarginSize, light
         );
 
         drawBackground(
             transform, buffer, x, y + height * FONT_HEIGHT,
             terminal.getBackgroundColourLine( height - 1 ), palette, greyscale,
-            leftMarginSize, rightMarginSize, bottomMarginSize
+            leftMarginSize, rightMarginSize, bottomMarginSize, light
         );
 
         // The main text
@@ -253,35 +252,42 @@ public final class FixedWidthFontRenderer
     public static void drawTerminal(
         @Nonnull PoseStack transform, @Nonnull VertexConsumer buffer, float x, float y,
         @Nonnull Terminal terminal, boolean greyscale,
-        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize, int light
     )
     {
-        drawTerminalWithoutCursor( transform, buffer, x, y, terminal, greyscale, topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize );
+        drawTerminalWithoutCursor( transform, buffer, x, y, terminal, greyscale, topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize, light );
         drawCursor( transform, buffer, x, y, terminal, greyscale );
     }
 
     // Called by WidgetTerminal
-    public static void drawTerminal(
+    public static void drawTerminalImmediate(
         @Nonnull PoseStack transform, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
         MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.TERMINAL_WITH_DEPTH );
-        drawTerminal( transform, buffer, x, y, terminal, greyscale, topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize );
+        VertexConsumer buffer = renderer.getBuffer( RenderType.text( FONT ) );
+        drawTerminal( transform, buffer, x, y, terminal, greyscale, topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize, FULL_BRIGHT_LIGHTMAP );
         renderer.endBatch();
     }
 
-    public static void drawEmptyTerminal( @Nonnull PoseStack transform, @Nonnull MultiBufferSource renderer, float x, float y, float width, float height )
+    public static void drawEmptyTerminal( @Nonnull PoseStack transform, @Nonnull VertexConsumer buffer, float x, float y, float width, float height, int light )
     {
         Colour colour = Colour.BLACK;
-        drawQuad( transform.last().pose(), renderer.getBuffer( RenderTypes.TERMINAL_WITH_DEPTH ), x, y, width, height, colour.getR(), colour.getG(), colour.getB() );
+        drawQuad( transform, buffer, x, y, width, height, colour.getR(), colour.getG(), colour.getB(), light );
     }
 
-    public static void drawEmptyTerminal( @Nonnull PoseStack transform, float x, float y, float width, float height )
+    public static void drawEmptyTerminalImmediate( @Nonnull PoseStack transform, float x, float y, float width, float height )
     {
         MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
-        drawEmptyTerminal( transform, renderer, x, y, width, height );
+        VertexConsumer buffer = renderer.getBuffer( RenderType.text( FONT ) );
+        drawEmptyTerminal( transform, buffer, x, y, width, height, FULL_BRIGHT_LIGHTMAP );
         renderer.endBatch();
     }
+
+    private static void vertex( Matrix4f poseMatrix, Matrix3f normalMatrix, VertexConsumer vertexConsumer, float x, float y, float z, float r, float g, float b, float u, float v, int light )
+    {
+        vertexConsumer.vertex( poseMatrix, x, y, z ).color( r, g, b, 1.0f ).uv( u, v ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0, 0, 1 ).endVertex();
+    }
+
 }

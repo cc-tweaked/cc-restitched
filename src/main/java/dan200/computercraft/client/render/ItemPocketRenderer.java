@@ -16,13 +16,12 @@ import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.util.Colour;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT_HEIGHT;
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT_WIDTH;
+import static dan200.computercraft.client.gui.FixedWidthFontRenderer.*;
 import static dan200.computercraft.client.render.ComputerBorderRenderer.*;
+import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMAP;
 
 /**
  * Emulates map rendering for pocket computers.
@@ -61,10 +60,11 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         transform.pushPose();
         transform.mulPose( Vector3f.YP.rotationDegrees( 180f ) );
         transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
-        transform.scale( 0.5f, 0.5f, 0.5f );
+        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.5f, 0.5f, 0.5f ) );
 
         float scale = 0.75f / Math.max( width + BORDER * 2, height + BORDER * 2 + LIGHT_HEIGHT );
-        transform.scale( scale, scale, -1.0f );
+        transform.last().pose().multiply( Matrix4f.createScaleMatrix( scale, scale, -1.0f ) );
+        transform.last().normal().mul( -1.0f );
         transform.translate( -0.5 * width, -0.5 * height, 0 );
 
         // Render the main frame
@@ -79,17 +79,20 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         int lightColour = ItemPocketComputer.getLightState( stack );
         if( lightColour == -1 ) lightColour = Colour.BLACK.getHex();
         renderLight( matrix, renderer, lightColour, width, height );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET );
 
         if( computer != null && terminal != null )
         {
             FixedWidthFontRenderer.drawTerminal(
-                transform, renderer.getBuffer( RenderType.entitySolid( FixedWidthFontRenderer.FONT ) ),
-                MARGIN, MARGIN, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN
+                transform, buffer,
+                MARGIN, MARGIN, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN, FULL_BRIGHT_LIGHTMAP
             );
         }
         else
         {
-            FixedWidthFontRenderer.drawEmptyTerminal( transform, 0, 0, width, height );
+            FixedWidthFontRenderer.drawEmptyTerminal(
+                transform, buffer,
+                0, 0, width, height, 0 );
         }
 
         transform.popPose();
@@ -113,10 +116,10 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         float b = (colour & 0xFF) / 255.0f;
         float z = 0.001f;
 
-        VertexConsumer buffer = render.getBuffer( RenderTypes.POSITION_COLOR );
-        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).endVertex();
-        buffer.vertex( transform, width, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).endVertex();
-        buffer.vertex( transform, width, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).endVertex();
-        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).endVertex();
+        VertexConsumer buffer = render.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
+        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_START ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
+        buffer.vertex( transform, width, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_END ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
+        buffer.vertex( transform, width, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_END ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
+        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_START ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
     }
 }
