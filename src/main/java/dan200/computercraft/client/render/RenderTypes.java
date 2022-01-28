@@ -13,27 +13,35 @@ import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
 
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT;
 
 public class RenderTypes
 {
+    public static final ResourceLocation FONT = new ResourceLocation( "computercraft", "textures/gui/term_font.png" );
+    public static final ResourceLocation PRINTOUT_BACKGROUND = new ResourceLocation( "computercraft", "textures/gui/printout.png" );
     public static final int FULL_BRIGHT_LIGHTMAP = (0xF << 4) | (0xF << 20);
 
-    public static MonitorTextureBufferShader monitorTboShader;
-
-    private static final RenderType ENTITY_CUTOUT_PRINTOUT = RenderType.entityCutout( new ResourceLocation( "computercraft", "textures/gui/printout.png" ) );
-    private static final RenderType ENTITY_CUTOUT_FONT = RenderType.entityCutout( FONT );
-
     public static final RenderType MONITOR_TBO = Types.MONITOR_TBO;
-    public static final RenderType MONITOR = ENTITY_CUTOUT_FONT;
+    public static final RenderType MONITOR = RenderType.textIntensity( FONT );
 
-    public static final RenderType ITEM_POCKET = ENTITY_CUTOUT_FONT;
-    public static final RenderType ITEM_POCKET_LIGHT = RenderType.text( FONT );
+    public static final RenderType ITEM_POCKET_TERMINAL = RenderType.textIntensity( FONT );
+    public static final RenderType ITEM_POCKET_LIGHT = RenderType.textIntensity( FONT );
+    public static final RenderType ITEM_PRINTOUT_BACKGROUND = RenderType.entityCutout( PRINTOUT_BACKGROUND );
+    public static final RenderType ITEM_PRINTOUT_TEXT = RenderType.entityCutout( FONT );
 
-    public static final RenderType ITEM_PRINTOUT_BACKGROUND = ENTITY_CUTOUT_PRINTOUT;
-    public static final RenderType ITEM_PRINTOUT_TEXT = ENTITY_CUTOUT_FONT;
+    public static final RenderType GUI_TERMINAL = RenderType.text( FONT );
+    public static final RenderType GUI_PRINTOUT_BACKGROUND = RenderType.text( PRINTOUT_BACKGROUND );
+    public static final RenderType GUI_PRINTOUT_TEXT = RenderType.text( FONT );
 
-    public static final RenderType POSITION_COLOR = Types.POSITION_COLOR;
+    public static RenderType itemPocketBorder( ResourceLocation location )
+    {
+        return RenderType.entityCutout( location );
+    }
+    public static RenderType guiComputerBorder( ResourceLocation location )
+    {
+        return RenderType.text( location );
+    }
+
+    public static MonitorTextureBufferShader monitorTboShader;
 
     @Nonnull
     static MonitorTextureBufferShader getMonitorTextureBufferShader()
@@ -55,15 +63,6 @@ public class RenderTypes
             RenderType.CompositeState.builder()
                 .setTextureState( TERM_FONT_TEXTURE )
                 .setShaderState( new ShaderStateShard( RenderTypes::getMonitorTextureBufferShader ) )
-                .setWriteMaskState( COLOR_WRITE )
-                .createCompositeState( false )
-        );
-
-        static final RenderType POSITION_COLOR = RenderType.create(
-            "position_color", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 128,
-            false, false, // useDelegate, needsSorting
-            RenderType.CompositeState.builder()
-                .setShaderState( POSITION_COLOR_SHADER )
                 .createCompositeState( false )
         );
 

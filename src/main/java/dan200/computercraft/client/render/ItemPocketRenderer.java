@@ -6,6 +6,7 @@
 package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import dan200.computercraft.ComputerCraft;
@@ -16,6 +17,7 @@ import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.util.Colour;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -60,9 +62,10 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         transform.pushPose();
         transform.mulPose( Vector3f.YP.rotationDegrees( 180f ) );
         transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.5f, 0.5f, 0.5f ) );
+        transform.scale( 0.5f, 0.5f, 0.5f );
 
         float scale = 0.75f / Math.max( width + BORDER * 2, height + BORDER * 2 + LIGHT_HEIGHT );
+        // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
         transform.last().pose().multiply( Matrix4f.createScaleMatrix( scale, scale, -1.0f ) );
         transform.last().normal().mul( -1.0f );
         transform.translate( -0.5 * width, -0.5 * height, 0 );
@@ -72,14 +75,13 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         ComputerFamily family = item.getFamily();
         int frameColour = item.getColour( stack );
 
-        Matrix4f matrix = transform.last().pose();
-        renderFrame( matrix, renderer, family, frameColour, light, width, height );
+        renderFrame( transform, renderer, family, frameColour, light, width, height );
 
         // Render the light
         int lightColour = ItemPocketComputer.getLightState( stack );
         if( lightColour == -1 ) lightColour = Colour.BLACK.getHex();
-        renderLight( matrix, renderer, lightColour, width, height );
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET );
+        renderLight( transform, renderer, lightColour, width, height );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET_TERMINAL );
 
         if( computer != null && terminal != null )
         {
@@ -98,7 +100,7 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         transform.popPose();
     }
 
-    private static void renderFrame( Matrix4f transform, MultiBufferSource render, ComputerFamily family, int colour, int light, int width, int height )
+    private static void renderFrame( PoseStack transform, MultiBufferSource renderer, ComputerFamily family, int colour, int light, int width, int height )
     {
         ResourceLocation texture = colour != -1 ? ComputerBorderRenderer.BACKGROUND_COLOUR : ComputerBorderRenderer.getTexture( family );
 
@@ -106,20 +108,23 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         float g = ((colour >>> 8) & 0xFF) / 255.0f;
         float b = (colour & 0xFF) / 255.0f;
 
-        ComputerBorderRenderer.render( transform, render.getBuffer( ComputerBorderRenderer.getRenderType( texture ) ), 0, 0, 0, light, width, height, true, r, g, b );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.itemPocketBorder( texture ) );
+        ComputerBorderRenderer.render( transform, buffer, 0, 0, 0, light, width, height, true, r, g, b );
     }
 
-    private static void renderLight( Matrix4f transform, MultiBufferSource render, int colour, int width, int height )
+    private static void renderLight( PoseStack transform, MultiBufferSource renderer, int colour, int width, int height )
     {
         float r = ((colour >>> 16) & 0xFF) / 255.0f;
         float g = ((colour >>> 8) & 0xFF) / 255.0f;
         float b = (colour & 0xFF) / 255.0f;
         float z = 0.001f;
 
-        VertexConsumer buffer = render.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
-        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_START ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
-        buffer.vertex( transform, width, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_END ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
-        buffer.vertex( transform, width, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_END ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
-        buffer.vertex( transform, width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_START ).uv2( FULL_BRIGHT_LIGHTMAP ).endVertex();
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
+        Matrix4f poseMatrix = transform.last().pose();
+        Matrix3f normalMatrix = transform.last().normal();
+        buffer.vertex( poseMatrix, width - LIGHT_HEIGHT * 2, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        buffer.vertex( poseMatrix, width, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        buffer.vertex( poseMatrix, width, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        buffer.vertex( poseMatrix, width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
     }
 }

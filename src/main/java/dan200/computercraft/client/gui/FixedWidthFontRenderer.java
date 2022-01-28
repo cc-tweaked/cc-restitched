@@ -11,14 +11,13 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import dan200.computercraft.client.FrameInfo;
+import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,8 +40,6 @@ import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMA
  */
 public final class FixedWidthFontRenderer
 {
-    public static final ResourceLocation FONT = new ResourceLocation( "computercraft", "textures/gui/term_font.png" );
-
     public static final int FONT_HEIGHT = 9;
     public static final int FONT_WIDTH = 6;
     public static final float WIDTH = 256.0f;
@@ -114,19 +111,19 @@ public final class FixedWidthFontRenderer
     }
 
     private static void drawBackground(
-        @Nonnull PoseStack transform, @Nonnull VertexConsumer renderer, float x, float y,
+        @Nonnull PoseStack transform, @Nonnull VertexConsumer buffer, float x, float y,
         @Nonnull TextBuffer backgroundColour, @Nonnull Palette palette, boolean greyscale,
         float leftMarginSize, float rightMarginSize, float height, int light
     )
     {
         if( leftMarginSize > 0 )
         {
-            drawQuad( transform, renderer, x - leftMarginSize, y, leftMarginSize, height, palette, greyscale, backgroundColour.charAt( 0 ), light );
+            drawQuad( transform, buffer, x - leftMarginSize, y, leftMarginSize, height, palette, greyscale, backgroundColour.charAt( 0 ), light );
         }
 
         if( rightMarginSize > 0 )
         {
-            drawQuad( transform, renderer, x + backgroundColour.length() * FONT_WIDTH, y, rightMarginSize, height, palette, greyscale, backgroundColour.charAt( backgroundColour.length() - 1 ), light );
+            drawQuad( transform, buffer, x + backgroundColour.length() * FONT_WIDTH, y, rightMarginSize, height, palette, greyscale, backgroundColour.charAt( backgroundColour.length() - 1 ), light );
         }
 
         // Batch together runs of identical background cells.
@@ -139,7 +136,7 @@ public final class FixedWidthFontRenderer
 
             if( blockColour != '\0' )
             {
-                drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (i - blockStart), height, palette, greyscale, blockColour, light );
+                drawQuad( transform, buffer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (i - blockStart), height, palette, greyscale, blockColour, light );
             }
 
             blockColour = colourIndex;
@@ -148,19 +145,19 @@ public final class FixedWidthFontRenderer
 
         if( blockColour != '\0' )
         {
-            drawQuad( transform, renderer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (backgroundColour.length() - blockStart), height, palette, greyscale, blockColour, light );
+            drawQuad( transform, buffer, x + blockStart * FONT_WIDTH, y, FONT_WIDTH * (backgroundColour.length() - blockStart), height, palette, greyscale, blockColour, light );
         }
     }
 
     public static void drawString(
-        @Nonnull PoseStack transform, @Nonnull VertexConsumer renderer, float x, float y,
+        @Nonnull PoseStack transform, @Nonnull VertexConsumer buffer, float x, float y,
         @Nonnull TextBuffer text, @Nonnull TextBuffer textColour, @Nullable TextBuffer backgroundColour,
         @Nonnull Palette palette, boolean greyscale, float leftMarginSize, float rightMarginSize, int light
     )
     {
         if( backgroundColour != null )
         {
-            drawBackground( transform, renderer, x, y, backgroundColour, palette, greyscale, leftMarginSize, rightMarginSize, FONT_HEIGHT, light );
+            drawBackground( transform, buffer, x, y, backgroundColour, palette, greyscale, leftMarginSize, rightMarginSize, FONT_HEIGHT, light );
         }
 
         for( int i = 0; i < text.length(); i++ )
@@ -181,7 +178,7 @@ public final class FixedWidthFontRenderer
             // Draw char
             int index = text.charAt( i );
             if( index > 255 ) index = '?';
-            drawChar( transform, renderer, x + i * FONT_WIDTH, y, index, r, g, b, light );
+            drawChar( transform, buffer, x + i * FONT_WIDTH, y, index, r, g, b, light );
         }
 
     }
@@ -266,7 +263,7 @@ public final class FixedWidthFontRenderer
     )
     {
         MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
-        VertexConsumer buffer = renderer.getBuffer( RenderType.text( FONT ) );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.GUI_TERMINAL );
         drawTerminal( transform, buffer, x, y, terminal, greyscale, topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize, FULL_BRIGHT_LIGHTMAP );
         renderer.endBatch();
     }
@@ -280,14 +277,14 @@ public final class FixedWidthFontRenderer
     public static void drawEmptyTerminalImmediate( @Nonnull PoseStack transform, float x, float y, float width, float height )
     {
         MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
-        VertexConsumer buffer = renderer.getBuffer( RenderType.text( FONT ) );
+        VertexConsumer buffer = renderer.getBuffer( RenderTypes.GUI_TERMINAL );
         drawEmptyTerminal( transform, buffer, x, y, width, height, FULL_BRIGHT_LIGHTMAP );
         renderer.endBatch();
     }
 
-    private static void vertex( Matrix4f poseMatrix, Matrix3f normalMatrix, VertexConsumer vertexConsumer, float x, float y, float z, float r, float g, float b, float u, float v, int light )
+    private static void vertex( Matrix4f poseMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float x, float y, float z, float r, float g, float b, float u, float v, int light )
     {
-        vertexConsumer.vertex( poseMatrix, x, y, z ).color( r, g, b, 1.0f ).uv( u, v ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0, 0, 1 ).endVertex();
+        buffer.vertex( poseMatrix, x, y, z ).color( r, g, b, 1.0f ).uv( u, v ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
     }
 
 }

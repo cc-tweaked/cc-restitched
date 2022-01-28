@@ -108,7 +108,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
             double yScale = ySize / pixelHeight;
             transform.pushPose();
 
-            // Avoid PoseStack#scale to preserve normal matrix
+            // Avoid PoseStack#scale to preserve normal matrix.
             transform.last().pose().multiply( Matrix4f.createScaleMatrix( (float) xScale, (float) -yScale, 1.0f ) );
 
             renderTerminal( renderer, transform, originTerminal, (float) (MARGIN / xScale), (float) (MARGIN / yScale) );
