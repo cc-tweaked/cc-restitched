@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import dan200.computercraft.ComputerCraft;
@@ -44,6 +45,15 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
      */
     private static final float MARGIN = (float) (TileMonitor.RENDER_MARGIN * 1.05);
     private static ByteBuffer tboContents;
+
+    private static final Matrix3f IDENTITY;
+
+    static
+    {
+        Matrix3f identity = new Matrix3f();
+        identity.setIdentity();
+        IDENTITY = identity;
+    }
 
     public TileEntityMonitorRenderer( BlockEntityRendererProvider.Context context )
     {
@@ -107,7 +117,6 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
             double xScale = xSize / pixelWidth;
             double yScale = ySize / pixelHeight;
             transform.pushPose();
-
             // Avoid PoseStack#scale to preserve normal matrix.
             transform.last().pose().multiply( Matrix4f.createScaleMatrix( (float) xScale, (float) -yScale, 1.0f ) );
 
@@ -197,11 +206,38 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
             case VBO:
             {
-                VertexConsumer buffer = renderer.getBuffer( RenderTypes.MONITOR );
-                FixedWidthFontRenderer.drawTerminalWithoutCursor(
-                    transform, buffer, 0, 0,
-                    terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin, FULL_BRIGHT_LIGHTMAP
-                );
+                VertexBuffer vbo = monitor.buffer;
+                if( redraw )
+                {
+                    Tesselator tessellator = Tesselator.getInstance();
+                    BufferBuilder builder = tessellator.getBuilder();
+                    builder.begin( RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format() );
+
+                    FixedWidthFontRenderer.drawTerminalWithoutCursor(
+                        new PoseStack(), builder, 0, 0,
+                        terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin, FULL_BRIGHT_LIGHTMAP
+                    );
+
+                    builder.end();
+                    vbo.upload( builder );
+                }
+
+                Matrix3f popViewRotation = RenderSystem.getInverseViewRotationMatrix();
+                RenderSystem.setInverseViewRotationMatrix( IDENTITY );
+
+                RenderTypes.MONITOR.setupRenderState();
+                vbo.drawWithShader( transform.last().pose(), RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
+                RenderTypes.MONITOR.clearRenderState();
+
+                RenderSystem.setInverseViewRotationMatrix( popViewRotation );
+
+                // How we would draw the terminal without using VBO, for reference until I need to delete this.
+                //VertexConsumer buffer = renderer.getBuffer( RenderTypes.MONITOR );
+                //FixedWidthFontRenderer.drawTerminalWithoutCursor(
+                //    transform, buffer, 0, 0,
+                //    terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin, FULL_BRIGHT_LIGHTMAP
+                //);
+                break;
             }
         }
     }

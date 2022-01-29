@@ -76,20 +76,20 @@ public final class FixedWidthFontRenderer
 
         Matrix4f matrix = transform.last().pose();
         Matrix3f normalMatrix = transform.last().normal();
-        vertex( matrix, normalMatrix, buffer, x, y, 2 * Z_EPSILON, r, g, b, xStart / WIDTH, yStart / WIDTH, light );
-        vertex( matrix, normalMatrix, buffer, x, y + FONT_HEIGHT, 2 * Z_EPSILON, r, g, b, xStart / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
-        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y + FONT_HEIGHT, 2 * Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
-        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y, 2 * Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, yStart / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x, y, Z_EPSILON, r, g, b, xStart / WIDTH, yStart / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x, y + FONT_HEIGHT, Z_EPSILON, r, g, b, xStart / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y + FONT_HEIGHT, Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, (yStart + FONT_HEIGHT) / WIDTH, light );
+        vertex( matrix, normalMatrix, buffer, x + FONT_WIDTH, y, Z_EPSILON, r, g, b, (xStart + FONT_WIDTH) / WIDTH, yStart / WIDTH, light );
     }
 
     private static void drawQuad( PoseStack transform, VertexConsumer buffer, float x, float y, float width, float height, float r, float g, float b, int light )
     {
         Matrix4f matrix = transform.last().pose();
         Matrix3f normalMatrix = transform.last().normal();
-        vertex( matrix, normalMatrix, buffer, x, y, Z_EPSILON, r, g, b, BACKGROUND_START, BACKGROUND_START, light );
-        vertex( matrix, normalMatrix, buffer, x, y + height, Z_EPSILON, r, g, b, BACKGROUND_START, BACKGROUND_END, light );
-        vertex( matrix, normalMatrix, buffer, x + width, y + height, Z_EPSILON, r, g, b, BACKGROUND_END, BACKGROUND_END, light );
-        vertex( matrix, normalMatrix, buffer, x + width, y, Z_EPSILON, r, g, b, BACKGROUND_END, BACKGROUND_START, light );
+        vertex( matrix, normalMatrix, buffer, x, y, 0, r, g, b, BACKGROUND_START, BACKGROUND_START, light );
+        vertex( matrix, normalMatrix, buffer, x, y + height, 0, r, g, b, BACKGROUND_START, BACKGROUND_END, light );
+        vertex( matrix, normalMatrix, buffer, x + width, y + height, 0, r, g, b, BACKGROUND_END, BACKGROUND_END, light );
+        vertex( matrix, normalMatrix, buffer, x + width, y, 0, r, g, b, BACKGROUND_END, BACKGROUND_START, light );
     }
 
     private static void drawQuad( PoseStack transform, VertexConsumer buffer, float x, float y, float width, float height, Palette palette, boolean greyscale, char colourIndex, int light )

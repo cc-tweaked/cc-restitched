@@ -7,8 +7,10 @@ package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
@@ -32,10 +34,16 @@ public class RenderTypes
     public static final RenderType GUI_PRINTOUT_BACKGROUND = RenderType.text( PRINTOUT_BACKGROUND );
     public static final RenderType GUI_PRINTOUT_TEXT = RenderType.text( FONT );
 
+    public static ShaderInstance getMonitorShader()
+    {
+        return GameRenderer.getRendertypeTextIntensityShader();
+    }
+
     public static RenderType itemPocketBorder( ResourceLocation location )
     {
         return RenderType.entityCutout( location );
     }
+
     public static RenderType guiComputerBorder( ResourceLocation location )
     {
         return RenderType.text( location );
