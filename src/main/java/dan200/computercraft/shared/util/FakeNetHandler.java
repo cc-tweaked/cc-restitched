@@ -6,7 +6,9 @@
 package dan200.computercraft.shared.util;
 
 import dan200.computercraft.api.turtle.FakePlayer;
+import dan200.computercraft.fabric.mixin.ConnectionAccess;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
@@ -26,8 +28,7 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
 {
     public FakeNetHandler( @Nonnull FakePlayer player )
     {
-        super( player.getLevel()
-            .getServer(), new FakeNetworkManager(), player );
+        super( player.getLevel().getServer(), new FakeNetworkManager(), player );
     }
 
     @Override
@@ -241,11 +242,6 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
     {
     }
 
-    //    @Override
-    //    public void onConfirmScreenAction( ConfirmScreenActionC2SPacket packet )
-    //    {
-    //    }
-
     @Override
     public void handleSignUpdate( @Nonnull ServerboundSignUpdatePacket packet )
     {
@@ -289,6 +285,7 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
         FakeNetworkManager()
         {
             super( PacketFlow.CLIENTBOUND );
+            ((ConnectionAccess)this).setChannel( new EmbeddedChannel() );
         }
 
         @Override
