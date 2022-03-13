@@ -26,7 +26,7 @@ Any contribution is welcome, be that using the mod, reporting bugs or contributi
 4) You cannot intentionally implement bugs and security vulnerabilities.
 5) Unless the code is taken directly from CC: Tweaked, `lua` code is offlimits from alteration.
 
-# Does this work Fabric's many rendering mods?
+# Rendering Mod Compatability
 * [ YES ] Sodium
 * [ YES ] Optifine
 	* Works with VBO Rendering (automatically set)
