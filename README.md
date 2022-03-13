@@ -31,17 +31,9 @@ Any contribution is welcome, be that using the mod, reporting bugs or contributi
 * [ YES ] Optifine
 	* Works with VBO Rendering (automatically set)
 	* No issues
-* [ EHH ] Iris Shaders
+* [ OK ] Iris Shaders
 	* "Works" with TBO Rendering (Default)
-	* Crashes with VBO Rendering
-	* <details>
-		<summary>Shaders are broken</summary>
-
-		* Shaders will cause varrying results ranging from monitors being invisible, to straight up crashing.
-		* Not using shaders will result in odd Z-Fighting of the monitor display and the transparent texture
-			- ![](https://user-images.githubusercontent.com/10422110/136869483-91824c5f-841f-4316-bfb1-2412477a29ee.png)
-			- ![](https://user-images.githubusercontent.com/10422110/136869535-a16581a3-5e0a-4632-923f-c8de8cc8a6ea.png)
-		</details>
+	* Works with VBO Rendering
 * [ YES ] Canvas
 	* Works with TBO Rendering (Default)
 	* Scuffed with VBO Rendering
