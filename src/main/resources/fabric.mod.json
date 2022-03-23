@@ -3,7 +3,7 @@
     "id": "computercraft",
     "name": "CC: Restitched",
     "version": "${version}",
-    "description": "CC: Tweaked for Fabric.",
+    "description": "CC: Tweaked ported to Fabric.",
     "license": "ComputerCraft Public License",
     "icon": "assets/computercraft/pack.png",
     "contact": {
@@ -17,7 +17,8 @@
         "parly",
         "Merith.TK",
         "Jummit",
-		"Toad-Dev"
+	"Toad-Dev",
+        "3prm3"
     ],
     "depends": {
         "minecraft": "1.18.x",
