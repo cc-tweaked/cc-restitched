@@ -42,7 +42,6 @@ import dan200.computercraft.shared.pocket.peripherals.PocketModem;
 import dan200.computercraft.shared.pocket.peripherals.PocketSpeaker;
 import dan200.computercraft.shared.turtle.blocks.BlockTurtle;
 import dan200.computercraft.shared.turtle.blocks.TileTurtle;
-import dan200.computercraft.shared.turtle.core.TurtlePlayer;
 import dan200.computercraft.shared.turtle.inventory.ContainerTurtle;
 import dan200.computercraft.shared.turtle.items.ItemTurtle;
 import dan200.computercraft.shared.turtle.upgrades.TurtleCraftingTable;
@@ -54,8 +53,6 @@ import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
@@ -83,7 +80,6 @@ public final class Registry
             ModBlockEntities.CABLE,
             ModBlocks.CABLE,
             ModItems.CABLE,
-            ModEntities.TURTLE_PLAYER,
             ModContainers.COMPUTER,
         };
 
@@ -295,13 +291,6 @@ public final class Registry
         {
             return net.minecraft.core.Registry.register( net.minecraft.core.Registry.ITEM, new ResourceLocation( MOD_ID, id ), item );
         }
-    }
-
-    public static class ModEntities
-    {
-        public static final EntityType<TurtlePlayer> TURTLE_PLAYER =
-            net.minecraft.core.Registry.register( net.minecraft.core.Registry.ENTITY_TYPE, new ResourceLocation( MOD_ID, "turtle_player" ),
-                EntityType.Builder.<TurtlePlayer>createNothing( MobCategory.MISC ).noSave().noSummon().sized( 0, 0 ).build( ComputerCraft.MOD_ID + ":turtle_player" ) );
     }
 
     public static class ModContainers

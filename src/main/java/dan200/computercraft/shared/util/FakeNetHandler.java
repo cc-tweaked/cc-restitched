@@ -285,7 +285,7 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
         FakeNetworkManager()
         {
             super( PacketFlow.CLIENTBOUND );
-            ((ConnectionAccess)this).setChannel( new EmbeddedChannel() );
+            ((ConnectionAccess) this).setChannel( new EmbeddedChannel() );
         }
 
         @Override

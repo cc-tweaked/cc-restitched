@@ -6,9 +6,9 @@
 package dan200.computercraft.api.turtle;
 
 import dan200.computercraft.api.ComputerCraftAPI;
-import dan200.computercraft.api.upgrades.IUpgradeBase;
 import dan200.computercraft.api.client.TransformedModel;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.api.upgrades.IUpgradeBase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.Direction;

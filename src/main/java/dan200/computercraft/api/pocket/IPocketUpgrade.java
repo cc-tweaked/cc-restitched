@@ -6,8 +6,8 @@
 package dan200.computercraft.api.pocket;
 
 import dan200.computercraft.api.ComputerCraftAPI;
-import dan200.computercraft.api.upgrades.IUpgradeBase;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.api.upgrades.IUpgradeBase;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;

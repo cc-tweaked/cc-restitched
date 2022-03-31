@@ -32,7 +32,7 @@ public final class CommandUtils
     }
 
     @SuppressWarnings( "unchecked" )
-    public static CompletableFuture<Suggestions> suggestOnServer( CommandContext<?> context, SuggestionsBuilder builder, Function<CommandContext<CommandSourceStack>, CompletableFuture<Suggestions>> supplier )
+    public static CompletableFuture<Suggestions> suggestOnServer( CommandContext<?> context, Function<CommandContext<CommandSourceStack>, CompletableFuture<Suggestions>> supplier )
     {
         Object source = context.getSource();
         if( !(source instanceof SharedSuggestionProvider) )

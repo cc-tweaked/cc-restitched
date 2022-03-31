@@ -27,11 +27,11 @@ public class MixinChunkMap
     ServerLevel level;
 
     /*
-    * This mixin mimics the logic of Forge's ChunkWatchEvent.Watch but I don't believe it behaves as expected. Instead
-    * of firing once when the player initially come in server view distance of a chunk, it fires every time
-    * the chunk is checked against the player's view distance. This continually happens every tick that the player
-    * moves (or even rotates in place).
-    */
+     * This mixin mimics the logic of Forge's ChunkWatchEvent.Watch but I don't believe it behaves as expected. Instead
+     * of firing once when the player initially come in server view distance of a chunk, it fires every time
+     * the chunk is checked against the player's view distance. This continually happens every tick that the player
+     * moves (or even rotates in place).
+     */
 
     //    @Inject( method = "updateChunkTracking", at = @At( value = "HEAD" ) )
     //    public void updateChunkTracking( ServerPlayer serverPlayer, ChunkPos chunkPos, MutableObject<ClientboundLevelChunkWithLightPacket> mutableObject, boolean bl, boolean bl2, CallbackInfo ci )

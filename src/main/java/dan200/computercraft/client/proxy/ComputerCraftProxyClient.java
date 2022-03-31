@@ -12,7 +12,6 @@ import dan200.computercraft.client.gui.*;
 import dan200.computercraft.client.render.TileEntityMonitorRenderer;
 import dan200.computercraft.client.render.TileEntityTurtleRenderer;
 import dan200.computercraft.client.render.TurtleModelLoader;
-import dan200.computercraft.client.render.TurtlePlayerRenderer;
 import dan200.computercraft.client.sound.SpeakerManager;
 import dan200.computercraft.fabric.events.CustomClientEvents;
 import dan200.computercraft.shared.Registry;
@@ -36,7 +35,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.event.client.ClientSpriteRegistryCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -105,8 +103,6 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
         ModelLoadingRegistry.INSTANCE.registerResourceProvider( loader -> ( name, context ) -> TurtleModelLoader.INSTANCE.accepts( name ) ?
             TurtleModelLoader.INSTANCE.loadModel(
                 name ) : null );
-
-        EntityRendererRegistry.register( Registry.ModEntities.TURTLE_PLAYER, TurtlePlayerRenderer::new );
 
         registerItemProperty( "state",
             ( stack, world, player, integer ) -> ItemPocketComputer.getState( stack )
