@@ -6,7 +6,7 @@
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/cc-tweaked/cc-restitched)
 
 # What is CC: Restitched?
-This is a port of [SquidDev-CC/CC-Tweaked](https://github.com/SquidDev-CC/CC-Tweaked) to the Fabric modloader as well as being a continuation of [JemmaZZ/cc-tweaked-fabric](https://github.com/JemmaZZ/cc-tweaked-fabric).
+This is a port of [cc-tweaked/cc-tweaked](https://github.com/SquidDev-CC/CC-Tweaked) to the Fabric modloader as well as being a continuation of [JemmaZZ/cc-tweaked-fabric](https://github.com/JemmaZZ/cc-tweaked-fabric).
 
 ## CC: Restitched vs. CC: Tweaked
 CC: R tries to maintain parity with CC: T, but may be behind or divergent in some areas. If you notice a disparity please open an issue. CC: R major and minor version numbers indicate parity with the major features of that version of CC: T. Patch version numbers will not align.
