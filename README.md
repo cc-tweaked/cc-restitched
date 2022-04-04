@@ -1,4 +1,4 @@
-<img src="logo.png" alt="CC: Restitched" width="100%"/>
+<img src="logo.png" alt="CC: Restitched" width="50%"/>
 
 [![Current build status](https://img.shields.io/github/workflow/status/cc-tweaked/cc-restitched/Build?style=for-the-badge&logo=github)](https://github.com/cc-tweaked/cc-restitched/actions "Current build status")
 [![Download CC: Restitched on CurseForge](https://img.shields.io/badge/curseforge-cc%3Arestitched-orange?style=for-the-badge&logo=curseforge)](https://www.curseforge.com/minecraft/mc-mods/cc-restitched "Download CC:  Restitched on CurseForge")
@@ -7,7 +7,7 @@
 
 
 # What is CC: Restitched?
-This is a port of [cc-tweaked/cc-tweaked](https://github.com/SquidDev-CC/CC-Tweaked) to the Fabric modloader as well as being a continuation of [JemmaZZ/cc-tweaked-fabric](https://github.com/JemmaZZ/cc-tweaked-fabric) and can be found at [Github Actions](https://github.com/cc-tweaked/cc-restitched/actions), [Modrinth](https://modrinth.com/mod/cc-restitched) and [Curseforge](https://www.curseforge.com/minecraft/mc-mods/cc-restitched).
+This is a port of [cc-tweaked/CC-Tweaked](https://github.com/cc-tweaked/CC-Tweaked) to the Fabric modloader as well as being a continuation of [JemmaZZ/cc-tweaked-fabric](https://github.com/JemmaZZ/cc-tweaked-fabric) and can be found at [Github Actions](https://github.com/cc-tweaked/cc-restitched/actions), [Modrinth](https://modrinth.com/mod/cc-restitched) and [Curseforge](https://www.curseforge.com/minecraft/mc-mods/cc-restitched).
 
 ## CC: Restitched vs. CC: Tweaked
 CC: R tries to maintain parity with CC: T, but may be behind or divergent in some areas. If you notice a disparity please open an issue. CC: R major and minor version numbers indicate parity with the major features of that version of CC: T. Patch version numbers will not align.
