@@ -39,16 +39,16 @@ Any contribution is welcome, be it using the mod, reporting bugs or contributing
 	* Works with VBO Rendering
 * [ YES ] [Canvas](https://www.curseforge.com/minecraft/mc-mods/canvas-renderer)
 	* Works with TBO Rendering (Default)
+- ![](https://cdn.discordapp.com/attachments/851534220680495165/960677825185214574/unknown.png)
 	* Scuffed with VBO Rendering
 	* <details>
 		<summary>VBO is broken</summary>
 
-  		Monitors are just... scuffed beyond belief.
-		- ![](https://i.imgur.com/JVNZ2Pn.png)
-		- ![](https://i.imgur.com/SXXpr54.png)
-			* The content to the left is supposed to be on the monitors to the right, also the bottom one is supposed to `black/white` not colored.
-		* Turtle Texture for some reason?
-			- ![](https://i.imgur.com/OEmZXsx.png)
+  		Monitors are following the player?.
+		- ![](https://cdn.discordapp.com/attachments/851534220680495165/960674312896016394/unknown.png)
+        - ![](https://cdn.discordapp.com/attachments/851534220680495165/960674662839357530/unknown.png)
+		- ![](https://cdn.discordapp.com/attachments/851534220680495165/960674410510041128/unknown.png)
+			* The screen seems to get bigger the closer you get to it.
 		</details>
 
 ## Community
