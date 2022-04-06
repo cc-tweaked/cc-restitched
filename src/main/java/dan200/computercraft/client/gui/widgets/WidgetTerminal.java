@@ -6,13 +6,16 @@
 package dan200.computercraft.client.gui.widgets;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import dan200.computercraft.client.gui.FixedWidthFontRenderer;
+import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.shared.computer.core.ClientComputer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.glfw.GLFW;
 
@@ -313,14 +316,24 @@ public class WidgetTerminal extends AbstractWidget
     {
         if( !visible ) return;
         Terminal terminal = computer.getTerminal();
+
+        var bufferSource = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
+        var emitter = FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.GUI_TERMINAL ) );
+
         if( terminal != null )
         {
-            FixedWidthFontRenderer.drawTerminalImmediate( transform, innerX, innerY, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN );
+            boolean greyscale = !computer.isColour();
+            FixedWidthFontRenderer.drawTerminal(
+                emitter,
+                (float) innerX, (float) innerY, terminal, greyscale, (float) MARGIN, (float) MARGIN, (float) MARGIN, (float) MARGIN
+            );
         }
         else
         {
-            FixedWidthFontRenderer.drawEmptyTerminalImmediate( transform, x, y, width, height );
+            FixedWidthFontRenderer.drawEmptyTerminal( emitter, (float) x, (float) y, (float) width, (float) height );
         }
+
+        bufferSource.endBatch();
     }
 
     @Override

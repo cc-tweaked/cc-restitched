@@ -8,7 +8,8 @@ package dan200.computercraft.client.render;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
@@ -35,7 +36,6 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 import static dan200.computercraft.client.gui.FixedWidthFontRenderer.*;
-import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMAP;
 
 public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonitor>
 {
@@ -43,8 +43,8 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
      * {@link TileMonitor#RENDER_MARGIN}, but a tiny bit of additional padding to ensure that there is no space between
      * the monitor frame and contents.
      */
-    private static final float MARGIN = (float) (TileMonitor.RENDER_MARGIN * 1.05);
-    private static ByteBuffer tboContents;
+    private static final float MARGIN = (float) (TileMonitor.RENDER_MARGIN * 1.1);
+    private static ByteBuffer backingBuffer;
 
     private static final Matrix3f IDENTITY;
 
@@ -60,7 +60,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
     }
 
     @Override
-    public void render( @Nonnull TileMonitor monitor, float partialTicks, @Nonnull PoseStack transform, @Nonnull MultiBufferSource renderer, int lightmapCoord, int overlayLight )
+    public void render( @Nonnull TileMonitor monitor, float partialTicks, @Nonnull PoseStack transform, @Nonnull MultiBufferSource bufferSource, int lightmapCoord, int overlayLight )
     {
         // Render from the origin monitor
         ClientMonitor originTerminal = monitor.getClientMonitor();
@@ -120,12 +120,12 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
             // Avoid PoseStack#scale to preserve normal matrix.
             transform.last().pose().multiply( Matrix4f.createScaleMatrix( (float) xScale, (float) -yScale, 1.0f ) );
 
-            renderTerminal( renderer, transform, originTerminal, (float) (MARGIN / xScale), (float) (MARGIN / yScale) );
+            renderTerminal( bufferSource, transform, originTerminal, (float) (MARGIN / xScale), (float) (MARGIN / yScale) );
 
-            // We don't draw the cursor with the VBO, as it's dynamic and so we'll end up refreshing far more than is
-            // reasonable.
+            // We don't draw the cursor with the VBO/TBO, as it's dynamic and so we'll end up refreshing far more than
+            // is reasonable.
             FixedWidthFontRenderer.drawCursor(
-                transform, renderer.getBuffer( RenderTypes.MONITOR ),
+                FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.MONITOR ) ),
                 0, 0, terminal, !originTerminal.isColour()
             );
 
@@ -134,16 +134,16 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
         else
         {
             FixedWidthFontRenderer.drawEmptyTerminal(
-                transform, renderer.getBuffer( RenderTypes.MONITOR ),
+                FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.MONITOR ) ),
                 -MARGIN, MARGIN,
-                (float) (xSize + 2 * MARGIN), (float) -(ySize + MARGIN * 2), FULL_BRIGHT_LIGHTMAP
+                (float) (xSize + 2 * MARGIN), (float) -(ySize + MARGIN * 2)
             );
         }
 
         transform.popPose();
     }
 
-    private static void renderTerminal( @Nonnull MultiBufferSource renderer, PoseStack transform, ClientMonitor monitor, float xMargin, float yMargin )
+    private static void renderTerminal( @Nonnull MultiBufferSource bufferSource, PoseStack transform, ClientMonitor monitor, float xMargin, float yMargin )
     {
         Terminal terminal = monitor.getTerminal();
 
@@ -160,14 +160,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 int pixelWidth = width * FONT_WIDTH, pixelHeight = height * FONT_HEIGHT;
                 if( redraw )
                 {
-                    int size = width * height * 3;
-                    if( tboContents == null || tboContents.capacity() < size )
-                    {
-                        tboContents = MemoryTracker.create( size );
-                    }
-
-                    ByteBuffer monitorBuffer = tboContents;
-                    monitorBuffer.clear();
+                    ByteBuffer monitorBuffer = getBuffer( width * height * 3 );
                     for( int y = 0; y < height; y++ )
                     {
                         TextBuffer text = terminal.getLine( y ), textColour = terminal.getTextColourLine( y ), background = terminal.getBackgroundColourLine( y );
@@ -195,7 +188,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 shader.setupUniform( width, height, terminal.getPalette(), !monitor.isColour() );
 
                 Matrix4f matrix = transform.last().pose();
-                VertexConsumer buffer = renderer.getBuffer( RenderTypes.MONITOR_TBO );
+                VertexConsumer buffer = bufferSource.getBuffer( RenderTypes.MONITOR_TBO );
                 tboVertex( buffer, matrix, -xMargin, -yMargin );
                 tboVertex( buffer, matrix, -xMargin, pixelHeight + yMargin );
                 tboVertex( buffer, matrix, pixelWidth + xMargin, -yMargin );
@@ -206,37 +199,28 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
             case VBO:
             {
-                VertexBuffer vbo = monitor.buffer;
+                var vbo = monitor.buffer;
                 if( redraw )
                 {
-                    Tesselator tessellator = Tesselator.getInstance();
-                    BufferBuilder builder = tessellator.getBuilder();
-                    builder.begin( RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format() );
-
+                    int vertexCount = FixedWidthFontRenderer.getVertexCount( terminal );
+                    ByteBuffer buffer = getBuffer( vertexCount * RenderTypes.MONITOR.format().getVertexSize() );
                     FixedWidthFontRenderer.drawTerminalWithoutCursor(
-                        new PoseStack(), builder, 0, 0,
-                        terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin, FULL_BRIGHT_LIGHTMAP
+                        FixedWidthFontRenderer.toByteBuffer( buffer ), 0, 0,
+                        terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
                     );
+                    buffer.flip();
 
-                    builder.end();
-                    vbo.upload( builder );
+                    vbo.upload( vertexCount, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), buffer );
                 }
 
                 Matrix3f popViewRotation = RenderSystem.getInverseViewRotationMatrix();
                 RenderSystem.setInverseViewRotationMatrix( IDENTITY );
 
+                bufferSource.getBuffer( RenderTypes.MONITOR );
                 RenderTypes.MONITOR.setupRenderState();
                 vbo.drawWithShader( transform.last().pose(), RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
-                RenderTypes.MONITOR.clearRenderState();
 
                 RenderSystem.setInverseViewRotationMatrix( popViewRotation );
-
-                // How we would draw the terminal without using VBO, for reference until I need to delete this.
-                //VertexConsumer buffer = renderer.getBuffer( RenderTypes.MONITOR );
-                //FixedWidthFontRenderer.drawTerminalWithoutCursor(
-                //    transform, buffer, 0, 0,
-                //    terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin, FULL_BRIGHT_LIGHTMAP
-                //);
                 break;
             }
         }
@@ -246,6 +230,20 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
     {
         // We encode position in the UV, as that's not transformed by the matrix.
         builder.vertex( matrix, x, y, 0 ).uv( x, y ).endVertex();
+    }
+
+    @Nonnull
+    private static ByteBuffer getBuffer( int capacity )
+    {
+
+        ByteBuffer buffer = backingBuffer;
+        if( buffer == null || buffer.capacity() < capacity )
+        {
+            buffer = backingBuffer = MemoryTracker.create( capacity );
+        }
+
+        buffer.clear();
+        return buffer;
     }
 
     @Override
