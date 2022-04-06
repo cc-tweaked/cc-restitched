@@ -6,26 +6,26 @@
 [![Gitpod ready-to-code](https://shields.io/badge/gitpod-ready--to--code-green?logo=gitpod&style=for-the-badge)](https://gitpod.io/#https://github.com/cc-tweaked/cc-restitched)
 
 
-<img src="readme-assets/whatiscc.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/whatiscc.png" alt="What is CC:Restitched" width="37.5%"/>
 
 This is a port of [cc-tweaked/CC-Tweaked](https://github.com/cc-tweaked/CC-Tweaked) to the [Fabric modloader](https://fabricmc.net/) as well as being a continuation of [JemmaZZ/cc-tweaked-fabric](https://github.com/JemmaZZ/cc-tweaked-fabric) and can be found at [Github Actions](https://github.com/cc-tweaked/cc-restitched/actions), [Modrinth](https://modrinth.com/mod/cc-restitched) and [Curseforge](https://www.curseforge.com/minecraft/mc-mods/cc-restitched).
 
-<img src="readme-assets/ccrandcct.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/ccrandcct.png" alt="CC: Restitched and CC: Tweaked" width="37.5%"/>
 
 CC: R tries to maintain parity with CC: T, though it may be behind or divergent in some areas. If you notice a disparity please open an issue. CC: R major and minor version numbers indicate parity with the major features of that version of CC: T. Patch version numbers will NOT align.
 
-<img src="readme-assets/incluededpacks.png.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/incluededpacks.png" alt="Included Resource Packs" width="37.5%"/>
 
 This mod includes textures by [Jummit](https://github.com/Jummit) that are more in line with the style of Mojang's new texture-artist, Jappa. If you prefer the original ComputerCraft textures you should  enable the `classic` resource pack.
  We also have a third resourcepack made by [3prm3](https://github.com/3prm3), it features a complete overhaul of CC's textures (in the style of an industrial mod) and can be used by enabling the `overhaul` resource pack. You can also check out his resource pack over [here](https://github.com/cc-orgs/cc-overhaul/tree/main) as  well!<img src="https://raw.githubusercontent.com/cc-orgs/cc-overhaul/main/pack.png" alt="CC: Restitched" width="32"  height="32"/>
 
-<img src="readme-assets/bleedingedgever.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/bleedingedgever.png" alt="Bleeding Edge Versions" width="37.5%"/>
 
 Bleeding edge builds can be found [here](https://github.com/cc-tweaked/cc-restitched/actions) at Github Actions.
 In the .zip file there should be a `-dev` jar, a `-javadoc` jar, a `-sources-dev` jar, a `-sources` jar, and a "plain" jar (jar without an affixed tag) jar.
 Put the "plain" jar in the mods folder.
 
-<img src="readme-assets/contributing.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/contributing.png" alt="Contributing to the Repo" width="37.5%"/>
 
 Any contribution is welcome, be it using the mod, reporting bugs or contributing code. In order to start helping develop CC: R there are a few rules;
 1) Follow the [Fabric](https://fabricmc.net/) programming guidelines as close as possible. This means you have to use [`loom`](https://fabricmc.net/wiki/tutorial:mappings) mappings, if you use anything else, your code will be rejected.
@@ -34,7 +34,7 @@ Any contribution is welcome, be it using the mod, reporting bugs or contributing
 4) Unless the code is taken directly from CC: Tweaked, `lua` code is offlimits from alteration. If you wish to contribute your changes to the in game rom please contribute upstream at [CC-Tweaked](https://github.com/cc-tweaked/CC-Tweaked).
 5) Branches should be named in this format `mc-<major ver.>.x/<specific-mc-ver.>`
 
-<img src="readme-assets/renderingmodcompat.png" alt="CC: Restitched" width="37.5%"/>
+<img src="readme-assets/renderingmodcompat.png" alt="Rendering Mod Compatability" width="37.5%"/>
 
 * [ YES ] [Sodium](https://www.curseforge.com/minecraft/mc-mods/sodium)
 * [ YES ] [OptiFabric](https://www.curseforge.com/minecraft/mc-mods/optifabric)
