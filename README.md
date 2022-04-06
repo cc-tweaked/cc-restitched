@@ -34,7 +34,7 @@ Any contribution is welcome, be it using the mod, reporting bugs or contributing
 4) Unless the code is taken directly from CC: Tweaked, `lua` code is offlimits from alteration. If you wish to contribute your changes to the in game rom please contribute upstream at [CC-Tweaked](https://github.com/cc-tweaked/CC-Tweaked).
 5) Branches should be named in this format `mc-<major ver.>.x/<specific-mc-ver.>`
 
-<img src="readme-assets/renderingmodcompat.png" alt="Rendering Mod Compatability" width="37.5%"/>
+<img src="readme-assets/renderingmodcompat.png" alt="Rendering Mod Compatibility" width="37.5%"/>
 
 * [ YES ] [Sodium](https://www.curseforge.com/minecraft/mc-mods/sodium)
 * [ YES ] [OptiFabric](https://www.curseforge.com/minecraft/mc-mods/optifabric)
