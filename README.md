@@ -40,9 +40,7 @@ Any contribution is welcome, be it using the mod, reporting bugs or contributing
 * [ YES ] [OptiFabric](https://www.curseforge.com/minecraft/mc-mods/optifabric)
 	* Works with VBO Rendering (automatically set)
 	* No issues
-* [ OK ] [Iris Shaders & Sodium](https://www.curseforge.com/minecraft/mc-mods/irisshaders)
-	* "Works" with TBO Rendering (Default)
-	* Works with VBO Rendering
+* [ YES ] [Iris Shaders & Sodium](https://www.curseforge.com/minecraft/mc-mods/irisshaders)
 * [ YES ] [Canvas](https://www.curseforge.com/minecraft/mc-mods/canvas-renderer)
 	* Works with TBO Rendering (Default)
 - ![](https://cdn.discordapp.com/attachments/851534220680495165/960677825185214574/unknown.png)
