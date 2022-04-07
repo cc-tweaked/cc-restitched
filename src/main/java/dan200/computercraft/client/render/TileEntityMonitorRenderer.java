@@ -202,7 +202,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 var vbo = monitor.buffer;
                 if( redraw )
                 {
-                    int vertexCount = FixedWidthFontRenderer.getVertexCount( terminal );
+                    int vertexCount = FixedWidthFontRenderer.getMaxVertexCount( terminal );
                     ByteBuffer buffer = getBuffer( vertexCount * RenderTypes.MONITOR.format().getVertexSize() );
                     FixedWidthFontRenderer.drawTerminalWithoutCursor(
                         FixedWidthFontRenderer.toByteBuffer( buffer ), 0, 0,

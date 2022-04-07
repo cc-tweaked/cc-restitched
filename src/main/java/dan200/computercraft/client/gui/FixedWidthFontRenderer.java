@@ -219,40 +219,9 @@ public final class FixedWidthFontRenderer
         drawQuad( emitter, x, y, 0, width, height, BLACK, FULL_BRIGHT_LIGHTMAP );
     }
 
-    public static int getVertexCount( Terminal terminal )
+    public static int getMaxVertexCount( Terminal terminal )
     {
-        int height = terminal.getHeight();
-        int count = 0;
-
-        for( int y = 0; y < height; y++ )
-        {
-            // We compress runs of adjacent characters, so we need to do that calculation here too :/.
-            int background = 2;
-            TextBuffer backgroundColour = terminal.getBackgroundColourLine( y );
-            char blockColour = '\0';
-            for( int x = 0; x < backgroundColour.length(); x++ )
-            {
-                char colourIndex = backgroundColour.charAt( x );
-                if( colourIndex == blockColour ) continue;
-
-                if( blockColour != '\0' ) background++;
-                blockColour = colourIndex;
-            }
-            if( blockColour != '\0' ) background++;
-
-            count += background;
-            if( y == 0 ) count += background;
-            if( y == height - 1 ) count += background;
-
-            // Thankfully the normal characters are much easier!
-            TextBuffer foreground = terminal.getLine( y );
-            for( int x = 0; x < foreground.length(); x++ )
-            {
-                char c = foreground.charAt( x );
-                if( c != '\0' && c != ' ' ) count++;
-            }
-        }
-        return count * 4;
+        return (terminal.getHeight() + 2) * terminal.getWidth() * 2 * 4;
     }
 
     /**
@@ -291,8 +260,9 @@ public final class FixedWidthFontRenderer
      *     <li>Only works with {@link DefaultVertexFormat#POSITION_COLOR_TEX_LIGHTMAP}.</li>
      * </ul>
      *
-     * @param buffer The buffer to emit to. This must have space for at least {@link #getVertexCount(Terminal)} vertices.
-     * @return The emitter, ot be passed to the rendering functions.
+     * @param buffer The buffer to emit to. This must have space for the vertices. See {@link #getMaxVertexCount(Terminal)}
+     *               for an upper bound.
+     * @return The emitter, to be passed to the rendering functions.
      */
     public static QuadEmitter toByteBuffer( ByteBuffer buffer )
     {
