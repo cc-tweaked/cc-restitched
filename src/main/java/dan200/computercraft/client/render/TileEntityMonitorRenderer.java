@@ -218,7 +218,18 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
                 bufferSource.getBuffer( RenderTypes.MONITOR );
                 RenderTypes.MONITOR.setupRenderState();
-                vbo.drawWithShader( transform.last().pose(), RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
+
+                var poseMatrix = transform.last().pose();
+                if( !MonitorRenderer.canvasModPresent )
+                {
+                    vbo.drawWithShader( poseMatrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
+                }
+                else
+                {
+                    var matrix = RenderSystem.getModelViewMatrix().copy();
+                    matrix.multiply( transform.last().pose() );
+                    vbo.drawWithShader( matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
+                }
 
                 RenderSystem.setInverseViewRotationMatrix( popViewRotation );
                 break;

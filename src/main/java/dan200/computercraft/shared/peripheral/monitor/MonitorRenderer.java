@@ -69,6 +69,8 @@ public enum MonitorRenderer
     private static boolean shaderMod;
     private static final List<String> shaderModIds = Arrays.asList( "iris", "canvas", "optifabric" );
 
+    public static final boolean canvasModPresent = FabricLoader.getInstance().isModLoaded( "canvas" );
+
     private static void initialise()
     {
         shaderMod = FabricLoader.getInstance().getAllMods().stream()
