@@ -166,7 +166,8 @@ public class InventoryMethods implements GenericPeripheral
     @LuaFunction( mainThread = true )
     public static int getItemLimit( Container inventory, int slot ) throws LuaException
     {
-        assertBetween( slot, 1, inventory.getContainerSize(), "Slot out of range (%s)" );
+        ItemStorage itemStorage = extractHandler( inventory );
+        assertBetween( slot, 1, itemStorage.size(), "Slot out of range (%s)" );
         return inventory.getMaxStackSize();
     }
 
