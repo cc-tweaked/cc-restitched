@@ -39,6 +39,9 @@
         ],
         "modmenu": [
             "dan200.computercraft.shared.integration.ModMenuIntegration"
+        ],
+        "fabric-datagen": [
+            "dan200.computercraft.data.Generators"
         ]
     },
     "mixins": [

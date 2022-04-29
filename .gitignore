@@ -22,3 +22,5 @@
 *.DS_Store
 .project
 *.launch
+
+/src/generated/resources/.cache
