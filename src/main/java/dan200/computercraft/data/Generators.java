@@ -15,6 +15,7 @@ public class Generators implements DataGeneratorEntrypoint
     {
         generator.addProvider( new RecipeGenerator( generator ) );
         generator.addProvider( new LootTableGenerator( generator ) );
+        generator.addProvider( new BlockModelProvider( generator ) );
 
         BlockTagsGenerator blockTags = new BlockTagsGenerator( generator );
         generator.addProvider( blockTags );
