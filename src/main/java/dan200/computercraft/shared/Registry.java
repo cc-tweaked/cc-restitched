@@ -49,7 +49,6 @@ import dan200.computercraft.shared.turtle.upgrades.TurtleModem;
 import dan200.computercraft.shared.turtle.upgrades.TurtleSpeaker;
 import dan200.computercraft.shared.turtle.upgrades.TurtleTool;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.resources.ResourceLocation;
@@ -110,7 +109,7 @@ public final class Registry
             register( "computer_advanced", new BlockComputer<>( properties(), ComputerFamily.ADVANCED, () -> ModBlockEntities.COMPUTER_ADVANCED ) );
 
         public static final BlockComputer<TileCommandComputer> COMPUTER_COMMAND =
-            register( "computer_command", new BlockComputer<>( properties().strength( -1, 6000000.0F ).requiresCorrectToolForDrops().noDrops(), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
+            register( "computer_command", new BlockComputer<>( properties().strength( -1, 6000000.0F ), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
 
         public static final BlockTurtle TURTLE_NORMAL =
             register( "turtle_normal", new BlockTurtle( turtleProperties(), ComputerFamily.NORMAL, () -> ModBlockEntities.TURTLE_NORMAL ) );
@@ -319,9 +318,9 @@ public final class Registry
         public static final MenuType<ContainerViewComputer> VIEW_COMPUTER =
             ContainerData.toType( new ResourceLocation( MOD_ID, "view_computer" ), ViewComputerContainerData::new, ContainerViewComputer::new );
 
-        private static <T extends AbstractContainerMenu> MenuType<T> registerSimple( String id, ScreenHandlerRegistry.SimpleClientHandlerFactory<T> function )
+        private static <T extends AbstractContainerMenu> MenuType<T> registerSimple( String id, MenuType.MenuSupplier<T> function )
         {
-            return ScreenHandlerRegistry.registerSimple( new ResourceLocation( MOD_ID, id ), function );
+            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.MENU, new ResourceLocation( MOD_ID, id ), new MenuType<T>( function ) );
         }
     }
 
