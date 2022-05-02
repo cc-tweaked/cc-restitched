@@ -48,6 +48,7 @@ import dan200.computercraft.shared.turtle.upgrades.TurtleCraftingTable;
 import dan200.computercraft.shared.turtle.upgrades.TurtleModem;
 import dan200.computercraft.shared.turtle.upgrades.TurtleSpeaker;
 import dan200.computercraft.shared.turtle.upgrades.TurtleTool;
+import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
@@ -207,7 +208,10 @@ public final class Registry
 
     public static final class ModItems
     {
-        private static final CreativeModeTab mainItemGroup = ComputerCraft.MAIN_GROUP;
+        private static final CreativeModeTab mainItemGroup = FabricItemGroupBuilder.build(
+            new ResourceLocation( MOD_ID, "main" ),
+            () -> new ItemStack( ModBlocks.COMPUTER_NORMAL )
+        ).setRecipeFolderName( MOD_ID );
 
         public static final ItemComputer COMPUTER_NORMAL =
             ofBlock( ModBlocks.COMPUTER_NORMAL, ItemComputer::new );
