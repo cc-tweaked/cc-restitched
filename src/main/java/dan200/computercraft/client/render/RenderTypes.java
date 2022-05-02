@@ -24,6 +24,7 @@ public class RenderTypes
 
     public static final RenderType MONITOR_TBO = Types.MONITOR_TBO;
     public static final RenderType MONITOR = RenderType.textIntensity( FONT );
+    public static final RenderType MONITOR_POLYGON_OFFSET = RenderType.textIntensityPolygonOffset( FONT );
 
     public static final RenderType ITEM_POCKET_TERMINAL = RenderType.textIntensity( FONT );
     public static final RenderType ITEM_POCKET_LIGHT = RenderType.textIntensity( FONT );
