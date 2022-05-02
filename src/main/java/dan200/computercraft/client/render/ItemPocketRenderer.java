@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import dan200.computercraft.ComputerCraft;
-import dan200.computercraft.client.gui.FixedWidthFontRenderer;
+import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.shared.computer.core.ClientComputer;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
@@ -20,8 +20,9 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.*;
 import static dan200.computercraft.client.render.ComputerBorderRenderer.*;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_WIDTH;
 
 /**
  * Emulates map rendering for pocket computers.
@@ -115,8 +116,7 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         byte r = (byte) ((colour >>> 16) & 0xFF);
         byte g = (byte) ((colour >>> 8) & 0xFF);
         byte b = (byte) (colour & 0xFF);
-        var c = new byte[] { r, g, b, (byte) 255 };
-        float z = 0.001f;
+        byte[] c = new byte[] { r, g, b, (byte) 255 };
 
         VertexConsumer buffer = render.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
         FixedWidthFontRenderer.drawQuad(

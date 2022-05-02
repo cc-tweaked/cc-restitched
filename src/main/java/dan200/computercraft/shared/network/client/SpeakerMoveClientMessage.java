@@ -7,11 +7,11 @@ package dan200.computercraft.shared.network.client;
 
 import dan200.computercraft.client.sound.SpeakerManager;
 import dan200.computercraft.shared.network.NetworkMessage;
+import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import dan200.computercraft.shared.network.PacketContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
@@ -26,33 +26,31 @@ import java.util.UUID;
 public class SpeakerMoveClientMessage implements NetworkMessage
 {
     private final UUID source;
-    private final Vec3 pos;
+    private final SpeakerPosition.Message pos;
 
-    public SpeakerMoveClientMessage( UUID source, Vec3 pos )
+    public SpeakerMoveClientMessage( UUID source, SpeakerPosition pos )
     {
         this.source = source;
-        this.pos = pos;
+        this.pos = pos.asMessage();
     }
 
     public SpeakerMoveClientMessage( FriendlyByteBuf buf )
     {
         source = buf.readUUID();
-        pos = new Vec3( buf.readDouble(), buf.readDouble(), buf.readDouble() );
+        pos = SpeakerPosition.Message.read( buf );
     }
 
     @Override
     public void toBytes( @Nonnull FriendlyByteBuf buf )
     {
         buf.writeUUID( source );
-        buf.writeDouble( pos.x() );
-        buf.writeDouble( pos.y() );
-        buf.writeDouble( pos.z() );
+        pos.write( buf );
     }
 
     @Override
     @Environment( EnvType.CLIENT )
     public void handle( PacketContext context )
     {
-        SpeakerManager.moveSound( source, pos );
+        SpeakerManager.moveSound( source, pos.reify() );
     }
 }

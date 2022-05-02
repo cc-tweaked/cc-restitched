@@ -5,10 +5,10 @@
  */
 package dan200.computercraft.client.sound;
 
+import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import com.mojang.blaze3d.audio.Channel;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,8 +24,7 @@ public class SpeakerManager
     // A return value of true cancels the event
     public static boolean playStreaming( SoundEngine engine, SoundInstance soundInstance, Channel channel )
     {
-        if( !(soundInstance instanceof SpeakerSound sound) ) return false;
-        if( sound.stream == null ) return false;
+        if( !(soundInstance instanceof SpeakerSound sound) || sound.stream == null ) return false;
 
         channel.attachBufferStream( sound.stream );
         channel.play();
@@ -46,7 +45,7 @@ public class SpeakerManager
         if( sound != null ) sound.stop();
     }
 
-    public static void moveSound( UUID source, Vec3 position )
+    public static void moveSound( UUID source, SpeakerPosition position )
     {
         SpeakerInstance sound = sounds.get( source );
         if( sound != null ) sound.setPosition( position );
