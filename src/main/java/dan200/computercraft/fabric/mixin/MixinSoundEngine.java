@@ -27,7 +27,7 @@ public class MixinSoundEngine
     private static SoundEngine thisCapture;
 
     @Inject(
-        method = "lambda$play$8(Lnet/minecraft/client/sounds/AudioStream;Lcom/mojang/blaze3d/audio/Channel;)V",
+        method = "method_19755(Lnet/minecraft/client/sounds/AudioStream;Lcom/mojang/blaze3d/audio/Channel;)V",
         at = @At( "HEAD" ),
         cancellable = true
     )

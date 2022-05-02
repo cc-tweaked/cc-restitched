@@ -104,7 +104,10 @@ public final class ComputerCraft implements ModInitializer
     // Logging
     public static final Logger log = LogManager.getLogger( MOD_ID );
 
-    public static CreativeModeTab MAIN_GROUP = FabricItemGroupBuilder.build( new ResourceLocation( MOD_ID, "main" ), () -> new ItemStack( ModBlocks.COMPUTER_NORMAL ) );
+    public static CreativeModeTab MAIN_GROUP = FabricItemGroupBuilder.build(
+        new ResourceLocation( MOD_ID, "main" ),
+        () -> new ItemStack( ModBlocks.COMPUTER_NORMAL )
+    ).setRecipeFolderName( ComputerCraft.MOD_ID );
 
     @Override
     public void onInitialize()

@@ -4,7 +4,7 @@ plugins {
     id "maven-publish"
     id "com.github.hierynomus.license" version "0.16.1"
     id "org.jetbrains.kotlin.jvm" version "1.5.21"
-    id 'fabric-loom' version '0.10-SNAPSHOT'
+    id 'fabric-loom' version '0.11-SNAPSHOT'
     id "com.modrinth.minotaur" version "2.+"
     id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
@@ -40,6 +40,18 @@ sourceSets {
 
 loom {
     accessWidenerPath = file("src/main/resources/cc.accesswidener")
+
+    runs {
+        data {
+            server()
+
+            name "Data Generation"
+            vmArg "-Dfabric-api.datagen"
+            vmArg "-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}"
+
+            runDir "build/datagen"
+        }
+    }
 }
 
 repositories {

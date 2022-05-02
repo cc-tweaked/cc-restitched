@@ -53,10 +53,10 @@ public class MixinLanguage
 
     private static void loadModLangFile( ModContainer modContainer, BiConsumer<String, String> biConsumer )
     {
-        Path path = modContainer.getPath( "assets/" + modContainer.getMetadata().getId() + "/lang/" + DEFAULT + ".json" );
-        if( !Files.exists( path ) ) return;
+        Optional<Path> path = modContainer.findPath( "assets/" + modContainer.getMetadata().getId() + "/lang/" + DEFAULT + ".json" );
+        if( path.isEmpty() ) return;
 
-        try( InputStream inputStream = Files.newInputStream( path ) )
+        try( InputStream inputStream = Files.newInputStream( path.get() ) )
         {
             loadFromJson( inputStream, biConsumer );
         }
