@@ -19,6 +19,7 @@ import dan200.computercraft.client.render.text.DirectFixedWidthFontRenderer;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.client.util.DirectBuffers;
 import dan200.computercraft.core.terminal.Terminal;
+import dan200.computercraft.shared.integration.IrisCompat;
 import dan200.computercraft.shared.peripheral.monitor.ClientMonitor;
 import dan200.computercraft.shared.peripheral.monitor.MonitorRenderer;
 import dan200.computercraft.shared.peripheral.monitor.TileMonitor;
@@ -111,7 +112,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
         // Draw the contents
         Terminal terminal = originTerminal.getTerminal();
-        if( terminal != null )
+        if( terminal != null && !IrisCompat.INSTANCE.isRenderingShadowPass() )
         {
             // Draw a terminal
             int width = terminal.getWidth(), height = terminal.getHeight();
