@@ -185,37 +185,31 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
             case VBO:
             {
-                var backgroundVbo = monitor.backgroundBuffer;
-                var foregroundVbo = monitor.foregroundBuffer;
+                var vbo = monitor.buffer;
                 if( redraw )
                 {
                     int vertexSize = RenderTypes.MONITOR.format().getVertexSize();
 
                     // Draw the background contents of the terminal into one vbo.
-                    ByteBuffer bgBuffer = getBuffer( DirectFixedWidthFontRenderer.getLayerVertexCount( terminal ) * vertexSize );
+                    ByteBuffer buffer = getBuffer( DirectFixedWidthFontRenderer.getVertexCount( terminal ) * vertexSize );
 
                     DirectFixedWidthFontRenderer.drawTerminalBackground(
-                        bgBuffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
+                        buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
                     );
-                    int bgTermIndexes = bgBuffer.position() / vertexSize;
-                    bgBuffer.flip();
-
-                    backgroundVbo.upload( bgTermIndexes, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), bgBuffer );
-
-                    // Draw the foreground contents of the terminal into another vbo.
-                    ByteBuffer fgBuffer = getBuffer( DirectFixedWidthFontRenderer.getLayerVertexCount( terminal ) * vertexSize );
-
+                    int backgroundBytes = buffer.position();
                     DirectFixedWidthFontRenderer.drawTerminalForeground(
-                        fgBuffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
+                        buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
                     );
-                    int fgTermIndices = fgBuffer.position() / vertexSize;
+                    int termVertices = buffer.position() / vertexSize;
+                    monitor.backgroundVertexCount = backgroundBytes / vertexSize;
+                    monitor.foregroundVertexCount = termVertices - monitor.backgroundVertexCount;
 
                     // If the cursor is visible, we append it to the end of our buffer. When rendering, we can either
                     // render n or n+1 quads and so toggle the cursor on and off.
-                    DirectFixedWidthFontRenderer.drawCursor( fgBuffer, 0, 0, terminal, !monitor.isColour() );
+                    DirectFixedWidthFontRenderer.drawCursor( buffer, 0, 0, terminal, !monitor.isColour() );
 
-                    fgBuffer.flip();
-                    foregroundVbo.upload( fgTermIndices, RenderTypes.MONITOR_POLYGON_OFFSET.mode(), RenderTypes.MONITOR_POLYGON_OFFSET.format(), fgBuffer );
+                    buffer.flip();
+                    vbo.upload( termVertices, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), buffer );
                 }
 
                 // TODO Figure out how to setup the inverse view rotation matrix properly.
@@ -235,22 +229,19 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 }
 
                 // Render background geometry
-                bufferSource.getBuffer( RenderTypes.MONITOR );
                 RenderTypes.MONITOR.setupRenderState();
-                backgroundVbo.drawWithShader(
-                    matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(), backgroundVbo.getIndexCount()
+                vbo.drawWithShader(
+                    matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(), monitor.backgroundVertexCount, 0
                 );
-                RenderTypes.MONITOR.clearRenderState();
 
                 // Render foreground geometry with glPolygonOffset enabled. Note we don't care about drawing these in
                 // front to back order because it's a cutout type shader that uses discard.
-                bufferSource.getBuffer( RenderTypes.MONITOR_POLYGON_OFFSET );
                 RenderTypes.MONITOR_POLYGON_OFFSET.setupRenderState();
-                foregroundVbo.drawWithShader(
+                vbo.drawWithShader(
                     matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(),
-                    // As mentioned in an above comment, render the extra cursor quad if it is visible this frame. Each
-                    // quad has an index count of 6.
-                    FixedWidthFontRenderer.isCursorVisible( terminal ) && FrameInfo.getGlobalCursorBlink() ? foregroundVbo.getIndexCount() + 6 : foregroundVbo.getIndexCount()
+                    // As mentioned in an above comment, render the extra cursor quad if it is visible this frame.
+                    FixedWidthFontRenderer.isCursorVisible( terminal ) && FrameInfo.getGlobalCursorBlink() ? monitor.foregroundVertexCount + 4 : monitor.foregroundVertexCount,
+                    monitor.backgroundVertexCount
                 );
                 RenderTypes.MONITOR_POLYGON_OFFSET.clearRenderState();
 

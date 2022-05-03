@@ -170,11 +170,11 @@ public final class DirectFixedWidthFontRenderer
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
-        drawTerminalForeground(
+        drawTerminalBackground(
             buffer, x, y, terminal, greyscale,
             topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
         );
-        drawTerminalBackground(
+        drawTerminalForeground(
             buffer, x, y, terminal, greyscale,
             topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
         );
@@ -189,9 +189,9 @@ public final class DirectFixedWidthFontRenderer
         }
     }
 
-    public static int getLayerVertexCount( Terminal terminal )
+    public static int getVertexCount( Terminal terminal )
     {
-        return (terminal.getHeight() + 2) * (terminal.getWidth() + 2) * 4;
+        return (terminal.getHeight() + 2) * (terminal.getWidth() + 2) * 2 * 4;
     }
 
     private static void quad( ByteBuffer buffer, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )
