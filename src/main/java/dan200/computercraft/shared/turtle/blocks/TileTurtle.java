@@ -432,11 +432,12 @@ public class TileTurtle extends TileComputerBase implements ITurtleTile, Default
     @Override
     public void setItem( int i, @Nonnull ItemStack stack )
     {
-        if( i >= 0 && i < INVENTORY_SIZE && !InventoryUtil.areItemsEqual( stack, inventory.get( i ) ) )
-        {
-            inventory.set( i, stack );
-            onInventoryDefinitelyChanged();
-        }
+            if ( i >= 0 && i < INVENTORY_SIZE )
+            {
+                inventory.set(i, stack);
+                if ( !InventoryUtil.areItemsEqual(stack, inventory.get(i)) )
+                    onInventoryDefinitelyChanged();
+            }
     }
 
     @Override
