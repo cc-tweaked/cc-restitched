@@ -8,6 +8,7 @@ package dan200.computercraft.shared.peripheral.monitor;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.client.render.TileEntityMonitorRenderer;
 import net.fabricmc.loader.api.FabricLoader;
+import org.lwjgl.opengl.GL;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -48,35 +49,32 @@ public enum MonitorRenderer
     @Nonnull
     public static MonitorRenderer current()
     {
-        if( !initialised ) initialise();
-
         MonitorRenderer current = ComputerCraft.monitorRenderer;
-        if( current == BEST ) return best();
+        if( current == BEST ) current = ComputerCraft.monitorRenderer = best();
         return current;
     }
 
     private static MonitorRenderer best()
     {
+        if( !GL.getCapabilities().OpenGL31 )
+        {
+            ComputerCraft.log.warn( "Texture buffers are not supported on your graphics card. Falling back to VBO monitor renderer." );
+            return VBO;
+        }
+
         if( shaderMod )
         {
-            ComputerCraft.log.warn( "Shader mod detected. Enabling VBO monitor renderer for compatibility." );
-            return ComputerCraft.monitorRenderer = VBO;
+            ComputerCraft.log.warn( "Shader mod detected. Falling back to VBO monitor renderer." );
+            return VBO;
         }
-        return ComputerCraft.monitorRenderer = TBO;
+
+        return TBO;
     }
 
-    private static boolean initialised = false;
-    private static boolean shaderMod;
     private static final List<String> shaderModIds = Arrays.asList( "iris", "canvas", "optifabric" );
+    private static boolean shaderMod = FabricLoader.getInstance().getAllMods().stream()
+        .map( modContainer -> modContainer.getMetadata().getId() )
+        .anyMatch( shaderModIds::contains );
 
     public static final boolean canvasModPresent = FabricLoader.getInstance().isModLoaded( "canvas" );
-
-    private static void initialise()
-    {
-        shaderMod = FabricLoader.getInstance().getAllMods().stream()
-            .map( modContainer -> modContainer.getMetadata().getId() )
-            .anyMatch( shaderModIds::contains );
-
-        initialised = true;
-    }
 }
