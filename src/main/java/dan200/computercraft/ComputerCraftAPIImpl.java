@@ -22,6 +22,7 @@ import dan200.computercraft.core.apis.ApiFactories;
 import dan200.computercraft.core.asm.GenericMethod;
 import dan200.computercraft.core.filesystem.FileMount;
 import dan200.computercraft.core.filesystem.ResourceMount;
+import dan200.computercraft.fabric.mixin.MinecraftServerAccess;
 import dan200.computercraft.shared.*;
 import dan200.computercraft.shared.peripheral.modem.wired.TileCable;
 import dan200.computercraft.shared.peripheral.modem.wired.TileWiredModemFull;
@@ -33,7 +34,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -56,7 +57,7 @@ public final class ComputerCraftAPIImpl implements IComputerCraftAPI
 
     public static InputStream getResourceFile( String domain, String subPath )
     {
-        ResourceManager manager = GameInstanceUtils.getServer().getResourceManager();
+        ReloadableResourceManager manager = (ReloadableResourceManager) ((MinecraftServerAccess) GameInstanceUtils.getServer()).callGetResourceManager();
         try
         {
             return manager.getResource( new ResourceLocation( domain, subPath ) ).getInputStream();
@@ -99,7 +100,7 @@ public final class ComputerCraftAPIImpl implements IComputerCraftAPI
     @Override
     public IMount createResourceMount( @Nonnull String domain, @Nonnull String subPath )
     {
-        ResourceManager manager = GameInstanceUtils.getServer().getResourceManager();
+        ReloadableResourceManager manager = (ReloadableResourceManager) ((MinecraftServerAccess) GameInstanceUtils.getServer()).callGetResourceManager();
         ResourceMount mount = ResourceMount.get( domain, subPath, manager );
         return mount.exists( "" ) ? mount : null;
     }

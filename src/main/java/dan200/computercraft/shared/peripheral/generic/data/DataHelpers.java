@@ -32,7 +32,15 @@ public final class DataHelpers
     @Nonnull
     public static <T> Map<String, Boolean> getTags( @Nonnull Stream<TagKey<T>> tags )
     {
-        return tags.collect( Collectors.toMap( x -> x.location().toString(), x -> true ) );
+        Collection<ResourceLocation> tags = BlockTags.getAllTags().getMatchingTags( block );
+        return getTags( tags );
+    }
+
+    @Nonnull
+    static Map<String, Boolean> getTags( @Nonnull Item item )
+    {
+        Collection<ResourceLocation> tags = ItemTags.getAllTags().getMatchingTags( item );
+        return getTags( tags );
     }
 
     @Nullable
