@@ -10,45 +10,44 @@ import dan200.computercraft.shared.PocketUpgrades;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.pocket.items.PocketComputerItemFactory;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.SpecialCraftingRecipe;
+import net.minecraft.recipe.SpecialRecipeSerializer;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 
-public final class PocketComputerUpgradeRecipe extends CustomRecipe
+public final class PocketComputerUpgradeRecipe extends SpecialCraftingRecipe
 {
-    private PocketComputerUpgradeRecipe( ResourceLocation identifier )
+    private PocketComputerUpgradeRecipe( Identifier identifier )
     {
         super( identifier );
     }
 
     @Override
-    public boolean canCraftInDimensions( int x, int y )
+    public boolean fits( int x, int y )
     {
         return x >= 2 && y >= 2;
     }
 
     @Nonnull
     @Override
-    public ItemStack getResultItem()
+    public ItemStack getOutput()
     {
         return PocketComputerItemFactory.create( -1, null, -1, ComputerFamily.NORMAL, null );
     }
 
     @Override
-    public boolean matches( @Nonnull CraftingContainer inventory, @Nonnull Level world )
+    public boolean matches( @Nonnull CraftingInventory inventory, @Nonnull World world )
     {
         return !assemble( inventory ).isEmpty();
     }
 
     @Nonnull
     @Override
-    public ItemStack assemble( @Nonnull CraftingContainer inventory )
+    public ItemStack assemble( @Nonnull CraftingInventory inventory )
     {
         // Scan the grid for a pocket computer
         ItemStack computer = ItemStack.EMPTY;
@@ -59,7 +58,7 @@ public final class PocketComputerUpgradeRecipe extends CustomRecipe
         {
             for( int x = 0; x < inventory.getWidth(); x++ )
             {
-                ItemStack item = inventory.getItem( x + y * inventory.getWidth() );
+                ItemStack item = inventory.getStack( x + y * inventory.getWidth() );
                 if( !item.isEmpty() && item.getItem() instanceof ItemPocketComputer )
                 {
                     computer = item;
@@ -81,7 +80,7 @@ public final class PocketComputerUpgradeRecipe extends CustomRecipe
         {
             for( int x = 0; x < inventory.getWidth(); x++ )
             {
-                ItemStack item = inventory.getItem( x + y * inventory.getWidth() );
+                ItemStack item = inventory.getStack( x + y * inventory.getWidth() );
                 if( x == computerX && y == computerY ) continue;
 
                 if( x == computerX && y == computerY - 1 )
@@ -113,5 +112,5 @@ public final class PocketComputerUpgradeRecipe extends CustomRecipe
         return SERIALIZER;
     }
 
-    public static final SimpleRecipeSerializer<PocketComputerUpgradeRecipe> SERIALIZER = new SimpleRecipeSerializer<>( PocketComputerUpgradeRecipe::new );
+    public static final SpecialRecipeSerializer<PocketComputerUpgradeRecipe> SERIALIZER = new SpecialRecipeSerializer<>( PocketComputerUpgradeRecipe::new );
 }

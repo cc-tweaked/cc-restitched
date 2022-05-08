@@ -8,9 +8,8 @@ package dan200.computercraft.shared.peripheral.speaker;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaTable;
 import dan200.computercraft.shared.util.PauseAwareTimer;
-import net.minecraft.util.Mth;
-
 import javax.annotation.Nonnull;
+import net.minecraft.util.math.MathHelper;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -87,7 +86,7 @@ class DfpwmState
         buffer.flip();
 
         pendingAudio = buffer;
-        pendingVolume = Mth.clamp( volume.orElse( (double) pendingVolume ).floatValue(), 0.0f, 3.0f );
+        pendingVolume = MathHelper.clamp( volume.orElse( (double) pendingVolume ).floatValue(), 0.0f, 3.0f );
         return true;
     }
 

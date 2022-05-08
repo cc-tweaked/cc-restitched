@@ -16,13 +16,12 @@ import dan200.computercraft.api.peripheral.PeripheralType;
 import dan200.computercraft.shared.peripheral.generic.data.ItemData;
 import dan200.computercraft.shared.util.InventoryUtil;
 import dan200.computercraft.shared.util.ItemStorage;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +44,9 @@ public class InventoryMethods implements GenericPeripheral
 
     @Nonnull
     @Override
-    public ResourceLocation id()
+    public Identifier id()
     {
-        return new ResourceLocation( ComputerCraft.MOD_ID, "inventory" );
+        return new Identifier( ComputerCraft.MOD_ID, "inventory" );
     }
 
     /**
@@ -57,7 +56,7 @@ public class InventoryMethods implements GenericPeripheral
      * @return The number of slots in this inventory.
      */
     @LuaFunction( mainThread = true )
-    public static int size( Container inventory )
+    public static int size( Inventory inventory )
     {
         return extractHandler( inventory ).size();
     }
@@ -87,7 +86,7 @@ public class InventoryMethods implements GenericPeripheral
      * }</pre>
      */
     @LuaFunction( mainThread = true )
-    public static Map<Integer, Map<String, ?>> list( Container inventory )
+    public static Map<Integer, Map<String, ?>> list( Inventory inventory )
     {
         ItemStorage itemStorage = extractHandler( inventory );
 
@@ -134,7 +133,7 @@ public class InventoryMethods implements GenericPeripheral
      */
     @Nullable
     @LuaFunction( mainThread = true )
-    public static Map<String, ?> getItemDetail( Container inventory, int slot ) throws LuaException
+    public static Map<String, ?> getItemDetail( Inventory inventory, int slot ) throws LuaException
     {
         ItemStorage itemStorage = extractHandler( inventory );
         assertBetween( slot, 1, itemStorage.size(), "Slot out of range (%s)" );
@@ -164,11 +163,11 @@ public class InventoryMethods implements GenericPeripheral
      * }</pre>
      */
     @LuaFunction( mainThread = true )
-    public static int getItemLimit( Container inventory, int slot ) throws LuaException
+    public static int getItemLimit( Inventory inventory, int slot ) throws LuaException
     {
         ItemStorage itemStorage = extractHandler( inventory );
         assertBetween( slot, 1, itemStorage.size(), "Slot out of range (%s)" );
-        return inventory.getMaxStackSize();
+        return inventory.getMaxCountPerStack();
     }
 
     /**
@@ -198,7 +197,7 @@ public class InventoryMethods implements GenericPeripheral
      */
     @LuaFunction( mainThread = true )
     public static int pushItems(
-        Container from, IComputerAccess computer,
+        Inventory from, IComputerAccess computer,
         String toName, int fromSlot, Optional<Integer> limit, Optional<Integer> toSlot
     ) throws LuaException
     {
@@ -247,7 +246,7 @@ public class InventoryMethods implements GenericPeripheral
      */
     @LuaFunction( mainThread = true )
     public static int pullItems(
-        Container to, IComputerAccess computer,
+        Inventory to, IComputerAccess computer,
         String fromName, int fromSlot, Optional<Integer> limit, Optional<Integer> toSlot
     ) throws LuaException
     {
@@ -278,10 +277,10 @@ public class InventoryMethods implements GenericPeripheral
 
         if( object instanceof BlockEntity blockEntity )
         {
-            Container inventory = InventoryUtil.getInventory( blockEntity );
+            Inventory inventory = InventoryUtil.getInventory( blockEntity );
             if( inventory != null ) return ItemStorage.wrap( inventory );
         }
-        else if( object instanceof Container container )
+        else if( object instanceof Inventory container )
         {
             return ItemStorage.wrap( container );
         }

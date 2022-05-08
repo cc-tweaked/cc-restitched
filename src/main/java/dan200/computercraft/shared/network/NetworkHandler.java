@@ -19,21 +19,20 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerChunkCache;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerChunkManager;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.WorldChunk;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -41,10 +40,10 @@ import java.util.function.Supplier;
 
 public final class NetworkHandler
 {
-    private static final Int2ObjectMap<BiConsumer<PacketContext, FriendlyByteBuf>> packetReaders = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectMap<BiConsumer<PacketContext, PacketByteBuf>> packetReaders = new Int2ObjectOpenHashMap<>();
     private static final Object2IntMap<Class<?>> packetIds = new Object2IntOpenHashMap<>();
 
-    private static final ResourceLocation ID = new ResourceLocation( ComputerCraft.MOD_ID, "main" );
+    private static final Identifier ID = new Identifier( ComputerCraft.MOD_ID, "main" );
 
     private NetworkHandler()
     {
@@ -79,7 +78,7 @@ public final class NetworkHandler
         registerMainThread( 21, TerminalDimensionsClientMessage.class, TerminalDimensionsClientMessage::new );
     }
 
-    private static void receive( MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buffer, PacketSender sender )
+    private static void receive( MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buffer, PacketSender sender )
     {
         int type = buffer.readByte();
         packetReaders.get( type ).accept( new PacketContext( player, server ), buffer );
@@ -91,39 +90,39 @@ public final class NetworkHandler
         return (Class<T>) supplier.get().getClass();
     }
 
-    private static FriendlyByteBuf encode( NetworkMessage message )
+    private static PacketByteBuf encode( NetworkMessage message )
     {
-        FriendlyByteBuf buf = new FriendlyByteBuf( Unpooled.buffer() );
+        PacketByteBuf buf = new PacketByteBuf( Unpooled.buffer() );
         buf.writeByte( packetIds.getInt( message.getClass() ) );
         message.toBytes( buf );
         return buf;
     }
 
-    public static void sendToPlayer( Player player, NetworkMessage packet )
+    public static void sendToPlayer( PlayerEntity player, NetworkMessage packet )
     {
-        ((ServerPlayer) player).connection.send( new ClientboundCustomPayloadPacket( ID, encode( packet ) ) );
+        ((ServerPlayerEntity) player).networkHandler.sendPacket( new CustomPayloadS2CPacket( ID, encode( packet ) ) );
     }
 
     public static void sendToAllPlayers( NetworkMessage packet )
     {
         MinecraftServer server = GameInstanceUtils.getServer();
-        server.getPlayerList().broadcastAll( new ClientboundCustomPayloadPacket( ID, encode( packet ) ) );
+        server.getPlayerManager().sendToAll( new CustomPayloadS2CPacket( ID, encode( packet ) ) );
     }
 
     public static void sendToServer( NetworkMessage packet )
     {
-        Minecraft.getInstance().player.connection.send( new ServerboundCustomPayloadPacket( ID, encode( packet ) ) );
+        MinecraftClient.getInstance().player.networkHandler.sendPacket( new CustomPayloadC2SPacket( ID, encode( packet ) ) );
     }
 
-    public static void sendToAllAround( NetworkMessage packet, Level world, Vec3 pos, double range )
+    public static void sendToAllAround( NetworkMessage packet, World world, Vec3d pos, double range )
     {
-        world.getServer().getPlayerList().broadcast( null, pos.x, pos.y, pos.z, range, world.dimension(), new ClientboundCustomPayloadPacket( ID, encode( packet ) ) );
+        world.getServer().getPlayerManager().sendToAround( null, pos.x, pos.y, pos.z, range, world.getRegistryKey(), new CustomPayloadS2CPacket( ID, encode( packet ) ) );
     }
 
-    public static void sendToAllTracking( NetworkMessage packet, LevelChunk chunk )
+    public static void sendToAllTracking( NetworkMessage packet, WorldChunk chunk )
     {
-        Consumer<ServerPlayer> sender = p -> p.connection.send( new ClientboundCustomPayloadPacket( ID, encode( packet ) ) );
-        ((ServerChunkCache) chunk.getLevel().getChunkSource()).chunkMap.getPlayers( chunk.getPos(), false ).forEach( sender );
+        Consumer<ServerPlayerEntity> sender = p -> p.networkHandler.sendPacket( new CustomPayloadS2CPacket( ID, encode( packet ) ) );
+        ((ServerChunkManager) chunk.getWorld().getChunkManager()).threadedAnvilChunkStorage.getPlayersWatchingChunk( chunk.getPos(), false ).forEach( sender );
     }
 
     /**
@@ -134,7 +133,7 @@ public final class NetworkHandler
      * @param id      The identifier for this packet type.
      * @param decoder The factory for this type of packet.
      */
-    private static <T extends NetworkMessage> void registerMainThread( int id, Class<T> type, Function<FriendlyByteBuf, T> decoder )
+    private static <T extends NetworkMessage> void registerMainThread( int id, Class<T> type, Function<PacketByteBuf, T> decoder )
     {
         packetIds.put( type, id );
         packetReaders.put( id, ( context, buf ) -> {
@@ -150,7 +149,7 @@ public final class NetworkHandler
             ClientPlayNetworking.registerGlobalReceiver( ID, ClientHandler::receive );
         }
 
-        static void receive( Minecraft client, ClientPacketListener handler, FriendlyByteBuf buffer, PacketSender responseSender )
+        static void receive( MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buffer, PacketSender responseSender )
         {
             int type = buffer.readByte();
             packetReaders.get( type ).accept( new PacketContext( client.player, client ), buffer );

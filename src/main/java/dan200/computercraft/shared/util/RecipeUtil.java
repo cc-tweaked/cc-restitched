@@ -10,14 +10,13 @@ import com.google.common.collect.Sets;
 import com.google.gson.*;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.TagParser;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.StringNbtReader;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.util.JsonHelper;
+import net.minecraft.util.collection.DefaultedList;
 
 // TODO: Replace some things with Forge??
 
@@ -31,9 +30,9 @@ public final class RecipeUtil
     {
         public final int width;
         public final int height;
-        public final NonNullList<Ingredient> ingredients;
+        public final DefaultedList<Ingredient> ingredients;
 
-        public ShapedTemplate( int width, int height, NonNullList<Ingredient> ingredients )
+        public ShapedTemplate( int width, int height, DefaultedList<Ingredient> ingredients )
         {
             this.width = width;
             this.height = height;
@@ -44,7 +43,7 @@ public final class RecipeUtil
     public static ShapedTemplate getTemplate( JsonObject json )
     {
         Map<Character, Ingredient> ingMap = Maps.newHashMap();
-        for( Map.Entry<String, JsonElement> entry : GsonHelper.getAsJsonObject( json, "key" ).entrySet() )
+        for( Map.Entry<String, JsonElement> entry : JsonHelper.getObject( json, "key" ).entrySet() )
         {
             if( entry.getKey().length() != 1 )
             {
@@ -60,7 +59,7 @@ public final class RecipeUtil
 
         ingMap.put( ' ', Ingredient.EMPTY );
 
-        JsonArray patternJ = GsonHelper.getAsJsonArray( json, "pattern" );
+        JsonArray patternJ = JsonHelper.getArray( json, "pattern" );
 
         if( patternJ.size() == 0 )
         {
@@ -70,7 +69,7 @@ public final class RecipeUtil
         String[] pattern = new String[patternJ.size()];
         for( int x = 0; x < pattern.length; x++ )
         {
-            String line = GsonHelper.convertToString( patternJ.get( x ), "pattern[" + x + "]" );
+            String line = JsonHelper.asString( patternJ.get( x ), "pattern[" + x + "]" );
             if( x > 0 && pattern[0].length() != line.length() )
             {
                 throw new JsonSyntaxException( "Invalid pattern: each row must  be the same width" );
@@ -80,7 +79,7 @@ public final class RecipeUtil
 
         int width = pattern[0].length();
         int height = pattern.length;
-        NonNullList<Ingredient> ingredients = NonNullList.withSize( width * height, Ingredient.EMPTY );
+        DefaultedList<Ingredient> ingredients = DefaultedList.ofSize( width * height, Ingredient.EMPTY );
 
         Set<Character> missingKeys = Sets.newHashSet( ingMap.keySet() );
         missingKeys.remove( ' ' );
@@ -110,7 +109,7 @@ public final class RecipeUtil
 
     public static ComputerFamily getFamily( JsonObject json, String name )
     {
-        String familyName = GsonHelper.getAsString( json, name );
+        String familyName = JsonHelper.getString( json, name );
         for( ComputerFamily family : ComputerFamily.values() )
         {
             if( family.name().equalsIgnoreCase( familyName ) ) return family;
@@ -126,7 +125,7 @@ public final class RecipeUtil
         {
             try
             {
-                itemStack.setTag( TagParser.parseTag( nbtElement.isJsonObject() ? GSON.toJson( nbtElement ) : GsonHelper.convertToString( nbtElement, "nbt" ) ) );
+                itemStack.setNbt( StringNbtReader.parse( nbtElement.isJsonObject() ? GSON.toJson( nbtElement ) : JsonHelper.asString( nbtElement, "nbt" ) ) );
             }
             catch( CommandSyntaxException e )
             {

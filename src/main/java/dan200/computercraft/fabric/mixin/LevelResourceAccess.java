@@ -5,15 +5,15 @@
  */
 package dan200.computercraft.fabric.mixin;
 
-import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.util.WorldSavePath;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin( LevelResource.class )
+@Mixin( WorldSavePath.class )
 public interface LevelResourceAccess
 {
     @Invoker( "<init>" )
-    static LevelResource create( String relativePath )
+    static WorldSavePath create( String relativePath )
     {
         throw new UnsupportedOperationException();
     }

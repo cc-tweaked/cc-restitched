@@ -9,17 +9,16 @@ import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.items.IComputerItem;
 import dan200.computercraft.shared.computer.recipe.ComputerFamilyRecipe;
 import dan200.computercraft.shared.turtle.items.TurtleItemFactory;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-
 import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DefaultedList;
 
 public final class TurtleRecipe extends ComputerFamilyRecipe
 {
-    private TurtleRecipe( ResourceLocation identifier, String group, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result, ComputerFamily family )
+    private TurtleRecipe( Identifier identifier, String group, int width, int height, DefaultedList<Ingredient> ingredients, ItemStack result, ComputerFamily family )
     {
         super( identifier, group, width, height, ingredients, result, family );
     }
@@ -41,10 +40,10 @@ public final class TurtleRecipe extends ComputerFamilyRecipe
         return TurtleItemFactory.create( computerID, label, -1, getFamily(), null, null, 0, null );
     }
 
-    public static final RecipeSerializer<TurtleRecipe> SERIALIZER = new Serializer<>()
+    public static final RecipeSerializer<TurtleRecipe> SERIALIZER = new dan200.computercraft.shared.computer.recipe.ComputerFamilyRecipe.Serializer<>()
     {
         @Override
-        protected TurtleRecipe create( ResourceLocation identifier, String group, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result, ComputerFamily family )
+        protected TurtleRecipe create( Identifier identifier, String group, int width, int height, DefaultedList<Ingredient> ingredients, ItemStack result, ComputerFamily family )
         {
             return new TurtleRecipe( identifier, group, width, height, ingredients, result, family );
         }

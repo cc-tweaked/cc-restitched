@@ -10,11 +10,10 @@ import dan200.computercraft.api.turtle.ITurtleAccess;
 import dan200.computercraft.api.turtle.event.TurtleRefuelEvent;
 import dan200.computercraft.shared.util.InventoryUtil;
 import dan200.computercraft.shared.util.WorldUtil;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.entity.FurnaceBlockEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 
 public final class FurnaceRefuelHandler implements TurtleRefuelEvent.Handler
 {
@@ -35,7 +34,7 @@ public final class FurnaceRefuelHandler implements TurtleRefuelEvent.Handler
         ItemStack stack = turtle.getItemHandler().take( slot, limit, ItemStack.EMPTY, false );
         int fuelToGive = fuelPerItem * stack.getCount();
         // Store the replacement item in the inventory
-        Item replacementStack = stack.getItem().getCraftingRemainingItem();
+        Item replacementStack = stack.getItem().getRecipeRemainder();
         if( replacementStack != null )
         {
             ItemStack remainder = InventoryUtil.storeItems( new ItemStack( replacementStack ), turtle.getItemHandler(), turtle.getSelectedSlot() );
@@ -50,7 +49,7 @@ public final class FurnaceRefuelHandler implements TurtleRefuelEvent.Handler
 
     private static int getFuelPerItem( @Nonnull ItemStack stack )
     {
-        int burnTime = FurnaceBlockEntity.getFuel().getOrDefault( stack.getItem(), 0 );
+        int burnTime = FurnaceBlockEntity.createFuelTimeMap().getOrDefault( stack.getItem(), 0 );
         return (burnTime * 5) / 100;
     }
 

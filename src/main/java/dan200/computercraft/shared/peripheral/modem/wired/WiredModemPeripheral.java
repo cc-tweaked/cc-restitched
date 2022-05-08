@@ -22,10 +22,9 @@ import dan200.computercraft.core.asm.PeripheralMethod;
 import dan200.computercraft.shared.peripheral.modem.ModemPeripheral;
 import dan200.computercraft.shared.peripheral.modem.ModemState;
 import dan200.computercraft.shared.util.LuaUtil;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.world.World;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -63,7 +62,7 @@ public abstract class WiredModemPeripheral extends ModemPeripheral implements IW
 
     @Nonnull
     @Override
-    public Level getLevel()
+    public World getLevel()
     {
         return modem.getLevel();
     }

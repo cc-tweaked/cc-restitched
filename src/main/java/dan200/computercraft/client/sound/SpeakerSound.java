@@ -5,19 +5,18 @@
  */
 package dan200.computercraft.client.sound;
 
-import com.mojang.blaze3d.audio.Channel;
 import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
-import net.minecraft.client.resources.sounds.AbstractSoundInstance;
-import net.minecraft.client.resources.sounds.TickableSoundInstance;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
-
 import java.util.concurrent.Executor;
+import net.minecraft.client.sound.AbstractSoundInstance;
+import net.minecraft.client.sound.Source;
+import net.minecraft.client.sound.TickableSoundInstance;
+import net.minecraft.entity.Entity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.Identifier;
 
 public class SpeakerSound extends AbstractSoundInstance implements TickableSoundInstance
 {
-    Channel channel;
+    Source channel;
     Executor executor;
     DfpwmStream stream;
 
@@ -25,14 +24,14 @@ public class SpeakerSound extends AbstractSoundInstance implements TickableSound
 
     private boolean stopped = false;
 
-    SpeakerSound( ResourceLocation sound, DfpwmStream stream, SpeakerPosition position, float volume, float pitch )
+    SpeakerSound( Identifier sound, DfpwmStream stream, SpeakerPosition position, float volume, float pitch )
     {
-        super( sound, SoundSource.RECORDS );
+        super( sound, SoundCategory.RECORDS );
         setPosition( position );
         this.stream = stream;
         this.volume = volume;
         this.pitch = pitch;
-        attenuation = Attenuation.LINEAR;
+        attenuationType = AttenuationType.LINEAR;
     }
 
     void setPosition( SpeakerPosition position )
@@ -44,7 +43,7 @@ public class SpeakerSound extends AbstractSoundInstance implements TickableSound
     }
 
     @Override
-    public boolean isStopped()
+    public boolean isDone()
     {
         return stopped;
     }
@@ -56,7 +55,7 @@ public class SpeakerSound extends AbstractSoundInstance implements TickableSound
         if( !entity.isAlive() )
         {
             stopped = true;
-            looping = false;
+            repeat = false;
         }
         else
         {

@@ -5,8 +5,6 @@
  */
 package dan200.computercraft.shared.network;
 
-import net.minecraft.world.entity.player.Player;
-
 import java.util.concurrent.Executor;
 
 public record PacketContext(Player player, Executor executor)

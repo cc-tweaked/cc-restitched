@@ -10,11 +10,11 @@ import com.google.gson.JsonParseException;
 import dan200.computercraft.fabric.util.ServerTranslationEntry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.locale.Language;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.StringDecomposer;
+import net.minecraft.client.font.TextVisitFactory;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.StringVisitable;
+import net.minecraft.text.Style;
+import net.minecraft.util.Language;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -106,27 +106,27 @@ public class MixinLanguage
         cir.setReturnValue( new Language()
         {
             @Override
-            public String getOrDefault( String key )
+            public String get( String key )
             {
                 return map.getOrDefault( key, key );
             }
 
             @Override
-            public boolean has( String key )
+            public boolean hasTranslation( String key )
             {
                 return map.containsKey( key );
             }
 
             @Override
-            public boolean isDefaultRightToLeft()
+            public boolean isRightToLeft()
             {
                 return false;
             }
 
             @Override
-            public FormattedCharSequence getVisualOrder( @NotNull FormattedText text )
+            public OrderedText reorder( @NotNull StringVisitable text )
             {
-                return visitor -> text.visit( ( style, string ) -> StringDecomposer.iterateFormatted( string, style, visitor ) ? Optional.empty() : FormattedText.STOP_ITERATION, Style.EMPTY ).isPresent();
+                return visitor -> text.visit( ( style, string ) -> TextVisitFactory.visitFormatted( string, style, visitor ) ? Optional.empty() : StringVisitable.TERMINATE_VISIT, Style.EMPTY ).isPresent();
             }
         } );
     }

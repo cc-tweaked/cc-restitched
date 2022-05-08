@@ -6,19 +6,18 @@
 package dan200.computercraft.shared.peripheral.monitor;
 
 import dan200.computercraft.ComputerCraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import java.util.Objects;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 /**
  * Expands a monitor into available space. This tries to expand in each direction until a fixed point is reached.
  */
 class Expander
 {
-    private final Level level;
+    private final World level;
     private final Direction down;
     private final Direction right;
 
@@ -32,7 +31,7 @@ class Expander
         width = origin.getWidth();
         height = origin.getHeight();
 
-        level = Objects.requireNonNull( origin.getLevel(), "level cannot be null" );
+        level = Objects.requireNonNull( origin.getWorld(), "level cannot be null" );
         down = origin.getDown();
         right = origin.getRight();
     }
@@ -70,11 +69,11 @@ class Expander
      */
     private boolean expandIn( boolean useXAxis, boolean isPositive )
     {
-        BlockPos pos = origin.getBlockPos();
+        BlockPos pos = origin.getPos();
         int height = this.height, width = this.width;
 
         int otherOffset = isPositive ? (useXAxis ? width : height) : -1;
-        BlockPos otherPos = useXAxis ? pos.relative( right, otherOffset ) : pos.relative( down, otherOffset );
+        BlockPos otherPos = useXAxis ? pos.offset( right, otherOffset ) : pos.offset( down, otherOffset );
         BlockEntity other = level.getBlockEntity( otherPos );
         if( !(other instanceof TileMonitor otherMonitor) || !origin.isCompatible( otherMonitor ) ) return false;
 

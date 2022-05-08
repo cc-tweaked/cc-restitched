@@ -8,25 +8,24 @@ package dan200.computercraft.shared.util;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import net.minecraft.core.NonNullList;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.item.crafting.ShapelessRecipe;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.ShapedRecipe;
+import net.minecraft.recipe.ShapelessRecipe;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
+import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.world.World;
 
 public final class ImpostorShapelessRecipe extends ShapelessRecipe
 {
     private final String group;
 
-    private ImpostorShapelessRecipe( @Nonnull ResourceLocation id, @Nonnull String group, @Nonnull ItemStack result, NonNullList<Ingredient> ingredients )
+    private ImpostorShapelessRecipe( @Nonnull Identifier id, @Nonnull String group, @Nonnull ItemStack result, DefaultedList<Ingredient> ingredients )
     {
         super( id, group, result, ingredients );
         this.group = group;
@@ -40,14 +39,14 @@ public final class ImpostorShapelessRecipe extends ShapelessRecipe
     }
 
     @Override
-    public boolean matches( @Nonnull CraftingContainer inv, @Nonnull Level world )
+    public boolean matches( @Nonnull CraftingInventory inv, @Nonnull World world )
     {
         return false;
     }
 
     @Nonnull
     @Override
-    public ItemStack assemble( @Nonnull CraftingContainer inventory )
+    public ItemStack craft( @Nonnull CraftingInventory inventory )
     {
         return ItemStack.EMPTY;
     }
@@ -63,25 +62,25 @@ public final class ImpostorShapelessRecipe extends ShapelessRecipe
     {
         @Nonnull
         @Override
-        public ImpostorShapelessRecipe fromJson( @Nonnull ResourceLocation id, @Nonnull JsonObject json )
+        public ImpostorShapelessRecipe read( @Nonnull Identifier id, @Nonnull JsonObject json )
         {
-            String s = GsonHelper.getAsString( json, "group", "" );
-            NonNullList<Ingredient> ingredients = readIngredients( GsonHelper.getAsJsonArray( json, "ingredients" ) );
+            String s = JsonHelper.getString( json, "group", "" );
+            DefaultedList<Ingredient> ingredients = readIngredients( JsonHelper.getArray( json, "ingredients" ) );
 
             if( ingredients.isEmpty() ) throw new JsonParseException( "No ingredients for shapeless recipe" );
             if( ingredients.size() > 9 )
             {
                 throw new JsonParseException( "Too many ingredients for shapeless recipe the max is 9" );
             }
-            JsonObject resultObject = GsonHelper.getAsJsonObject( json, "result" );
-            ItemStack itemStack = ShapedRecipe.itemStackFromJson( resultObject );
+            JsonObject resultObject = JsonHelper.getObject( json, "result" );
+            ItemStack itemStack = ShapedRecipe.outputFromJson( resultObject );
             RecipeUtil.setNbt( itemStack, resultObject );
             return new ImpostorShapelessRecipe( id, s, itemStack, ingredients );
         }
 
-        private NonNullList<Ingredient> readIngredients( JsonArray arrays )
+        private DefaultedList<Ingredient> readIngredients( JsonArray arrays )
         {
-            NonNullList<Ingredient> items = NonNullList.create();
+            DefaultedList<Ingredient> items = DefaultedList.of();
             for( int i = 0; i < arrays.size(); ++i )
             {
                 Ingredient ingredient = Ingredient.fromJson( arrays.get( i ) );
@@ -92,26 +91,26 @@ public final class ImpostorShapelessRecipe extends ShapelessRecipe
         }
 
         @Override
-        public ImpostorShapelessRecipe fromNetwork( @Nonnull ResourceLocation id, FriendlyByteBuf buffer )
+        public ImpostorShapelessRecipe read( @Nonnull Identifier id, PacketByteBuf buffer )
         {
-            String s = buffer.readUtf( 32767 );
+            String s = buffer.readString( 32767 );
             int i = buffer.readVarInt();
-            NonNullList<Ingredient> items = NonNullList.withSize( i, Ingredient.EMPTY );
+            DefaultedList<Ingredient> items = DefaultedList.ofSize( i, Ingredient.EMPTY );
 
-            for( int j = 0; j < items.size(); j++ ) items.set( j, Ingredient.fromNetwork( buffer ) );
-            ItemStack result = buffer.readItem();
+            for( int j = 0; j < items.size(); j++ ) items.set( j, Ingredient.fromPacket( buffer ) );
+            ItemStack result = buffer.readItemStack();
 
             return new ImpostorShapelessRecipe( id, s, result, items );
         }
 
         @Override
-        public void toNetwork( @Nonnull FriendlyByteBuf buffer, @Nonnull ImpostorShapelessRecipe recipe )
+        public void toNetwork( @Nonnull PacketByteBuf buffer, @Nonnull ImpostorShapelessRecipe recipe )
         {
-            buffer.writeUtf( recipe.getGroup() );
+            buffer.writeString( recipe.getGroup() );
             buffer.writeVarInt( recipe.getIngredients().size() );
 
-            for( Ingredient ingredient : recipe.getIngredients() ) ingredient.toNetwork( buffer );
-            buffer.writeItem( recipe.getResultItem() );
+            for( Ingredient ingredient : recipe.getIngredients() ) ingredient.write( buffer );
+            buffer.writeItemStack( recipe.getOutput() );
         }
     };
 }

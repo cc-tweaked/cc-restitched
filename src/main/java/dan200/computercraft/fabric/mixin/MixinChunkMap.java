@@ -6,11 +6,11 @@
 package dan200.computercraft.fabric.mixin;
 
 import dan200.computercraft.fabric.events.CustomServerEvents;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.world.chunk.WorldChunk;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,12 +19,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin( ChunkMap.class )
+@Mixin( ThreadedAnvilChunkStorage.class )
 public class MixinChunkMap
 {
     @Final
     @Shadow
-    ServerLevel level;
+    ServerWorld level;
 
     /*
      * This mixin mimics the logic of Forge's ChunkWatchEvent.Watch but I don't believe it behaves as expected. Instead
@@ -44,7 +44,7 @@ public class MixinChunkMap
 
     // This version behaves as expected in my testing.
     @Inject( method = "playerLoadedChunk", at = @At( value = "HEAD" ) )
-    private void playerLoadedChunk( ServerPlayer serverPlayer, MutableObject<ClientboundLevelChunkWithLightPacket> mutableObject, LevelChunk levelChunk, CallbackInfo ci )
+    private void playerLoadedChunk( ServerPlayerEntity serverPlayer, MutableObject<ChunkDataS2CPacket> mutableObject, WorldChunk levelChunk, CallbackInfo ci )
     {
         CustomServerEvents.SERVER_PLAYER_LOADED_CHUNK_EVENT.invoker().onServerPlayerLoadedChunk( serverPlayer, levelChunk.getPos() );
     }

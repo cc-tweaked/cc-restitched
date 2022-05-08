@@ -9,10 +9,9 @@ import dan200.computercraft.client.ClientTableFormatter;
 import dan200.computercraft.shared.command.text.TableBuilder;
 import dan200.computercraft.shared.network.NetworkMessage;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.text.Text;
 
 public class ChatTableClientMessage implements NetworkMessage
 {
@@ -24,15 +23,15 @@ public class ChatTableClientMessage implements NetworkMessage
         this.table = table;
     }
 
-    public ChatTableClientMessage( @Nonnull FriendlyByteBuf buf )
+    public ChatTableClientMessage( @Nonnull PacketByteBuf buf )
     {
         int id = buf.readVarInt();
         int columns = buf.readVarInt();
         TableBuilder table;
         if( buf.readBoolean() )
         {
-            Component[] headers = new Component[columns];
-            for( int i = 0; i < columns; i++ ) headers[i] = buf.readComponent();
+            Text[] headers = new Text[columns];
+            for( int i = 0; i < columns; i++ ) headers[i] = buf.readText();
             table = new TableBuilder( id, headers );
         }
         else
@@ -43,8 +42,8 @@ public class ChatTableClientMessage implements NetworkMessage
         int rows = buf.readVarInt();
         for( int i = 0; i < rows; i++ )
         {
-            Component[] row = new Component[columns];
-            for( int j = 0; j < columns; j++ ) row[j] = buf.readComponent();
+            Text[] row = new Text[columns];
+            for( int j = 0; j < columns; j++ ) row[j] = buf.readText();
             table.row( row );
         }
 
@@ -53,20 +52,20 @@ public class ChatTableClientMessage implements NetworkMessage
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
         buf.writeVarInt( table.getId() );
         buf.writeVarInt( table.getColumns() );
         buf.writeBoolean( table.getHeaders() != null );
         if( table.getHeaders() != null )
         {
-            for( Component header : table.getHeaders() ) buf.writeComponent( header );
+            for( Text header : table.getHeaders() ) buf.writeText( header );
         }
 
         buf.writeVarInt( table.getRows().size() );
-        for( Component[] row : table.getRows() )
+        for( Text[] row : table.getRows() )
         {
-            for( Component column : row ) buf.writeComponent( column );
+            for( Text column : row ) buf.writeText( column );
         }
 
         buf.writeVarInt( table.getAdditional() );

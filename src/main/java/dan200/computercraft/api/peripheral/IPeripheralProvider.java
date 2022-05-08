@@ -5,12 +5,11 @@
  */
 package dan200.computercraft.api.peripheral;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 /**
  * This interface is used to create peripheral implementations for blocks.
@@ -30,5 +29,5 @@ public interface IPeripheralProvider
      * @see dan200.computercraft.api.ComputerCraftAPI#registerPeripheralProvider(IPeripheralProvider)
      */
     @Nullable
-    IPeripheral getPeripheral( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull Direction side );
+    IPeripheral getPeripheral( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull Direction side );
 }

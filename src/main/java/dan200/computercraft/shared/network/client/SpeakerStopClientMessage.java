@@ -10,8 +10,7 @@ import dan200.computercraft.shared.network.NetworkMessage;
 import dan200.computercraft.shared.network.PacketContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.network.FriendlyByteBuf;
-
+import net.minecraft.network.PacketByteBuf;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
@@ -31,15 +30,15 @@ public class SpeakerStopClientMessage implements NetworkMessage
         this.source = source;
     }
 
-    public SpeakerStopClientMessage( FriendlyByteBuf buf )
+    public SpeakerStopClientMessage( PacketByteBuf buf )
     {
-        source = buf.readUUID();
+        source = buf.readUuid();
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
-        buf.writeUUID( source );
+        buf.writeUuid( source );
     }
 
     @Override

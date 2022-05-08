@@ -24,21 +24,25 @@ import dan200.computercraft.shared.util.ImpostorShapelessRecipe;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
-import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.data.recipes.FinishedRecipe;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
-import net.minecraft.data.recipes.ShapelessRecipeBuilder;
-import net.minecraft.data.recipes.SpecialRecipeBuilder;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.advancement.criterion.InventoryChangedCriterion;
+import net.minecraft.block.Blocks;
+import net.minecraft.data.server.recipe.ComplexRecipeJsonFactory;
+import net.minecraft.data.server.recipe.RecipeJsonProvider;
+import net.minecraft.data.server.recipe.ShapedRecipeJsonFactory;
+import net.minecraft.data.server.recipe.ShapelessRecipeJsonFactory;
+import net.minecraft.item.DyeItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemConvertible;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.predicate.item.ItemPredicate;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
-import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Blocks;
-
 import javax.annotation.Nonnull;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -54,7 +58,7 @@ class RecipeGenerator extends FabricRecipeProvider
     }
 
     @Override
-    protected void generateRecipes( @Nonnull Consumer<FinishedRecipe> add )
+    protected void generateRecipes( @Nonnull Consumer<RecipeJsonProvider> add )
     {
         basicRecipes( add );
         diskColours( add );
@@ -73,21 +77,21 @@ class RecipeGenerator extends FabricRecipeProvider
      *
      * @param add The callback to add recipes.
      */
-    private void diskColours( @Nonnull Consumer<FinishedRecipe> add )
+    private void diskColours( @Nonnull Consumer<RecipeJsonProvider> add )
     {
         for( Colour colour : Colour.VALUES )
         {
-            ShapelessRecipeBuilder
-                .shapeless( Registry.ModItems.DISK )
-                .requires( ConventionalItemTags.REDSTONE_DUSTS )
-                .requires( Items.PAPER )
-                .requires( DyeItem.byColor( ofColour( colour ) ) )
+            ShapelessRecipeJsonFactory
+                .create( Registry.ModItems.DISK )
+                .input( ConventionalItemTags.REDSTONE_DUSTS )
+                .input( Items.PAPER )
+                .input( DyeItem.byColor( ofColour( colour ) ) )
                 .group( "computercraft:disk" )
-                .unlockedBy( "has_drive", inventoryChange( Registry.ModBlocks.DISK_DRIVE ) )
-                .save( RecipeWrapper.wrap(
+                .criterion( "has_drive", inventoryChange( Registry.ModBlocks.DISK_DRIVE ) )
+                .offerTo( RecipeWrapper.wrap(
                     ImpostorShapelessRecipe.SERIALIZER, add,
                     x -> x.putInt( IColouredItem.NBT_COLOUR, colour.getHex() )
-                ), new ResourceLocation( ComputerCraft.MOD_ID, "disk_" + (colour.ordinal() + 1) ) );
+                ), new Identifier( ComputerCraft.MOD_ID, "disk_" + (colour.ordinal() + 1) ) );
         }
     }
 
@@ -96,7 +100,7 @@ class RecipeGenerator extends FabricRecipeProvider
      *
      * @param add The callback to add recipes.
      */
-    private void turtleUpgrades( @Nonnull Consumer<FinishedRecipe> add )
+    private void turtleUpgrades( @Nonnull Consumer<RecipeJsonProvider> add )
     {
         for( ComputerFamily family : ComputerFamily.values() )
         {
@@ -107,17 +111,17 @@ class RecipeGenerator extends FabricRecipeProvider
 
             TurtleUpgrades.getVanillaUpgrades().forEach( upgrade -> {
                 ItemStack result = TurtleItemFactory.create( -1, null, -1, family, null, upgrade, -1, null );
-                ShapedRecipeBuilder
-                    .shaped( result.getItem() )
+                ShapedRecipeJsonFactory
+                    .create( result.getItem() )
                     .group( String.format( "%s:turtle_%s", ComputerCraft.MOD_ID, nameId ) )
                     .pattern( "#T" )
-                    .define( 'T', base.getItem() )
-                    .define( '#', upgrade.getCraftingItem().getItem() )
-                    .unlockedBy( "has_items",
+                    .input( 'T', base.getItem() )
+                    .input( '#', upgrade.getCraftingItem().getItem() )
+                    .criterion( "has_items",
                         inventoryChange( base.getItem(), upgrade.getCraftingItem().getItem() ) )
-                    .save(
-                        RecipeWrapper.wrap( ImpostorRecipe.SERIALIZER, add, result.getTag() ),
-                        new ResourceLocation( ComputerCraft.MOD_ID, String.format( "turtle_%s/%s/%s",
+                    .offerTo(
+                        RecipeWrapper.wrap( ImpostorRecipe.SERIALIZER, add, result.getNbt() ),
+                        new Identifier( ComputerCraft.MOD_ID, String.format( "turtle_%s/%s/%s",
                             nameId, upgrade.getUpgradeID().getNamespace(), upgrade.getUpgradeID().getPath()
                         ) )
                     );
@@ -130,7 +134,7 @@ class RecipeGenerator extends FabricRecipeProvider
      *
      * @param add The callback to add recipes.
      */
-    private void pocketUpgrades( @Nonnull Consumer<FinishedRecipe> add )
+    private void pocketUpgrades( @Nonnull Consumer<RecipeJsonProvider> add )
     {
         for( ComputerFamily family : ComputerFamily.values() )
         {
@@ -141,18 +145,18 @@ class RecipeGenerator extends FabricRecipeProvider
 
             PocketUpgrades.getVanillaUpgrades().forEach( upgrade -> {
                 ItemStack result = PocketComputerItemFactory.create( -1, null, -1, family, upgrade );
-                ShapedRecipeBuilder
-                    .shaped( result.getItem() )
+                ShapedRecipeJsonFactory
+                    .create( result.getItem() )
                     .group( String.format( "%s:pocket_%s", ComputerCraft.MOD_ID, nameId ) )
                     .pattern( "#" )
                     .pattern( "P" )
-                    .define( 'P', base.getItem() )
-                    .define( '#', upgrade.getCraftingItem().getItem() )
-                    .unlockedBy( "has_items",
+                    .input( 'P', base.getItem() )
+                    .input( '#', upgrade.getCraftingItem().getItem() )
+                    .criterion( "has_items",
                         inventoryChange( base.getItem(), upgrade.getCraftingItem().getItem() ) )
-                    .save(
-                        RecipeWrapper.wrap( ImpostorRecipe.SERIALIZER, add, result.getTag() ),
-                        new ResourceLocation( ComputerCraft.MOD_ID, String.format( "pocket_%s/%s/%s",
+                    .offerTo(
+                        RecipeWrapper.wrap( ImpostorRecipe.SERIALIZER, add, result.getNbt() ),
+                        new Identifier( ComputerCraft.MOD_ID, String.format( "pocket_%s/%s/%s",
                             nameId, upgrade.getUpgradeID().getNamespace(), upgrade.getUpgradeID().getPath()
                         ) )
                     );
@@ -160,205 +164,205 @@ class RecipeGenerator extends FabricRecipeProvider
         }
     }
 
-    private void basicRecipes( @Nonnull Consumer<FinishedRecipe> add )
+    private void basicRecipes( @Nonnull Consumer<RecipeJsonProvider> add )
     {
-        ShapedRecipeBuilder
-            .shaped( Registry.ModItems.CABLE, 6 )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModItems.CABLE, 6 )
             .pattern( " # " )
             .pattern( "#R#" )
             .pattern( " # " )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .unlockedBy( "has_modem", inventoryChange( WIRED_MODEM ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_NORMAL )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.COMPUTER_NORMAL )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_redstone", inventoryChange( ConventionalItemTags.REDSTONE_DUSTS ) )
-            .save( add );
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_redstone", inventoryChange( ConventionalItemTags.REDSTONE_DUSTS ) )
+            .offerTo( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_ADVANCED )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.COMPUTER_ADVANCED )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
-            .define( '#', ConventionalItemTags.GOLD_INGOTS )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_components", inventoryChange( Items.REDSTONE, Items.GOLD_INGOT ) )
-            .save( add );
+            .input( '#', ConventionalItemTags.GOLD_INGOTS )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_components", inventoryChange( Items.REDSTONE, Items.GOLD_INGOT ) )
+            .offerTo( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_COMMAND )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.COMPUTER_COMMAND )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
-            .define( '#', ConventionalItemTags.GOLD_INGOTS )
-            .define( 'R', Blocks.COMMAND_BLOCK )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_components", inventoryChange( Blocks.COMMAND_BLOCK ) )
-            .save( add );
+            .input( '#', ConventionalItemTags.GOLD_INGOTS )
+            .input( 'R', Blocks.COMMAND_BLOCK )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_components", inventoryChange( Blocks.COMMAND_BLOCK ) )
+            .offerTo( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.DISK_DRIVE )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.DISK_DRIVE )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#R#" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.MONITOR_NORMAL )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.MONITOR_NORMAL )
             .pattern( "###" )
             .pattern( "#G#" )
             .pattern( "###" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.MONITOR_ADVANCED, 4 )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.MONITOR_ADVANCED, 4 )
             .pattern( "###" )
             .pattern( "#G#" )
             .pattern( "###" )
-            .define( '#', ConventionalItemTags.GOLD_INGOTS )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ConventionalItemTags.GOLD_INGOTS )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModItems.POCKET_COMPUTER_NORMAL )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModItems.POCKET_COMPUTER_NORMAL )
             .pattern( "###" )
             .pattern( "#A#" )
             .pattern( "#G#" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'A', Items.GOLDEN_APPLE )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'A', Items.GOLDEN_APPLE )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .unlockedBy( "has_apple", inventoryChange( Items.GOLDEN_APPLE ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModItems.POCKET_COMPUTER_ADVANCED )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModItems.POCKET_COMPUTER_ADVANCED )
             .pattern( "###" )
             .pattern( "#A#" )
             .pattern( "#G#" )
-            .define( '#', ConventionalItemTags.GOLD_INGOTS )
-            .define( 'A', Items.GOLDEN_APPLE )
-            .define( 'G', ConventionalItemTags.GLASS_PANES )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ConventionalItemTags.GOLD_INGOTS )
+            .input( 'A', Items.GOLDEN_APPLE )
+            .input( 'G', ConventionalItemTags.GLASS_PANES )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .unlockedBy( "has_apple", inventoryChange( Items.GOLDEN_APPLE ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.PRINTER )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.PRINTER )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#D#" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .define( 'D', ConventionalItemTags.DYES )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .input( 'D', ConventionalItemTags.DYES )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.SPEAKER )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.SPEAKER )
             .pattern( "###" )
             .pattern( "#N#" )
             .pattern( "#R#" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'N', Blocks.NOTE_BLOCK )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'N', Blocks.NOTE_BLOCK )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModItems.WIRED_MODEM )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModItems.WIRED_MODEM )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "###" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'R', ConventionalItemTags.REDSTONE_DUSTS )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'R', ConventionalItemTags.REDSTONE_DUSTS )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .unlockedBy( "has_cable", inventoryChange( Registry.ModItems.CABLE ) )
             .save( add );
 
-        ShapelessRecipeBuilder
-            .shapeless( Registry.ModBlocks.WIRED_MODEM_FULL )
-            .requires( Registry.ModItems.WIRED_MODEM )
-            .unlockedBy( "has_modem", inventoryChange( WIRED_MODEM ) )
-            .save( add, new ResourceLocation( ComputerCraft.MOD_ID, "wired_modem_full_from" ) );
-        ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.WIRED_MODEM )
-            .requires( Registry.ModBlocks.WIRED_MODEM_FULL )
-            .unlockedBy( "has_modem", inventoryChange( WIRED_MODEM ) )
-            .save( add, new ResourceLocation( ComputerCraft.MOD_ID, "wired_modem_full_to" ) );
+        ShapelessRecipeJsonFactory
+            .create( Registry.ModBlocks.WIRED_MODEM_FULL )
+            .input( Registry.ModItems.WIRED_MODEM )
+            .criterion( "has_modem", inventoryChange( WIRED_MODEM ) )
+            .save( add, new Identifier( ComputerCraft.MOD_ID, "wired_modem_full_from" ) );
+        ShapelessRecipeJsonFactory
+            .create( Registry.ModItems.WIRED_MODEM )
+            .input( Registry.ModBlocks.WIRED_MODEM_FULL )
+            .criterion( "has_modem", inventoryChange( WIRED_MODEM ) )
+            .save( add, new Identifier( ComputerCraft.MOD_ID, "wired_modem_full_to" ) );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.WIRELESS_MODEM_NORMAL )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.WIRELESS_MODEM_NORMAL )
             .pattern( "###" )
             .pattern( "#E#" )
             .pattern( "###" )
-            .define( '#', ExtraConventionalItemTags.STONES )
-            .define( 'E', ExtraConventionalItemTags.ENDER_PEARLS )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ExtraConventionalItemTags.STONES )
+            .input( 'E', ExtraConventionalItemTags.ENDER_PEARLS )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .save( add );
 
-        ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.WIRELESS_MODEM_ADVANCED )
+        ShapedRecipeJsonFactory
+            .create( Registry.ModBlocks.WIRELESS_MODEM_ADVANCED )
             .pattern( "###" )
             .pattern( "#E#" )
             .pattern( "###" )
-            .define( '#', ConventionalItemTags.GOLD_INGOTS )
-            .define( 'E', Items.ENDER_EYE )
-            .unlockedBy( "has_computer", inventoryChange( COMPUTER ) )
+            .input( '#', ConventionalItemTags.GOLD_INGOTS )
+            .input( 'E', Items.ENDER_EYE )
+            .criterion( "has_computer", inventoryChange( COMPUTER ) )
             .unlockedBy( "has_wireless", inventoryChange( Registry.ModBlocks.WIRELESS_MODEM_NORMAL ) )
             .save( add );
 
-        ShapelessRecipeBuilder
-            .shapeless( Items.PLAYER_HEAD )
-            .requires( ExtraConventionalItemTags.SKULLS )
-            .requires( Registry.ModItems.MONITOR_NORMAL )
-            .unlockedBy( "has_monitor", inventoryChange( Registry.ModItems.MONITOR_NORMAL ) )
-            .save(
-                RecipeWrapper.wrap( RecipeSerializer.SHAPELESS_RECIPE, add, playerHead( "Cloudhunter", "6d074736-b1e9-4378-a99b-bd8777821c9c" ) ),
-                new ResourceLocation( ComputerCraft.MOD_ID, "skull_cloudy" )
+        ShapelessRecipeJsonFactory
+            .create( Items.PLAYER_HEAD )
+            .input( ExtraConventionalItemTags.SKULLS )
+            .input( Registry.ModItems.MONITOR_NORMAL )
+            .criterion( "has_monitor", inventoryChange( Registry.ModItems.MONITOR_NORMAL ) )
+            .offerTo(
+                RecipeWrapper.wrap( RecipeSerializer.SHAPELESS, add, playerHead( "Cloudhunter", "6d074736-b1e9-4378-a99b-bd8777821c9c" ) ),
+                new Identifier( ComputerCraft.MOD_ID, "skull_cloudy" )
             );
 
-        ShapelessRecipeBuilder
-            .shapeless( Items.PLAYER_HEAD )
-            .requires( ExtraConventionalItemTags.SKULLS )
-            .requires( Registry.ModItems.COMPUTER_NORMAL )
-            .unlockedBy( "has_computer", inventoryChange( Registry.ModItems.COMPUTER_NORMAL ) )
-            .save(
-                RecipeWrapper.wrap( RecipeSerializer.SHAPELESS_RECIPE, add, playerHead( "dan200", "f3c8d69b-0776-4512-8434-d1b2165909eb" ) ),
-                new ResourceLocation( ComputerCraft.MOD_ID, "skull_dan200" )
+        ShapelessRecipeJsonFactory
+            .create( Items.PLAYER_HEAD )
+            .input( ExtraConventionalItemTags.SKULLS )
+            .input( Registry.ModItems.COMPUTER_NORMAL )
+            .criterion( "has_computer", inventoryChange( Registry.ModItems.COMPUTER_NORMAL ) )
+            .offerTo(
+                RecipeWrapper.wrap( RecipeSerializer.SHAPELESS, add, playerHead( "dan200", "f3c8d69b-0776-4512-8434-d1b2165909eb" ) ),
+                new Identifier( ComputerCraft.MOD_ID, "skull_dan200" )
             );
 
-        ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.PRINTED_PAGES )
-            .requires( Registry.ModItems.PRINTED_PAGE, 2 )
-            .requires( Items.STRING )
-            .unlockedBy( "has_printer", inventoryChange( Registry.ModBlocks.PRINTER ) )
-            .save( RecipeWrapper.wrap( ImpostorShapelessRecipe.SERIALIZER, add ) );
+        ShapelessRecipeJsonFactory
+            .create( Registry.ModItems.PRINTED_PAGES )
+            .input( Registry.ModItems.PRINTED_PAGE, 2 )
+            .input( Items.STRING )
+            .criterion( "has_printer", inventoryChange( Registry.ModBlocks.PRINTER ) )
+            .offerTo( RecipeWrapper.wrap( ImpostorShapelessRecipe.SERIALIZER, add ) );
 
-        ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.PRINTED_BOOK )
-            .requires( Items.LEATHER )
-            .requires( Registry.ModItems.PRINTED_PAGE, 1 )
-            .requires( Items.STRING )
-            .unlockedBy( "has_printer", inventoryChange( Registry.ModBlocks.PRINTER ) )
-            .save( RecipeWrapper.wrap( ImpostorShapelessRecipe.SERIALIZER, add ) );
+        ShapelessRecipeJsonFactory
+            .create( Registry.ModItems.PRINTED_BOOK )
+            .input( Items.LEATHER )
+            .input( Registry.ModItems.PRINTED_PAGE, 1 )
+            .input( Items.STRING )
+            .criterion( "has_printer", inventoryChange( Registry.ModBlocks.PRINTER ) )
+            .offerTo( RecipeWrapper.wrap( ImpostorShapelessRecipe.SERIALIZER, add ) );
     }
 
     private static DyeColor ofColour( Colour colour )
@@ -366,30 +370,30 @@ class RecipeGenerator extends FabricRecipeProvider
         return DyeColor.byId( 15 - colour.ordinal() );
     }
 
-    private static InventoryChangeTrigger.TriggerInstance inventoryChange( TagKey<Item> stack )
+    private static InventoryChangedCriterion.Conditions inventoryChange( TagKey<Item> stack )
     {
-        return InventoryChangeTrigger.TriggerInstance.hasItems( ItemPredicate.Builder.item().of( stack ).build() );
+        return InventoryChangedCriterion.Conditions.items( ItemPredicate.Builder.create().tag( stack ).build() );
     }
 
-    private static InventoryChangeTrigger.TriggerInstance inventoryChange( ItemLike... stack )
+    private static InventoryChangedCriterion.Conditions inventoryChange( ItemConvertible... stack )
     {
-        return InventoryChangeTrigger.TriggerInstance.hasItems( stack );
+        return InventoryChangedCriterion.Conditions.items( stack );
     }
 
-    private static CompoundTag playerHead( String name, String uuid )
+    private static NbtCompound playerHead( String name, String uuid )
     {
-        CompoundTag owner = new CompoundTag();
+        NbtCompound owner = new NbtCompound();
         owner.putString( "Name", name );
         owner.putString( "Id", uuid );
 
-        CompoundTag tag = new CompoundTag();
+        NbtCompound tag = new NbtCompound();
         tag.put( "SkullOwner", owner );
         return tag;
     }
 
-    private static void addSpecial( Consumer<FinishedRecipe> add, SimpleRecipeSerializer<?> special )
+    private static void addSpecial( Consumer<RecipeJsonProvider> add, SpecialRecipeSerializer<?> special )
     {
-        var key = net.minecraft.core.Registry.RECIPE_SERIALIZER.getKey( special );
-        SpecialRecipeBuilder.special( special ).save( add, key.toString() );
+        var key = net.minecraft.util.registry.Registry.RECIPE_SERIALIZER.getId( special );
+        ComplexRecipeJsonFactory.create( special ).offerTo( add, key.toString() );
     }
 }

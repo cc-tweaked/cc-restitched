@@ -7,55 +7,54 @@ package dan200.computercraft.shared.peripheral.monitor;
 
 import dan200.computercraft.api.turtle.FakePlayer;
 import dan200.computercraft.shared.common.BlockGeneric;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.function.Supplier;
 
 public class BlockMonitor extends BlockGeneric
 {
-    public static final DirectionProperty ORIENTATION = DirectionProperty.create( "orientation",
+    public static final DirectionProperty ORIENTATION = DirectionProperty.of( "orientation",
         Direction.UP, Direction.DOWN, Direction.NORTH );
 
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
 
-    public static final EnumProperty<MonitorEdgeState> STATE = EnumProperty.create( "state", MonitorEdgeState.class );
+    public static final EnumProperty<MonitorEdgeState> STATE = EnumProperty.of( "state", MonitorEdgeState.class );
 
-    public BlockMonitor( Properties settings, Supplier<BlockEntityType<? extends TileMonitor>> type )
+    public BlockMonitor( Settings settings, Supplier<BlockEntityType<? extends TileMonitor>> type )
     {
         super( settings, type );
         // TODO: Test underwater - do we need isSolid at all?
-        registerDefaultState( getStateDefinition().any()
-            .setValue( ORIENTATION, Direction.NORTH )
-            .setValue( FACING, Direction.NORTH )
-            .setValue( STATE, MonitorEdgeState.NONE ) );
+        setDefaultState( getStateManager().getDefaultState()
+            .with( ORIENTATION, Direction.NORTH )
+            .with( FACING, Direction.NORTH )
+            .with( STATE, MonitorEdgeState.NONE ) );
     }
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> builder )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> builder )
     {
         builder.add( ORIENTATION, FACING, STATE );
     }
 
     @Override
     @Nullable
-    public BlockState getStateForPlacement( BlockPlaceContext context )
+    public BlockState getPlacementState( ItemPlacementContext context )
     {
-        float pitch = context.getPlayer() == null ? 0 : context.getPlayer().getXRot();
+        float pitch = context.getPlayer() == null ? 0 : context.getPlayer().getPitch();
         Direction orientation;
         if( pitch > 66.5f )
         {
@@ -72,18 +71,18 @@ public class BlockMonitor extends BlockGeneric
             orientation = Direction.NORTH;
         }
 
-        return defaultBlockState()
-            .setValue( FACING, context.getHorizontalDirection().getOpposite() )
-            .setValue( ORIENTATION, orientation );
+        return getDefaultState()
+            .with( FACING, context.getPlayerFacing().getOpposite() )
+            .with( ORIENTATION, orientation );
     }
 
     @Override
-    public void setPlacedBy( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull BlockState blockState, @Nullable LivingEntity livingEntity, @Nonnull ItemStack itemStack )
+    public void onPlaced( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull BlockState blockState, @Nullable LivingEntity livingEntity, @Nonnull ItemStack itemStack )
     {
-        super.setPlacedBy( world, pos, blockState, livingEntity, itemStack );
+        super.onPlaced( world, pos, blockState, livingEntity, itemStack );
 
         BlockEntity entity = world.getBlockEntity( pos );
-        if( entity instanceof TileMonitor monitor && !world.isClientSide )
+        if( entity instanceof TileMonitor monitor && !world.isClient )
         {
             // Defer the block update if we're being placed by another TE. See #691
             if( livingEntity == null || livingEntity instanceof FakePlayer )

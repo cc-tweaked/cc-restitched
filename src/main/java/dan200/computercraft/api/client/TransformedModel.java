@@ -5,17 +5,16 @@
  */
 package dan200.computercraft.api.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Transformation;
-import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.render.model.BakedModelManager;
+import net.minecraft.client.util.ModelIdentifier;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.AffineTransformation;
+import net.minecraft.util.math.Vec3f;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
@@ -26,9 +25,9 @@ import java.util.Objects;
 public final class TransformedModel
 {
     private final BakedModel model;
-    private final Transformation matrix;
+    private final AffineTransformation matrix;
 
-    public TransformedModel( @Nonnull BakedModel model, @Nonnull Transformation matrix )
+    public TransformedModel( @Nonnull BakedModel model, @Nonnull AffineTransformation matrix )
     {
         this.model = Objects.requireNonNull( model );
         this.matrix = Objects.requireNonNull( matrix );
@@ -37,18 +36,18 @@ public final class TransformedModel
     public TransformedModel( @Nonnull BakedModel model )
     {
         this.model = Objects.requireNonNull( model );
-        matrix = Transformation.identity();
+        matrix = AffineTransformation.identity();
     }
 
-    public static TransformedModel of( @Nonnull ModelResourceLocation location )
+    public static TransformedModel of( @Nonnull ModelIdentifier location )
     {
-        ModelManager modelManager = Minecraft.getInstance().getModelManager();
+        BakedModelManager modelManager = MinecraftClient.getInstance().getBakedModelManager();
         return new TransformedModel( modelManager.getModel( location ) );
     }
 
-    public static TransformedModel of( @Nonnull ItemStack item, @Nonnull Transformation transform )
+    public static TransformedModel of( @Nonnull ItemStack item, @Nonnull AffineTransformation transform )
     {
-        BakedModel model = Minecraft.getInstance().getItemRenderer().getItemModelShaper().getItemModel( item );
+        BakedModel model = MinecraftClient.getInstance().getItemRenderer().getModels().getModel( item );
         return new TransformedModel( model, transform );
     }
 
@@ -59,23 +58,23 @@ public final class TransformedModel
     }
 
     @Nonnull
-    public Transformation getMatrix()
+    public AffineTransformation getMatrix()
     {
         return matrix;
     }
 
-    public void push( PoseStack matrixStack )
+    public void push( MatrixStack matrixStack )
     {
-        matrixStack.pushPose();
+        matrixStack.push();
 
-        Vector3f translation = matrix.getTranslation();
-        matrixStack.translate( translation.x(), translation.y(), translation.z() );
+        Vec3f translation = matrix.getTranslation();
+        matrixStack.translate( translation.getX(), translation.getY(), translation.getZ() );
 
-        matrixStack.mulPose( matrix.getLeftRotation() );
+        matrixStack.multiply( matrix.getRotation2() );
 
-        Vector3f scale = matrix.getScale();
-        matrixStack.scale( scale.x(), scale.y(), scale.z() );
+        Vec3f scale = matrix.getScale();
+        matrixStack.scale( scale.getX(), scale.getY(), scale.getZ() );
 
-        matrixStack.mulPose( matrix.getRightRotation() );
+        matrixStack.multiply( matrix.getRotation1() );
     }
 }

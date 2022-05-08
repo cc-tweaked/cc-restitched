@@ -5,31 +5,30 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
-
 import javax.annotation.Nonnull;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Matrix4f;
 
 public class ComputerBorderRenderer
 {
-    public static final ResourceLocation BACKGROUND_NORMAL = new ResourceLocation( ComputerCraft.MOD_ID, "textures/gui/corners_normal.png" );
-    public static final ResourceLocation BACKGROUND_ADVANCED = new ResourceLocation( ComputerCraft.MOD_ID, "textures/gui/corners_advanced.png" );
-    public static final ResourceLocation BACKGROUND_COMMAND = new ResourceLocation( ComputerCraft.MOD_ID, "textures/gui/corners_command.png" );
-    public static final ResourceLocation BACKGROUND_COLOUR = new ResourceLocation( ComputerCraft.MOD_ID, "textures/gui/corners_colour.png" );
+    public static final Identifier BACKGROUND_NORMAL = new Identifier( ComputerCraft.MOD_ID, "textures/gui/corners_normal.png" );
+    public static final Identifier BACKGROUND_ADVANCED = new Identifier( ComputerCraft.MOD_ID, "textures/gui/corners_advanced.png" );
+    public static final Identifier BACKGROUND_COMMAND = new Identifier( ComputerCraft.MOD_ID, "textures/gui/corners_command.png" );
+    public static final Identifier BACKGROUND_COLOUR = new Identifier( ComputerCraft.MOD_ID, "textures/gui/corners_colour.png" );
 
     private static final Matrix4f IDENTITY = new Matrix4f();
 
     static
     {
-        IDENTITY.setIdentity();
+        IDENTITY.loadIdentity();
     }
 
     /**
@@ -55,13 +54,13 @@ public class ComputerBorderRenderer
     public static final int TEX_SIZE = 256;
     private static final float TEX_SCALE = 1 / (float) TEX_SIZE;
 
-    private final PoseStack transform;
+    private final MatrixStack transform;
     private final VertexConsumer builder;
     private final int light;
     private final int z;
     private final float r, g, b;
 
-    public ComputerBorderRenderer( PoseStack transform, VertexConsumer builder, int z, int light, float r, float g, float b )
+    public ComputerBorderRenderer( MatrixStack transform, VertexConsumer builder, int z, int light, float r, float g, float b )
     {
         this.transform = transform;
         this.builder = builder;
@@ -73,7 +72,7 @@ public class ComputerBorderRenderer
     }
 
     @Nonnull
-    public static ResourceLocation getTexture( @Nonnull ComputerFamily family )
+    public static Identifier getTexture( @Nonnull ComputerFamily family )
     {
         switch( family )
         {
@@ -87,18 +86,18 @@ public class ComputerBorderRenderer
         }
     }
 
-    public static void renderFromGui( ResourceLocation location, int x, int y, int z, int light, int width, int height )
+    public static void renderFromGui( Identifier location, int x, int y, int z, int light, int width, int height )
     {
-        PoseStack identityStack = new PoseStack();
-        MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
+        MatrixStack identityStack = new MatrixStack();
+        VertexConsumerProvider.Immediate renderer = VertexConsumerProvider.immediate( Tessellator.getInstance().getBuffer() );
         render(
             identityStack, renderer.getBuffer( RenderTypes.guiComputerBorder( location ) ),
             x, y, z, light, width, height, false, 1, 1, 1
         );
-        renderer.endBatch();
+        renderer.draw();
     }
 
-    public static void render( PoseStack transform, VertexConsumer buffer, int x, int y, int z, int light, int width, int height, boolean withLight, float r, float g, float b )
+    public static void render( MatrixStack transform, VertexConsumer buffer, int x, int y, int z, int light, int width, int height, boolean withLight, float r, float g, float b )
     {
         new ComputerBorderRenderer( transform, buffer, z, light, r, g, b ).doRender( x, y, width, height, withLight );
     }
@@ -150,11 +149,11 @@ public class ComputerBorderRenderer
 
     private void renderTexture( int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight )
     {
-        Matrix4f poseMatrix = transform.last().pose();
-        Matrix3f normalMatrix = transform.last().normal();
-        builder.vertex( poseMatrix, x, y + height, z ).color( r, g, b, 1.0f ).uv( u * TEX_SCALE, (v + textureHeight) * TEX_SCALE ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        builder.vertex( poseMatrix, x + width, y + height, z ).color( r, g, b, 1.0f ).uv( (u + textureWidth) * TEX_SCALE, (v + textureHeight) * TEX_SCALE ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        builder.vertex( poseMatrix, x + width, y, z ).color( r, g, b, 1.0f ).uv( (u + textureWidth) * TEX_SCALE, v * TEX_SCALE ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        builder.vertex( poseMatrix, x, y, z ).color( r, g, b, 1.0f ).uv( u * TEX_SCALE, v * TEX_SCALE ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        Matrix4f poseMatrix = transform.peek().getPositionMatrix();
+        Matrix3f normalMatrix = transform.peek().getNormalMatrix();
+        builder.vertex( poseMatrix, x, y + height, z ).color( r, g, b, 1.0f ).texture( u * TEX_SCALE, (v + textureHeight) * TEX_SCALE ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normalMatrix, 0f, 0f, 1f ).next();
+        builder.vertex( poseMatrix, x + width, y + height, z ).color( r, g, b, 1.0f ).texture( (u + textureWidth) * TEX_SCALE, (v + textureHeight) * TEX_SCALE ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normalMatrix, 0f, 0f, 1f ).next();
+        builder.vertex( poseMatrix, x + width, y, z ).color( r, g, b, 1.0f ).texture( (u + textureWidth) * TEX_SCALE, v * TEX_SCALE ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normalMatrix, 0f, 0f, 1f ).next();
+        builder.vertex( poseMatrix, x, y, z ).color( r, g, b, 1.0f ).texture( u * TEX_SCALE, v * TEX_SCALE ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normalMatrix, 0f, 0f, 1f ).next();
     }
 }

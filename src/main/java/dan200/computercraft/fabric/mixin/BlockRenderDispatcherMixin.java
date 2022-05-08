@@ -5,24 +5,11 @@
  */
 package dan200.computercraft.fabric.mixin;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.peripheral.modem.wired.BlockCable;
 import dan200.computercraft.shared.peripheral.modem.wired.CableModemVariant;
 import dan200.computercraft.shared.peripheral.modem.wired.CableShapes;
 import dan200.computercraft.shared.util.WorldUtil;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,23 +17,36 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.block.BlockModelRenderer;
+import net.minecraft.client.render.block.BlockModels;
+import net.minecraft.client.render.block.BlockRenderManager;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.BlockRenderView;
 
 /**
  * Provides custom block breaking progress for modems, so it only applies to the current part.
  *
- * @see BlockRenderDispatcher#renderBreakingTexture(BlockState, BlockPos, BlockAndTintGetter, PoseStack, VertexConsumer)
+ * @see BlockRenderManager#renderDamage(BlockState, BlockPos, BlockRenderView, MatrixStack, VertexConsumer)
  */
-@Mixin( BlockRenderDispatcher.class )
+@Mixin( BlockRenderManager.class )
 public class BlockRenderDispatcherMixin
 {
     @Shadow
     private final Random random;
     @Shadow
-    private final BlockModelShaper blockModelShaper;
+    private final BlockModels blockModelShaper;
     @Shadow
-    private final ModelBlockRenderer modelRenderer;
+    private final BlockModelRenderer modelRenderer;
 
-    public BlockRenderDispatcherMixin( Random random, BlockModelShaper blockModelShaper, ModelBlockRenderer modelRenderer )
+    public BlockRenderDispatcherMixin( Random random, BlockModels blockModelShaper, BlockModelRenderer modelRenderer )
     {
         this.random = random;
         this.blockModelShaper = blockModelShaper;
@@ -60,32 +60,32 @@ public class BlockRenderDispatcherMixin
         require = 0 // This isn't critical functionality, so don't worry if we can't apply it.
     )
     public void renderBlockDamage(
-        BlockState state, BlockPos pos, BlockAndTintGetter world, PoseStack pose, VertexConsumer buffers,
+        BlockState state, BlockPos pos, BlockRenderView world, MatrixStack pose, VertexConsumer buffers,
         CallbackInfo info
     )
     {
         // Only apply to cables which have both a cable and modem
         if( state.getBlock() != Registry.ModBlocks.CABLE
-            || !state.getValue( BlockCable.CABLE )
-            || state.getValue( BlockCable.MODEM ) == CableModemVariant.None
+            || !state.get( BlockCable.CABLE )
+            || state.get( BlockCable.MODEM ) == CableModemVariant.None
         )
         {
             return;
         }
 
-        HitResult hit = Minecraft.getInstance().hitResult;
+        HitResult hit = MinecraftClient.getInstance().crosshairTarget;
         if( hit == null || hit.getType() != HitResult.Type.BLOCK ) return;
         BlockPos hitPos = ((BlockHitResult) hit).getBlockPos();
 
         if( !hitPos.equals( pos ) ) return;
 
         info.cancel();
-        BlockState newState = WorldUtil.isVecInside( CableShapes.getModemShape( state ), hit.getLocation().subtract( pos.getX(), pos.getY(), pos.getZ() ) )
-            ? state.getBlock().defaultBlockState().setValue( BlockCable.MODEM, state.getValue( BlockCable.MODEM ) )
-            : state.setValue( BlockCable.MODEM, CableModemVariant.None );
+        BlockState newState = WorldUtil.isVecInside( CableShapes.getModemShape( state ), hit.getPos().subtract( pos.getX(), pos.getY(), pos.getZ() ) )
+            ? state.getBlock().getDefaultState().with( BlockCable.MODEM, state.get( BlockCable.MODEM ) )
+            : state.with( BlockCable.MODEM, CableModemVariant.None );
 
-        BakedModel model = blockModelShaper.getBlockModel( newState );
-        long seed = newState.getSeed( pos );
-        modelRenderer.tesselateBlock( world, model, newState, pos, pose, buffers, true, random, seed, OverlayTexture.NO_OVERLAY );
+        BakedModel model = blockModelShaper.getModel( newState );
+        long seed = newState.getRenderingSeed( pos );
+        modelRenderer.render( world, model, newState, pos, pose, buffers, true, random, seed, OverlayTexture.DEFAULT_UV );
     }
 }

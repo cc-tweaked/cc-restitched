@@ -12,56 +12,55 @@ import dan200.computercraft.shared.common.IColouredItem;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.items.ItemComputerBase;
 import dan200.computercraft.shared.turtle.blocks.BlockTurtle;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.cauldron.CauldronInteraction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.LayeredCauldronBlock;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.LeveledCauldronBlock;
+import net.minecraft.block.cauldron.CauldronBehavior;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DefaultedList;
 
 import static dan200.computercraft.shared.turtle.core.TurtleBrain.*;
 
 public class ItemTurtle extends ItemComputerBase implements ITurtleItem
 {
-    public ItemTurtle( BlockTurtle block, Properties settings )
+    public ItemTurtle( BlockTurtle block, Settings settings )
     {
         super( block, settings );
     }
 
-    public ItemStack create( int id, String label, int colour, ITurtleUpgrade leftUpgrade, ITurtleUpgrade rightUpgrade, int fuelLevel, ResourceLocation overlay )
+    public ItemStack create( int id, String label, int colour, ITurtleUpgrade leftUpgrade, ITurtleUpgrade rightUpgrade, int fuelLevel, Identifier overlay )
     {
         // Build the stack
         ItemStack stack = new ItemStack( this );
-        if( label != null ) stack.setHoverName( new TextComponent( label ) );
-        if( id >= 0 ) stack.getOrCreateTag().putInt( NBT_ID, id );
+        if( label != null ) stack.setCustomName( new LiteralText( label ) );
+        if( id >= 0 ) stack.getOrCreateNbt().putInt( NBT_ID, id );
         IColouredItem.setColourBasic( stack, colour );
-        if( fuelLevel > 0 ) stack.getOrCreateTag().putInt( NBT_FUEL, fuelLevel );
-        if( overlay != null ) stack.getOrCreateTag().putString( NBT_OVERLAY, overlay.toString() );
+        if( fuelLevel > 0 ) stack.getOrCreateNbt().putInt( NBT_FUEL, fuelLevel );
+        if( overlay != null ) stack.getOrCreateNbt().putString( NBT_OVERLAY, overlay.toString() );
 
         if( leftUpgrade != null )
         {
-            stack.getOrCreateTag().putString( NBT_LEFT_UPGRADE, leftUpgrade.getUpgradeID().toString() );
+            stack.getOrCreateNbt().putString( NBT_LEFT_UPGRADE, leftUpgrade.getUpgradeID().toString() );
         }
 
         if( rightUpgrade != null )
         {
-            stack.getOrCreateTag().putString( NBT_RIGHT_UPGRADE, rightUpgrade.getUpgradeID().toString() );
+            stack.getOrCreateNbt().putString( NBT_RIGHT_UPGRADE, rightUpgrade.getUpgradeID().toString() );
         }
 
         return stack;
     }
 
     @Override
-    public void fillItemCategory( @Nonnull CreativeModeTab group, @Nonnull NonNullList<ItemStack> list )
+    public void appendStacks( @Nonnull ItemGroup group, @Nonnull DefaultedList<ItemStack> list )
     {
-        if( !allowdedIn( group ) ) return;
+        if( !isIn( group ) ) return;
 
         ComputerFamily family = getFamily();
 
@@ -73,33 +72,33 @@ public class ItemTurtle extends ItemComputerBase implements ITurtleItem
 
     @Nonnull
     @Override
-    public Component getName( @Nonnull ItemStack stack )
+    public Text getName( @Nonnull ItemStack stack )
     {
-        String baseString = getDescriptionId( stack );
+        String baseString = getTranslationKey( stack );
         ITurtleUpgrade left = getUpgrade( stack, TurtleSide.LEFT );
         ITurtleUpgrade right = getUpgrade( stack, TurtleSide.RIGHT );
         if( left != null && right != null )
         {
-            return new TranslatableComponent( baseString + ".upgraded_twice",
-                new TranslatableComponent( right.getUnlocalisedAdjective() ),
-                new TranslatableComponent( left.getUnlocalisedAdjective() )
+            return new TranslatableText( baseString + ".upgraded_twice",
+                new TranslatableText( right.getUnlocalisedAdjective() ),
+                new TranslatableText( left.getUnlocalisedAdjective() )
             );
         }
         else if( left != null )
         {
-            return new TranslatableComponent( baseString + ".upgraded",
-                new TranslatableComponent( left.getUnlocalisedAdjective() )
+            return new TranslatableText( baseString + ".upgraded",
+                new TranslatableText( left.getUnlocalisedAdjective() )
             );
         }
         else if( right != null )
         {
-            return new TranslatableComponent( baseString + ".upgraded",
-                new TranslatableComponent( right.getUnlocalisedAdjective() )
+            return new TranslatableText( baseString + ".upgraded",
+                new TranslatableText( right.getUnlocalisedAdjective() )
             );
         }
         else
         {
-            return new TranslatableComponent( baseString );
+            return new TranslatableText( baseString );
         }
     }
 
@@ -141,7 +140,7 @@ public class ItemTurtle extends ItemComputerBase implements ITurtleItem
     @Override
     public ITurtleUpgrade getUpgrade( @Nonnull ItemStack stack, @Nonnull TurtleSide side )
     {
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getNbt();
         if( tag == null ) return null;
 
         String key = side == TurtleSide.LEFT ? NBT_LEFT_UPGRADE : NBT_RIGHT_UPGRADE;
@@ -149,28 +148,28 @@ public class ItemTurtle extends ItemComputerBase implements ITurtleItem
     }
 
     @Override
-    public ResourceLocation getOverlay( @Nonnull ItemStack stack )
+    public Identifier getOverlay( @Nonnull ItemStack stack )
     {
-        CompoundTag tag = stack.getTag();
-        return tag != null && tag.contains( NBT_OVERLAY ) ? new ResourceLocation( tag.getString( NBT_OVERLAY ) ) : null;
+        NbtCompound tag = stack.getNbt();
+        return tag != null && tag.contains( NBT_OVERLAY ) ? new Identifier( tag.getString( NBT_OVERLAY ) ) : null;
     }
 
     @Override
     public int getFuelLevel( @Nonnull ItemStack stack )
     {
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getNbt();
         return tag != null && tag.contains( NBT_FUEL ) ? tag.getInt( NBT_FUEL ) : 0;
     }
 
-    public static final CauldronInteraction CAULDRON_INTERACTION = ( blockState, level, pos, player, hand, stack ) ->
+    public static final CauldronBehavior CAULDRON_INTERACTION = ( blockState, level, pos, player, hand, stack ) ->
     {
-        if( IColouredItem.getColourBasic( stack ) == -1 ) return InteractionResult.PASS;
-        if( !level.isClientSide )
+        if( IColouredItem.getColourBasic( stack ) == -1 ) return ActionResult.PASS;
+        if( !level.isClient )
         {
             IColouredItem.setColourBasic( stack, -1 );
-            LayeredCauldronBlock.lowerFillLevel( blockState, level, pos );
+            LeveledCauldronBlock.decrementFluidLevel( blockState, level, pos );
         }
 
-        return InteractionResult.sidedSuccess( level.isClientSide );
+        return ActionResult.success( level.isClient );
     };
 }

@@ -6,20 +6,20 @@
 package dan200.computercraft.client.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.VertexBuffer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Matrix4f;
-import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL45C;
 
 import java.nio.ByteBuffer;
+import net.minecraft.client.gl.VertexBuffer;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.Shader;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.util.math.Matrix4f;
 
 /**
  * A version of {@link VertexBuffer} which allows uploading {@link ByteBuffer}s directly.
  *
- * This should probably be its own class (rather than subclassing), but I need access to {@link VertexBuffer#drawWithShader}.
+ * This should probably be its own class (rather than subclassing), but I need access to {@link VertexBuffer#setShader}.
  */
 public class DirectVertexBuffer extends VertexBuffer
 {
@@ -29,30 +29,30 @@ public class DirectVertexBuffer extends VertexBuffer
     {
         if( DirectBuffers.HAS_DSA )
         {
-            RenderSystem.glDeleteBuffers( vertextBufferId );
-            if( DirectBuffers.ON_LINUX ) BufferUploader.reset(); // See comment on DirectBuffers.deleteBuffer.
-            vertextBufferId = GL45C.glCreateBuffers();
+            RenderSystem.glDeleteBuffers( vertexBufferId );
+            if( DirectBuffers.ON_LINUX ) BufferRenderer.unbindAll(); // See comment on DirectBuffers.deleteBuffer.
+            vertexBufferId = GL45C.glCreateBuffers();
         }
     }
 
-    public void upload( int vertexCount, VertexFormat.Mode mode, VertexFormat format, ByteBuffer buffer )
+    public void upload( int vertexCount, VertexFormat.DrawMode mode, VertexFormat format, ByteBuffer buffer )
     {
         RenderSystem.assertOnRenderThread();
 
-        DirectBuffers.setBufferData( GL15.GL_ARRAY_BUFFER, vertextBufferId, buffer, GL15.GL_STATIC_DRAW );
+        DirectBuffers.setBufferData( GL15.GL_ARRAY_BUFFER, vertexBufferId, buffer, GL15.GL_STATIC_DRAW );
 
-        this.format = format;
-        this.mode = mode;
-        actualIndexCount = indexCount = mode.indexCount( vertexCount );
-        indexType = VertexFormat.IndexType.SHORT;
-        sequentialIndices = true;
+        this.vertexFormat = format;
+        this.drawMode = mode;
+        actualIndexCount = vertexCount = mode.getSize( vertexCount );
+        elementFormat = VertexFormat.IntType.SHORT;
+        usesTexture = true;
     }
 
-    public void drawWithShader( Matrix4f modelView, Matrix4f projection, ShaderInstance shader, int indexCount )
+    public void drawWithShader( Matrix4f modelView, Matrix4f projection, Shader shader, int indexCount )
     {
-        this.indexCount = indexCount;
-        drawWithShader( modelView, projection, shader );
-        this.indexCount = actualIndexCount;
+        this.vertexCount = indexCount;
+        setShader( modelView, projection, shader );
+        this.vertexCount = actualIndexCount;
     }
 
     public int getIndexCount()
@@ -64,6 +64,6 @@ public class DirectVertexBuffer extends VertexBuffer
     public void close()
     {
         super.close();
-        if( DirectBuffers.ON_LINUX ) BufferUploader.reset(); // See comment on DirectBuffers.deleteBuffer.
+        if( DirectBuffers.ON_LINUX ) BufferRenderer.unbindAll(); // See comment on DirectBuffers.deleteBuffer.
     }
 }

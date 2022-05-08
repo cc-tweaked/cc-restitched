@@ -5,23 +5,22 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.core.Direction;
-import net.minecraft.world.WorldlyContainer;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.inventory.SidedInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Direction;
 
-public interface DefaultSidedInventory extends DefaultInventory, WorldlyContainer
+public interface DefaultSidedInventory extends DefaultInventory, SidedInventory
 {
     @Override
-    default boolean canPlaceItemThroughFace( int slot, @Nonnull ItemStack stack, @Nullable Direction side )
+    default boolean canInsert( int slot, @Nonnull ItemStack stack, @Nullable Direction side )
     {
-        return canPlaceItem( slot, stack );
+        return isValid( slot, stack );
     }
 
     @Override
-    default boolean canTakeItemThroughFace( int slot, @Nonnull ItemStack stack, @Nonnull Direction side )
+    default boolean canExtract( int slot, @Nonnull ItemStack stack, @Nonnull Direction side )
     {
         return true;
     }

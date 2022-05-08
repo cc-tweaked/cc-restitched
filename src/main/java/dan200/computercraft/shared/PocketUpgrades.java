@@ -9,9 +9,8 @@ import dan200.computercraft.api.pocket.IPocketUpgrade;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenCustomHashMap;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.Util;
-import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Util;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
@@ -20,7 +19,7 @@ import java.util.stream.Stream;
 public final class PocketUpgrades
 {
     private static final Map<String, IPocketUpgrade> upgrades = new HashMap<>();
-    private static final Map<IPocketUpgrade, String> upgradeOwners = new Object2ObjectLinkedOpenCustomHashMap<>( Util.identityStrategy() );
+    private static final Map<IPocketUpgrade, String> upgradeOwners = new Object2ObjectLinkedOpenCustomHashMap<>( Util.identityHashStrategy() );
 
     private PocketUpgrades() {}
 

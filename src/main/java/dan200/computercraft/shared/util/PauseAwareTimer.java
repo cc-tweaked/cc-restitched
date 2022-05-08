@@ -5,8 +5,8 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Util;
 
 /**
  * A monotonically increasing clock which accounts for the game being paused.
@@ -23,22 +23,22 @@ public final class PauseAwareTimer
 
     public static long getTime()
     {
-        return (paused ? pauseTime : Util.getNanos()) - pauseOffset;
+        return (paused ? pauseTime : Util.getMeasuringTimeNano()) - pauseOffset;
     }
 
     public static void tick()
     {
-        boolean isPaused = Minecraft.getInstance().isPaused();
+        boolean isPaused = MinecraftClient.getInstance().isPaused();
         if( isPaused == paused ) return;
 
         if( isPaused )
         {
-            pauseTime = Util.getNanos();
+            pauseTime = Util.getMeasuringTimeNano();
             paused = true;
         }
         else
         {
-            pauseOffset += Util.getNanos() - pauseTime;
+            pauseOffset += Util.getMeasuringTimeNano() - pauseTime;
             paused = false;
         }
     }

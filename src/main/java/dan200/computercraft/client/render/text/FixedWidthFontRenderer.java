@@ -5,19 +5,18 @@
  */
 package dan200.computercraft.client.render.text;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import dan200.computercraft.client.FrameInfo;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
-
 import javax.annotation.Nonnull;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
 
 import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMAP;
 
@@ -40,7 +39,7 @@ import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMA
  */
 public final class FixedWidthFontRenderer
 {
-    public static final ResourceLocation FONT = new ResourceLocation( "computercraft", "textures/gui/term_font.png" );
+    public static final Identifier FONT = new Identifier( "computercraft", "textures/gui/term_font.png" );
 
     public static final int FONT_HEIGHT = 9;
     public static final int FONT_WIDTH = 6;
@@ -221,11 +220,11 @@ public final class FixedWidthFontRenderer
 
     public record QuadEmitter(Matrix4f poseMatrix, Vector3f normal, VertexConsumer consumer ) {}
 
-    public static QuadEmitter toVertexConsumer( PoseStack transform, VertexConsumer consumer )
+    public static QuadEmitter toVertexConsumer( MatrixStack transform, VertexConsumer consumer )
     {
-        var normal = new Vector3f( 0f, 0f, 1f );
-        normal.transform( transform.last().normal() );
-        return new QuadEmitter( transform.last().pose(), normal, consumer );
+        var normal = new Vec3f( 0f, 0f, 1f );
+        normal.transform( transform.peek().getNormalMatrix() );
+        return new QuadEmitter( transform.peek().getPositionMatrix(), normal, consumer );
     }
 
     private static void quad( QuadEmitter c, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2, int light )
@@ -235,9 +234,9 @@ public final class FixedWidthFontRenderer
         var normal = c.normal();
         byte r = rgba[0], g = rgba[1], b = rgba[2], a = rgba[3];
 
-        consumer.vertex( poseMatrix, x1, y1, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).uv( u1, v1 ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normal.x(), normal.y(), normal.z() ).endVertex();
-        consumer.vertex( poseMatrix, x1, y2, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).uv( u1, v2 ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normal.x(), normal.y(), normal.z() ).endVertex();
-        consumer.vertex( poseMatrix, x2, y2, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).uv( u2, v2 ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normal.x(), normal.y(), normal.z() ).endVertex();
-        consumer.vertex( poseMatrix, x2, y1, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).uv( u2, v1 ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normal.x(), normal.y(), normal.z() ).endVertex();
+        consumer.vertex( poseMatrix, x1, y1, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).texture( u1, v1 ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normal.getX(), normal.getY(), normal.getZ() ).next();
+        consumer.vertex( poseMatrix, x1, y2, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).texture( u1, v2 ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normal.getX(), normal.getY(), normal.getZ() ).next();
+        consumer.vertex( poseMatrix, x2, y2, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).texture( u2, v2 ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normal.getX(), normal.getY(), normal.getZ() ).next();
+        consumer.vertex( poseMatrix, x2, y1, z ).color( rgba[0], rgba[1], rgba[2], rgba[3] ).texture( u2, v1 ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normal.getX(), normal.getY(), normal.getZ() ).next();
     }
 }

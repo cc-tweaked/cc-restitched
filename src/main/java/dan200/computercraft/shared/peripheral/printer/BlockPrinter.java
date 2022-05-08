@@ -7,78 +7,77 @@ package dan200.computercraft.shared.peripheral.printer;
 
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.common.BlockGeneric;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.stats.Stats;
-import net.minecraft.world.Nameable;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.stat.Stats;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.Nameable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public class BlockPrinter extends BlockGeneric
 {
-    private static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    static final BooleanProperty TOP = BooleanProperty.create( "top" );
-    static final BooleanProperty BOTTOM = BooleanProperty.create( "bottom" );
+    private static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    static final BooleanProperty TOP = BooleanProperty.of( "top" );
+    static final BooleanProperty BOTTOM = BooleanProperty.of( "bottom" );
 
-    public BlockPrinter( Properties settings )
+    public BlockPrinter( Settings settings )
     {
         super( settings, () -> Registry.ModBlockEntities.PRINTER );
-        registerDefaultState( getStateDefinition().any()
-            .setValue( FACING, Direction.NORTH )
-            .setValue( TOP, false )
-            .setValue( BOTTOM, false ) );
+        setDefaultState( getStateManager().getDefaultState()
+            .with( FACING, Direction.NORTH )
+            .with( TOP, false )
+            .with( BOTTOM, false ) );
     }
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> properties )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> properties )
     {
         properties.add( FACING, TOP, BOTTOM );
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement( BlockPlaceContext placement )
+    public BlockState getPlacementState( ItemPlacementContext placement )
     {
-        return defaultBlockState().setValue( FACING, placement.getHorizontalDirection().getOpposite() );
+        return getDefaultState().with( FACING, placement.getPlayerFacing().getOpposite() );
     }
 
     @Override
-    public void playerDestroy( @Nonnull Level world, @Nonnull Player player, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable BlockEntity te, @Nonnull ItemStack stack )
+    public void afterBreak( @Nonnull World world, @Nonnull PlayerEntity player, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable BlockEntity te, @Nonnull ItemStack stack )
     {
         if( te instanceof Nameable nameable && nameable.hasCustomName() )
         {
-            player.awardStat( Stats.BLOCK_MINED.get( this ) );
-            player.causeFoodExhaustion( 0.005F );
+            player.incrementStat( Stats.MINED.getOrCreateStat( this ) );
+            player.addExhaustion( 0.005F );
 
             ItemStack result = new ItemStack( this );
-            result.setHoverName( nameable.getCustomName() );
-            popResource( world, pos, result );
+            result.setCustomName( nameable.getCustomName() );
+            dropStack( world, pos, result );
         }
         else
         {
-            super.playerDestroy( world, player, pos, state, te, stack );
+            super.afterBreak( world, player, pos, state, te, stack );
         }
     }
 
     @Override
-    public void setPlacedBy( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull BlockState state, LivingEntity placer, ItemStack stack )
+    public void onPlaced( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull BlockState state, LivingEntity placer, ItemStack stack )
     {
-        if( stack.hasCustomHoverName() && world.getBlockEntity( pos ) instanceof TilePrinter printer )
+        if( stack.hasCustomName() && world.getBlockEntity( pos ) instanceof TilePrinter printer )
         {
-            printer.customName = stack.getHoverName();
+            printer.customName = stack.getName();
         }
     }
 }

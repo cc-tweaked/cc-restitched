@@ -11,8 +11,7 @@ import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.api.upgrades.IUpgradeBase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.Direction;
-
+import net.minecraft.util.math.Direction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -75,8 +74,8 @@ public interface ITurtleUpgrade extends IUpgradeBase
     /**
      * Called to obtain the model to be used when rendering a turtle peripheral.
      *
-     * This can be obtained from {@link net.minecraft.client.renderer.ItemModelShaper#getItemModel(ItemStack)},
-     * {@link net.minecraft.client.resources.model.ModelManager#getModel(ModelResourceLocation)} or any other
+     * This can be obtained from {@link net.minecraft.client.render.item.ItemModels#getItemModel(ItemStack)},
+     * {@link net.minecraft.client.render.model.BakedModelManager#getModel(ModelResourceLocation)} or any other
      * source.
      *
      * @param turtle Access to the turtle that the upgrade resides on. This will be null when getting item models!

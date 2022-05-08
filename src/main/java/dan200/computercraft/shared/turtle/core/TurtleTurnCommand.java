@@ -29,13 +29,13 @@ public class TurtleTurnCommand implements ITurtleCommand
         {
             case LEFT:
             {
-                turtle.setDirection( turtle.getDirection().getCounterClockWise() );
+                turtle.setDirection( turtle.getDirection().rotateYCounterclockwise() );
                 turtle.playAnimation( TurtleAnimation.TURN_LEFT );
                 return TurtleCommandResult.success();
             }
             case RIGHT:
             {
-                turtle.setDirection( turtle.getDirection().getClockWise() );
+                turtle.setDirection( turtle.getDirection().rotateYClockwise() );
                 turtle.playAnimation( TurtleAnimation.TURN_RIGHT );
                 return TurtleCommandResult.success();
             }

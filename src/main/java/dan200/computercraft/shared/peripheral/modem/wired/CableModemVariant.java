@@ -5,13 +5,12 @@
  */
 package dan200.computercraft.shared.peripheral.modem.wired;
 
-import net.minecraft.core.Direction;
-import net.minecraft.util.StringRepresentable;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.math.Direction;
 
-public enum CableModemVariant implements StringRepresentable
+public enum CableModemVariant implements StringIdentifiable
 {
     None( "none", null ),
     DownOff( "down_off", Direction.DOWN ),
@@ -53,19 +52,19 @@ public enum CableModemVariant implements StringRepresentable
     @Nonnull
     public static CableModemVariant from( Direction facing )
     {
-        return facing == null ? None : VALUES[1 + facing.get3DDataValue()];
+        return facing == null ? None : VALUES[1 + facing.getId()];
     }
 
     @Nonnull
     public static CableModemVariant from( Direction facing, boolean modem, boolean peripheral )
     {
         int state = (modem ? 1 : 0) + (peripheral ? 2 : 0);
-        return facing == null ? None : VALUES[1 + 6 * state + facing.get3DDataValue()];
+        return facing == null ? None : VALUES[1 + 6 * state + facing.getId()];
     }
 
     @Nonnull
     @Override
-    public String getSerializedName()
+    public String asString()
     {
         return name;
     }

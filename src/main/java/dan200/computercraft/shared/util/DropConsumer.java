@@ -5,17 +5,16 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public final class DropConsumer
 {
@@ -25,9 +24,9 @@ public final class DropConsumer
 
     private static Function<ItemStack, ItemStack> dropConsumer;
     private static List<ItemStack> remainingDrops;
-    private static Level dropWorld;
+    private static World dropWorld;
     private static BlockPos dropPos;
-    private static AABB dropBounds;
+    private static Box dropBounds;
     private static Entity dropEntity;
 
     public static void set( Entity entity, Function<ItemStack, ItemStack> consumer )
@@ -35,18 +34,18 @@ public final class DropConsumer
         dropConsumer = consumer;
         remainingDrops = new ArrayList<>();
         dropEntity = entity;
-        dropWorld = entity.level;
+        dropWorld = entity.world;
         dropPos = null;
-        dropBounds = new AABB( entity.blockPosition() ).inflate( 2, 2, 2 );
+        dropBounds = new Box( entity.getBlockPos() ).expand( 2, 2, 2 );
     }
 
-    public static void set( Level world, BlockPos pos, Function<ItemStack, ItemStack> consumer )
+    public static void set( World world, BlockPos pos, Function<ItemStack, ItemStack> consumer )
     {
         dropConsumer = consumer;
         remainingDrops = new ArrayList<>( 2 );
         dropEntity = null;
         dropWorld = world;
-        dropBounds = new AABB( pos ).inflate( 2, 2, 2 );
+        dropBounds = new Box( pos ).expand( 2, 2, 2 );
     }
 
     public static List<ItemStack> clear()
@@ -62,7 +61,7 @@ public final class DropConsumer
         return remainingStacks;
     }
 
-    public static void clearAndDrop( Level world, BlockPos pos, Direction direction )
+    public static void clearAndDrop( World world, BlockPos pos, Direction direction )
     {
         List<ItemStack> remainingDrops = clear();
         for( ItemStack remaining : remainingDrops ) WorldUtil.dropItemStack( remaining, world, pos, direction );
@@ -77,10 +76,10 @@ public final class DropConsumer
     public static boolean onEntitySpawn( Entity entity )
     {
         // Capture any nearby item spawns
-        if( dropWorld != null && dropWorld == entity.getCommandSenderWorld() && entity instanceof ItemEntity
-            && dropBounds.contains( entity.position() ) )
+        if( dropWorld != null && dropWorld == entity.getEntityWorld() && entity instanceof ItemEntity
+            && dropBounds.contains( entity.getPos() ) )
         {
-            handleDrops( ((ItemEntity) entity).getItem() );
+            handleDrops( ((ItemEntity) entity).getStack() );
             return true;
         }
         return false;
@@ -94,7 +93,7 @@ public final class DropConsumer
         return true;
     }
 
-    public static boolean onHarvestDrops( Level world, BlockPos pos, ItemStack stack )
+    public static boolean onHarvestDrops( World world, BlockPos pos, ItemStack stack )
     {
         if( dropWorld != null && dropWorld == world && dropPos != null && dropPos.equals( pos ) )
         {

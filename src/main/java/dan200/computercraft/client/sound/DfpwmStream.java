@@ -7,11 +7,11 @@ package dan200.computercraft.client.sound;
 
 import dan200.computercraft.shared.peripheral.speaker.SpeakerPeripheral;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.sounds.AudioStream;
 import org.lwjgl.BufferUtils;
 
 import javax.annotation.Nonnull;
 import javax.sound.sampled.AudioFormat;
+import net.minecraft.client.sound.AudioStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -97,7 +97,7 @@ class DfpwmStream implements AudioStream
 
     @Nonnull
     @Override
-    public synchronized ByteBuffer read( int capacity )
+    public synchronized ByteBuffer getBuffer( int capacity )
     {
         ByteBuffer result = BufferUtils.createByteBuffer( capacity );
         while( result.hasRemaining() )

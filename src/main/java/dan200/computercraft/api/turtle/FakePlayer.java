@@ -7,55 +7,54 @@ package dan200.computercraft.api.turtle;
 
 import com.mojang.authlib.GameProfile;
 import dan200.computercraft.shared.util.FakeNetHandler;
-import net.minecraft.commands.arguments.EntityAnchorArgument;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.Container;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.trading.MerchantOffers;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.entity.CommandBlockEntity;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nullable;
+import net.minecraft.block.entity.CommandBlockBlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.command.argument.EntityAnchorArgumentType;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.passive.HorseBaseEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.MessageType;
+import net.minecraft.network.Packet;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.village.TradeOfferList;
 import java.util.Collection;
 import java.util.OptionalInt;
 import java.util.UUID;
 
 /**
- * A wrapper for {@link ServerPlayer} which denotes a "fake" player.
+ * A wrapper for {@link ServerPlayerEntity} which denotes a "fake" player.
  *
  * Please note that this does not implement any of the traditional fake player behaviour. It simply exists to prevent me passing in normal players.
  */
-public abstract class FakePlayer extends ServerPlayer
+public abstract class FakePlayer extends ServerPlayerEntity
 {
-    public FakePlayer( ServerLevel world, GameProfile gameProfile )
+    public FakePlayer( ServerWorld world, GameProfile gameProfile )
     {
         super( world.getServer(), world, gameProfile );
-        connection = new FakeNetHandler( this );
+        networkHandler = new FakeNetHandler( this );
     }
 
     // region Direct networkHandler access
     @Override
-    public void onEnterCombat()
+    public void enterCombat()
     {
     }
 
     @Override
-    public void onLeaveCombat()
+    public void endCombat()
     {
     }
 
@@ -65,23 +64,23 @@ public abstract class FakePlayer extends ServerPlayer
     }
 
     @Override
-    public void doTick()
+    public void playerTick()
     {
     }
 
     @Override
-    public void die( DamageSource damage )
+    public void onDeath( DamageSource damage )
     {
     }
 
     @Override
-    public Entity changeDimension( ServerLevel destination )
+    public Entity moveToWorld( ServerWorld destination )
     {
         return this;
     }
 
     @Override
-    public void stopSleepInBed( boolean bl, boolean updateSleepingPlayers )
+    public void wakeUp( boolean bl, boolean updateSleepingPlayers )
     {
 
     }
@@ -98,33 +97,33 @@ public abstract class FakePlayer extends ServerPlayer
     }
 
     @Override
-    public void openTextEdit( SignBlockEntity tile )
+    public void openEditSignScreen( SignBlockEntity tile )
     {
     }
 
     @Override
-    public OptionalInt openMenu( @Nullable MenuProvider container )
+    public OptionalInt openHandledScreen( @Nullable NamedScreenHandlerFactory container )
     {
         return OptionalInt.empty();
     }
 
     @Override
-    public void sendMerchantOffers( int id, MerchantOffers list, int level, int experience, boolean levelled, boolean refreshable )
+    public void sendTradeOffers( int id, TradeOfferList list, int level, int experience, boolean levelled, boolean refreshable )
     {
     }
 
     @Override
-    public void openHorseInventory( AbstractHorse horse, Container inventory )
+    public void openHorseInventory( HorseBaseEntity horse, Inventory inventory )
     {
     }
 
     @Override
-    public void openItemGui( ItemStack stack, InteractionHand hand )
+    public void useBook( ItemStack stack, Hand hand )
     {
     }
 
     @Override
-    public void openCommandBlock( CommandBlockEntity block )
+    public void openCommandBlockScreen( CommandBlockBlockEntity block )
     {
     }
 
@@ -144,7 +143,7 @@ public abstract class FakePlayer extends ServerPlayer
     //    }
 
     @Override
-    public void closeContainer()
+    public void closeHandledScreen()
     {
     }
 
@@ -154,55 +153,55 @@ public abstract class FakePlayer extends ServerPlayer
     //    }
 
     @Override
-    public int awardRecipes( Collection<Recipe<?>> recipes )
+    public int unlockRecipes( Collection<Recipe<?>> recipes )
     {
         return 0;
     }
 
     // Indirect
     @Override
-    public int resetRecipes( Collection<Recipe<?>> recipes )
+    public int lockRecipes( Collection<Recipe<?>> recipes )
     {
         return 0;
     }
 
     @Override
-    public void displayClientMessage( Component textComponent, boolean status )
+    public void sendMessage( Text textComponent, boolean status )
     {
     }
 
     @Override
-    protected void completeUsingItem()
+    protected void consumeItem()
     {
     }
 
     @Override
-    public void lookAt( EntityAnchorArgument.Anchor anchor, Vec3 vec3d )
+    public void lookAt( EntityAnchorArgumentType.EntityAnchor anchor, Vec3d vec3d )
     {
     }
 
     @Override
-    public void lookAt( EntityAnchorArgument.Anchor self, Entity entity, EntityAnchorArgument.Anchor target )
+    public void lookAtEntity( EntityAnchorArgumentType.EntityAnchor self, Entity entity, EntityAnchorArgumentType.EntityAnchor target )
     {
     }
 
     @Override
-    protected void onEffectAdded( MobEffectInstance statusEffectInstance, @Nullable Entity source )
+    protected void onStatusEffectApplied( StatusEffectInstance statusEffectInstance, @Nullable Entity source )
     {
     }
 
     @Override
-    protected void onEffectUpdated( MobEffectInstance statusEffectInstance, boolean particles, @Nullable Entity source )
+    protected void onStatusEffectUpgraded( StatusEffectInstance statusEffectInstance, boolean particles, @Nullable Entity source )
     {
     }
 
     @Override
-    protected void onEffectRemoved( MobEffectInstance statusEffectInstance )
+    protected void onStatusEffectRemoved( StatusEffectInstance statusEffectInstance )
     {
     }
 
     @Override
-    public void teleportTo( double x, double y, double z )
+    public void requestTeleport( double x, double y, double z )
     {
     }
 
@@ -212,13 +211,13 @@ public abstract class FakePlayer extends ServerPlayer
     //    }
 
     @Override
-    public void sendMessage( Component message, ChatType type, UUID senderUuid )
+    public void sendMessage( Text message, MessageType type, UUID senderUuid )
     {
 
     }
 
     @Override
-    public String getIpAddress()
+    public String getIp()
     {
         return "[Fake Player]";
     }
@@ -234,27 +233,27 @@ public abstract class FakePlayer extends ServerPlayer
     //    }
 
     @Override
-    public void setCamera( Entity entity )
+    public void setCameraEntity( Entity entity )
     {
     }
 
     @Override
-    public void teleportTo( ServerLevel serverWorld, double x, double y, double z, float pitch, float yaw )
+    public void teleport( ServerWorld serverWorld, double x, double y, double z, float pitch, float yaw )
     {
     }
 
     @Override
-    public void trackChunk( ChunkPos chunkPos, Packet<?> packet )
+    public void sendInitialChunkPackets( ChunkPos chunkPos, Packet<?> packet )
     {
     }
 
     @Override
-    public void untrackChunk( ChunkPos chunkPos )
+    public void sendUnloadChunkPacket( ChunkPos chunkPos )
     {
     }
 
     @Override
-    public void playNotifySound( SoundEvent soundEvent, SoundSource soundCategory, float volume, float pitch )
+    public void playSound( SoundEvent soundEvent, SoundCategory soundCategory, float volume, float pitch )
     {
     }
 }

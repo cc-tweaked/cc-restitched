@@ -13,10 +13,9 @@ import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.shared.MediaProviders;
 import dan200.computercraft.shared.media.items.ItemDisk;
 import dan200.computercraft.shared.util.StringUtil;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.item.ItemStack;
 import java.util.Optional;
 
 /**

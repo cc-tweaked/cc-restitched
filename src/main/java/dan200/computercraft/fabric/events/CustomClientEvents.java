@@ -5,11 +5,11 @@
  */
 package dan200.computercraft.fabric.events;
 
-import com.mojang.blaze3d.audio.Channel;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.sound.SoundSystem;
+import net.minecraft.client.sound.Source;
 
 public class CustomClientEvents
 {
@@ -39,6 +39,6 @@ public class CustomClientEvents
     @FunctionalInterface
     public interface PlayStreamingAudio
     {
-        boolean onPlayStreamingAudio( SoundEngine engine, SoundInstance soundInstance, Channel channel );
+        boolean onPlayStreamingAudio( SoundSystem engine, SoundInstance soundInstance, Source channel );
     }
 }

@@ -5,13 +5,12 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.world.Container;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import java.util.Set;
 
 /**
@@ -21,14 +20,14 @@ import java.util.Set;
  * and by other interfaces to have inventories which change their backing store.
  */
 @FunctionalInterface
-public interface InventoryDelegate extends Container
+public interface InventoryDelegate extends Inventory
 {
-    Container getInventory();
+    Inventory getInventory();
 
     @Override
-    default int getContainerSize()
+    default int size()
     {
-        return getInventory().getContainerSize();
+        return getInventory().size();
     }
 
     @Override
@@ -39,82 +38,82 @@ public interface InventoryDelegate extends Container
 
     @Nonnull
     @Override
-    default ItemStack getItem( int slot )
+    default ItemStack getStack( int slot )
     {
-        return getInventory().getItem( slot );
+        return getInventory().getStack( slot );
     }
 
     @Nonnull
     @Override
-    default ItemStack removeItem( int slot, int count )
+    default ItemStack removeStack( int slot, int count )
     {
-        return getInventory().removeItem( slot, count );
+        return getInventory().removeStack( slot, count );
     }
 
     @Nonnull
     @Override
-    default ItemStack removeItemNoUpdate( int slot )
+    default ItemStack removeStack( int slot )
     {
-        return getInventory().removeItemNoUpdate( slot );
+        return getInventory().removeStack( slot );
     }
 
     @Override
-    default void setItem( int slot, @Nonnull ItemStack stack )
+    default void setStack( int slot, @Nonnull ItemStack stack )
     {
-        getInventory().setItem( slot, stack );
+        getInventory().setStack( slot, stack );
     }
 
     @Override
-    default int getMaxStackSize()
+    default int getMaxCountPerStack()
     {
-        return getInventory().getMaxStackSize();
+        return getInventory().getMaxCountPerStack();
     }
 
     @Override
-    default void setChanged()
+    default void markDirty()
     {
-        getInventory().setChanged();
+        getInventory().markDirty();
     }
 
     @Override
-    default boolean stillValid( @Nonnull Player player )
+    default boolean canPlayerUse( @Nonnull PlayerEntity player )
     {
-        return getInventory().stillValid( player );
+        return getInventory().canPlayerUse( player );
     }
 
     @Override
-    default void startOpen( @Nonnull Player player )
+    default void onOpen( @Nonnull PlayerEntity player )
     {
-        getInventory().startOpen( player );
+        getInventory().onOpen( player );
     }
 
     @Override
-    default void stopOpen( @Nonnull Player player )
+    default void onClose( @Nonnull PlayerEntity player )
     {
-        getInventory().stopOpen( player );
+        getInventory().onClose( player );
     }
 
     @Override
-    default boolean canPlaceItem( int slot, @Nonnull ItemStack stack )
+    default boolean isValid( int slot, @Nonnull ItemStack stack )
     {
-        return getInventory().canPlaceItem( slot, stack );
+        return getInventory().isValid( slot, stack );
     }
 
     @Override
-    default void clearContent()
+    default void clear()
     {
-        getInventory().clearContent();
+        getInventory().clear();
     }
 
     @Override
-    default int countItem( @Nonnull Item stack )
+    default int count( @Nonnull Item stack )
     {
-        return getInventory().countItem( stack );
+        return getInventory().count( stack );
     }
 
     @Override
-    default boolean hasAnyOf( @Nonnull Set<Item> set )
+    default boolean containsAny( @Nonnull Set<Item> set )
     {
-        return getInventory().hasAnyOf( set );
+        return getInventory().containsAny( set );
     }
 }

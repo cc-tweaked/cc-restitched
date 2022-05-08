@@ -8,15 +8,14 @@ package dan200.computercraft.shared.turtle.core;
 import dan200.computercraft.api.turtle.ITurtleAccess;
 import dan200.computercraft.api.turtle.ITurtleCommand;
 import dan200.computercraft.api.turtle.TurtleCommandResult;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.List;
 
 public class TurtleCompareCommand implements ITurtleCommand
@@ -36,15 +35,15 @@ public class TurtleCompareCommand implements ITurtleCommand
         Direction direction = this.direction.toWorldDir( turtle );
 
         // Get currently selected stack
-        ItemStack selectedStack = turtle.getInventory().getItem( turtle.getSelectedSlot() );
+        ItemStack selectedStack = turtle.getInventory().getStack( turtle.getSelectedSlot() );
 
         // Get stack representing thing in front
-        Level world = turtle.getLevel();
+        World world = turtle.getLevel();
         BlockPos oldPosition = turtle.getPosition();
-        BlockPos newPosition = oldPosition.relative( direction );
+        BlockPos newPosition = oldPosition.offset( direction );
 
         ItemStack lookAtStack = ItemStack.EMPTY;
-        if( !world.isEmptyBlock( newPosition ) )
+        if( !world.isAir( newPosition ) )
         {
             BlockState lookAtState = world.getBlockState( newPosition );
             Block lookAtBlock = lookAtState.getBlock();
@@ -54,7 +53,7 @@ public class TurtleCompareCommand implements ITurtleCommand
                 // (try 5 times to try and beat random number generators)
                 for( int i = 0; i < 5 && lookAtStack.isEmpty(); i++ )
                 {
-                    List<ItemStack> drops = Block.getDrops( lookAtState, (ServerLevel) world, newPosition, world.getBlockEntity( newPosition ) );
+                    List<ItemStack> drops = Block.getDroppedStacks( lookAtState, (ServerWorld) world, newPosition, world.getBlockEntity( newPosition ) );
                     if( !drops.isEmpty() )
                     {
                         for( ItemStack drop : drops )

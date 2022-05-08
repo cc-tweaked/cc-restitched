@@ -6,10 +6,9 @@
 package dan200.computercraft.api.turtle;
 
 import dan200.computercraft.api.upgrades.IUpgradeBase;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 
 /**
  * A base class for {@link ITurtleUpgrade}s.
@@ -18,12 +17,12 @@ import javax.annotation.Nonnull;
  */
 public abstract class AbstractTurtleUpgrade implements ITurtleUpgrade
 {
-    private final ResourceLocation id;
+    private final Identifier id;
     private final TurtleUpgradeType type;
     private final String adjective;
     private final ItemStack stack;
 
-    protected AbstractTurtleUpgrade( ResourceLocation id, TurtleUpgradeType type, String adjective, ItemStack stack )
+    protected AbstractTurtleUpgrade( Identifier id, TurtleUpgradeType type, String adjective, ItemStack stack )
     {
         this.id = id;
         this.type = type;
@@ -31,14 +30,14 @@ public abstract class AbstractTurtleUpgrade implements ITurtleUpgrade
         this.stack = stack;
     }
 
-    protected AbstractTurtleUpgrade( ResourceLocation id, TurtleUpgradeType type, ItemStack stack )
+    protected AbstractTurtleUpgrade( Identifier id, TurtleUpgradeType type, ItemStack stack )
     {
         this( id, type, IUpgradeBase.getDefaultAdjective( id ), stack );
     }
 
     @Nonnull
     @Override
-    public final ResourceLocation getUpgradeID()
+    public final Identifier getUpgradeID()
     {
         return id;
     }

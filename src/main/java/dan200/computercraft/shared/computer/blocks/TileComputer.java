@@ -12,16 +12,15 @@ import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.core.ComputerState;
 import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.computer.inventory.ComputerMenuWithoutInventory;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 public class TileComputer extends TileComputerBase
 {
@@ -37,15 +36,15 @@ public class TileComputer extends TileComputerBase
     {
         ComputerFamily family = getFamily();
         ServerComputer computer = new ServerComputer(
-            getLevel(), id, label, instanceID, family,
+            getWorld(), id, label, instanceID, family,
             ComputerCraft.computerTermWidth,
             ComputerCraft.computerTermHeight
         );
-        computer.setPosition( getBlockPos() );
+        computer.setPosition( getPos() );
         return computer;
     }
 
-    protected boolean isUsableByPlayer( Player player )
+    protected boolean isUsableByPlayer( PlayerEntity player )
     {
         return isUsable( player, false );
     }
@@ -53,16 +52,16 @@ public class TileComputer extends TileComputerBase
     @Override
     public Direction getDirection()
     {
-        return getBlockState().getValue( BlockComputer.FACING );
+        return getCachedState().get( BlockComputer.FACING );
     }
 
     @Override
     protected void updateBlockState( ComputerState newState )
     {
-        BlockState existing = getBlockState();
-        if( existing.getValue( BlockComputer.STATE ) != newState )
+        BlockState existing = getCachedState();
+        if( existing.get( BlockComputer.STATE ) != newState )
         {
-            getLevel().setBlock( getBlockPos(), existing.setValue( BlockComputer.STATE, newState ), 3 );
+            getWorld().setBlockState( getPos(), existing.with( BlockComputer.STATE, newState ), 3 );
         }
     }
 
@@ -78,7 +77,7 @@ public class TileComputer extends TileComputerBase
 
     @Nullable
     @Override
-    public AbstractContainerMenu createMenu( int id, @Nonnull Inventory inventory, @Nonnull Player player )
+    public ScreenHandler createMenu( int id, @Nonnull PlayerInventory inventory, @Nonnull PlayerEntity player )
     {
         return new ComputerMenuWithoutInventory( Registry.ModContainers.COMPUTER, id, inventory, this::isUsableByPlayer, createServerComputer(), getFamily() );
     }

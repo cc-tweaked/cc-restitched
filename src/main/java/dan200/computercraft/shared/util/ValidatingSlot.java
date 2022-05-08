@@ -5,21 +5,20 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.world.Container;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.Slot;
 
 public class ValidatingSlot extends Slot
 {
-    public ValidatingSlot( Container inventoryIn, int index, int xPosition, int yPosition )
+    public ValidatingSlot( Inventory inventoryIn, int index, int xPosition, int yPosition )
     {
         super( inventoryIn, index, xPosition, yPosition );
     }
 
     @Override
-    public boolean mayPlace( @Nonnull ItemStack stack )
+    public boolean canInsert( @Nonnull ItemStack stack )
     {
         return true; // inventory.isItemValidForSlot( slotNumber, stack );
     }

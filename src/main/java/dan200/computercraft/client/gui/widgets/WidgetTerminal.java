@@ -5,18 +5,20 @@
  */
 package dan200.computercraft.client.gui.widgets;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
+import dan200.computercraft.client.render.text.FixedWidthFontRenderer.QuadEmitter;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.shared.computer.core.ClientComputer;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.VertexConsumerProvider.Immediate;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
@@ -26,7 +28,7 @@ import static dan200.computercraft.client.render.ComputerBorderRenderer.MARGIN;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_WIDTH;
 
-public class WidgetTerminal extends AbstractWidget
+public class WidgetTerminal extends ClickableWidget
 {
     private static final float TERMINATE_TIME = 0.5f;
 
@@ -50,7 +52,7 @@ public class WidgetTerminal extends AbstractWidget
 
     public WidgetTerminal( @Nonnull ClientComputer computer, int x, int y, int termWidth, int termHeight )
     {
-        super( x, y, termWidth * FONT_WIDTH + MARGIN * 2, termHeight * FONT_HEIGHT + MARGIN * 2, TextComponent.EMPTY );
+        super( x, y, termWidth * FONT_WIDTH + MARGIN * 2, termHeight * FONT_HEIGHT + MARGIN * 2, LiteralText.EMPTY );
 
         this.computer = computer;
 
@@ -92,7 +94,7 @@ public class WidgetTerminal extends AbstractWidget
 
                 case GLFW.GLFW_KEY_V:
                     // Ctrl+V for paste
-                    String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+                    String clipboard = MinecraftClient.getInstance().keyboard.getClipboard();
                     if( clipboard != null )
                     {
                         // Clip to the first occurrence of \r or \n
@@ -112,7 +114,7 @@ public class WidgetTerminal extends AbstractWidget
                         }
 
                         // Filter the string
-                        clipboard = SharedConstants.filterText( clipboard );
+                        clipboard = SharedConstants.stripInvalidChars( clipboard );
                         if( !clipboard.isEmpty() )
                         {
                             // Clip to 512 characters and queue the event
@@ -312,12 +314,12 @@ public class WidgetTerminal extends AbstractWidget
     }
 
     @Override
-    public void render( @Nonnull PoseStack transform, int mouseX, int mouseY, float partialTicks )
+    public void render( @Nonnull MatrixStack transform, int mouseX, int mouseY, float partialTicks )
     {
         if( !visible ) return;
         Terminal terminal = computer.getTerminal();
 
-        var bufferSource = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
+        var bufferSource = VertexConsumerProvider.immediate( Tessellator.getInstance().getBuffer() );
         var emitter = FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.GUI_TERMINAL ) );
 
         if( terminal != null )
@@ -333,11 +335,11 @@ public class WidgetTerminal extends AbstractWidget
             FixedWidthFontRenderer.drawEmptyTerminal( emitter, (float) x, (float) y, (float) width, (float) height );
         }
 
-        bufferSource.endBatch();
+        bufferSource.draw();
     }
 
     @Override
-    public void updateNarration( @Nonnull NarrationElementOutput output )
+    public void appendNarrations( @Nonnull NarrationMessageBuilder output )
     {
         // I'm not sure what the right option is here.
     }

@@ -8,10 +8,9 @@ package dan200.computercraft.shared.network.client;
 import dan200.computercraft.shared.computer.core.ComputerState;
 import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 
 /**
  * Provides additional data about a client computer, such as its ID and current state.
@@ -19,7 +18,7 @@ import javax.annotation.Nonnull;
 public class ComputerDataClientMessage extends ComputerClientMessage
 {
     private final ComputerState state;
-    private final CompoundTag userData;
+    private final NbtCompound userData;
 
     public ComputerDataClientMessage( ServerComputer computer )
     {
@@ -28,18 +27,18 @@ public class ComputerDataClientMessage extends ComputerClientMessage
         userData = computer.getUserData();
     }
 
-    public ComputerDataClientMessage( @Nonnull FriendlyByteBuf buf )
+    public ComputerDataClientMessage( @Nonnull PacketByteBuf buf )
     {
         super( buf );
-        state = buf.readEnum( ComputerState.class );
+        state = buf.readEnumConstant( ComputerState.class );
         userData = buf.readNbt();
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
         super.toBytes( buf );
-        buf.writeEnum( state );
+        buf.writeEnumConstant( state );
         buf.writeNbt( userData );
     }
 

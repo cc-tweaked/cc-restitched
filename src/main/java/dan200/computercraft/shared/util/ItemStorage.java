@@ -5,36 +5,35 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.core.Direction;
-import net.minecraft.world.Container;
-import net.minecraft.world.WorldlyContainer;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SidedInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Direction;
 
 /**
  * The most cutesy alternative of {@code IItemHandler} the world has ever seen.
  */
 public interface ItemStorage
 {
-    static ItemStorage wrap( Container inventory )
+    static ItemStorage wrap( Inventory inventory )
     {
         return new InventoryWrapper( inventory );
     }
 
-    static ItemStorage wrap( @Nonnull WorldlyContainer inventory, @Nonnull Direction facing )
+    static ItemStorage wrap( @Nonnull SidedInventory inventory, @Nonnull Direction facing )
     {
         return new SidedInventoryWrapper( inventory, facing );
     }
 
-    static ItemStorage wrap( @Nonnull Container inventory, @Nonnull Direction facing )
+    static ItemStorage wrap( @Nonnull Inventory inventory, @Nonnull Direction facing )
     {
-        return inventory instanceof WorldlyContainer ? new SidedInventoryWrapper( (WorldlyContainer) inventory, facing ) : new InventoryWrapper( inventory );
+        return inventory instanceof SidedInventory ? new SidedInventoryWrapper( (SidedInventory) inventory, facing ) : new InventoryWrapper( inventory );
     }
 
     static boolean areStackable( @Nonnull ItemStack a, @Nonnull ItemStack b )
     {
-        return a == b || (a.getItem() == b.getItem() && ItemStack.tagMatches( a, b ));
+        return a == b || (a.getItem() == b.getItem() && ItemStack.areNbtEqual( a, b ));
     }
 
     int size();
@@ -57,9 +56,9 @@ public interface ItemStorage
 
     class InventoryWrapper implements ItemStorage
     {
-        private final Container inventory;
+        private final Inventory inventory;
 
-        InventoryWrapper( Container inventory )
+        InventoryWrapper( Inventory inventory )
         {
             this.inventory = inventory;
         }
@@ -67,14 +66,14 @@ public interface ItemStorage
         @Override
         public int size()
         {
-            return inventory.getContainerSize();
+            return inventory.size();
         }
 
         @Override
         @Nonnull
         public ItemStack getStack( int slot )
         {
-            return inventory.getItem( slot );
+            return inventory.getStack( slot );
         }
 
         @Override
@@ -87,7 +86,7 @@ public interface ItemStorage
         @Nonnull
         public ItemStack take( int slot, int limit, @Nonnull ItemStack filter, boolean simulate )
         {
-            ItemStack existing = inventory.getItem( slot );
+            ItemStack existing = inventory.getStack( slot );
             if( existing.isEmpty() || !canExtract( slot, existing ) || (!filter.isEmpty() && !areStackable( existing, filter )) )
             {
                 return ItemStack.EMPTY;
@@ -122,23 +121,23 @@ public interface ItemStorage
 
         private void setAndDirty( int slot, @Nonnull ItemStack stack )
         {
-            inventory.setItem( slot, stack );
-            inventory.setChanged();
+            inventory.setStack( slot, stack );
+            inventory.markDirty();
         }
 
         @Override
         @Nonnull
         public ItemStack store( int slot, @Nonnull ItemStack stack, boolean simulate )
         {
-            if( stack.isEmpty() || !inventory.canPlaceItem( slot, stack ) )
+            if( stack.isEmpty() || !inventory.isValid( slot, stack ) )
             {
                 return stack;
             }
 
-            ItemStack existing = inventory.getItem( slot );
+            ItemStack existing = inventory.getStack( slot );
             if( existing.isEmpty() )
             {
-                int limit = Math.min( stack.getMaxStackSize(), inventory.getMaxStackSize() );
+                int limit = Math.min( stack.getMaxCount(), inventory.getMaxCountPerStack() );
                 if( limit <= 0 )
                 {
                     return stack;
@@ -165,7 +164,7 @@ public interface ItemStorage
             }
             else if( areStackable( stack, existing ) )
             {
-                int limit = Math.min( existing.getMaxStackSize(), inventory.getMaxStackSize() ) - existing.getCount();
+                int limit = Math.min( existing.getMaxCount(), inventory.getMaxCountPerStack() ) - existing.getCount();
                 if( limit <= 0 )
                 {
                     return stack;
@@ -175,7 +174,7 @@ public interface ItemStorage
                 {
                     if( !simulate )
                     {
-                        existing.grow( stack.getCount() );
+                        existing.increment( stack.getCount() );
                         setAndDirty( slot, existing );
                     }
                     return ItemStack.EMPTY;
@@ -183,10 +182,10 @@ public interface ItemStorage
                 else
                 {
                     stack = stack.copy();
-                    stack.shrink( limit );
+                    stack.decrement( limit );
                     if( !simulate )
                     {
-                        existing.grow( limit );
+                        existing.increment( limit );
                         setAndDirty( slot, existing );
                     }
                     return stack;
@@ -201,10 +200,10 @@ public interface ItemStorage
 
     class SidedInventoryWrapper extends InventoryWrapper
     {
-        private final WorldlyContainer inventory;
+        private final SidedInventory inventory;
         private final Direction facing;
 
-        SidedInventoryWrapper( WorldlyContainer inventory, Direction facing )
+        SidedInventoryWrapper( SidedInventory inventory, Direction facing )
         {
             super( inventory );
             this.inventory = inventory;
@@ -214,20 +213,20 @@ public interface ItemStorage
         @Override
         protected boolean canExtract( int slot, ItemStack stack )
         {
-            return super.canExtract( slot, stack ) && inventory.canTakeItemThroughFace( slot, stack, facing );
+            return super.canExtract( slot, stack ) && inventory.canExtract( slot, stack, facing );
         }
 
         @Override
         public int size()
         {
-            return inventory.getSlotsForFace( facing ).length;
+            return inventory.getAvailableSlots( facing ).length;
         }
 
         @Nonnull
         @Override
         public ItemStack take( int slot, int limit, @Nonnull ItemStack filter, boolean simulate )
         {
-            int[] slots = inventory.getSlotsForFace( facing );
+            int[] slots = inventory.getAvailableSlots( facing );
             return slot >= 0 && slot < slots.length ? super.take( slots[slot], limit, filter, simulate ) : ItemStack.EMPTY;
         }
 
@@ -235,14 +234,14 @@ public interface ItemStorage
         @Override
         public ItemStack store( int slot, @Nonnull ItemStack stack, boolean simulate )
         {
-            int[] slots = inventory.getSlotsForFace( facing );
+            int[] slots = inventory.getAvailableSlots( facing );
             if( slot < 0 || slot >= slots.length )
             {
                 return stack;
             }
 
             int mappedSlot = slots[slot];
-            if( !inventory.canPlaceItemThroughFace( slot, stack, facing ) )
+            if( !inventory.canInsert( slot, stack, facing ) )
             {
                 return stack;
             }

@@ -9,43 +9,42 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dan200.computercraft.api.turtle.FakePlayer;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import net.minecraft.command.CommandSource;
+import net.minecraft.entity.Entity;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 public final class CommandUtils
 {
     private CommandUtils() {}
 
-    public static boolean isPlayer( CommandSourceStack output )
+    public static boolean isPlayer( ServerCommandSource output )
     {
         Entity sender = output.getEntity();
-        return sender instanceof ServerPlayer
+        return sender instanceof ServerPlayerEntity
             && !(sender instanceof FakePlayer)
-            && ((ServerPlayer) sender).connection != null;
+            && ((ServerPlayerEntity) sender).networkHandler != null;
     }
 
     @SuppressWarnings( "unchecked" )
-    public static CompletableFuture<Suggestions> suggestOnServer( CommandContext<?> context, Function<CommandContext<CommandSourceStack>, CompletableFuture<Suggestions>> supplier )
+    public static CompletableFuture<Suggestions> suggestOnServer( CommandContext<?> context, Function<CommandContext<ServerCommandSource>, CompletableFuture<Suggestions>> supplier )
     {
         Object source = context.getSource();
-        if( !(source instanceof SharedSuggestionProvider) )
+        if( !(source instanceof CommandSource) )
         {
             return Suggestions.empty();
         }
-        else if( source instanceof CommandSourceStack )
+        else if( source instanceof ServerCommandSource )
         {
-            return supplier.apply( (CommandContext<CommandSourceStack>) context );
+            return supplier.apply( (CommandContext<ServerCommandSource>) context );
         }
         else
         {
-            return ((SharedSuggestionProvider) source).customSuggestion( (CommandContext<SharedSuggestionProvider>) context, builder );
+            return ((CommandSource) source).getCompletions( (CommandContext<CommandSource>) context, builder );
         }
     }
 

@@ -7,7 +7,7 @@ package dan200.computercraft.shared.network.client;
 
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketByteBuf;
 
 public class ComputerDeletedClientMessage extends ComputerClientMessage
 {
@@ -16,7 +16,7 @@ public class ComputerDeletedClientMessage extends ComputerClientMessage
         super( instanceId );
     }
 
-    public ComputerDeletedClientMessage( FriendlyByteBuf buffer )
+    public ComputerDeletedClientMessage( PacketByteBuf buffer )
     {
         super( buffer );
     }

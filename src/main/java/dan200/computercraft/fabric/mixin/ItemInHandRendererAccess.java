@@ -5,22 +5,22 @@
  */
 package dan200.computercraft.fabric.mixin;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.item.HeldItemRenderer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Arm;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin( ItemInHandRenderer.class )
+@Mixin( HeldItemRenderer.class )
 public interface ItemInHandRendererAccess
 {
     @Invoker
     float callCalculateMapTilt( float tickDelta );
 
     @Invoker
-    void callRenderMapHand( PoseStack matrices, MultiBufferSource vertexConsumers, int light, HumanoidArm arm );
+    void callRenderMapHand( MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Arm arm );
 
     @Invoker
-    void callRenderPlayerArm( PoseStack matrices, MultiBufferSource vertexConsumers, int light, float equipProgress, float swingProgress, HumanoidArm arm );
+    void callRenderPlayerArm( MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float equipProgress, float swingProgress, Arm arm );
 }

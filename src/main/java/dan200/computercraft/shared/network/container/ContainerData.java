@@ -6,15 +6,14 @@
 package dan200.computercraft.shared.network.container;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-import net.minecraft.core.Registry;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
-
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import javax.annotation.Nonnull;
 import java.util.function.Function;
 
@@ -23,38 +22,38 @@ import java.util.function.Function;
  */
 public interface ContainerData
 {
-    void toBytes( FriendlyByteBuf buf );
+    void toBytes( PacketByteBuf buf );
 
-    default void open( Player player, MenuProvider owner )
+    default void open( PlayerEntity player, NamedScreenHandlerFactory owner )
     {
-        if( player.level.isClientSide ) return;
-        player.openMenu( owner );
+        if( player.world.isClient ) return;
+        player.openHandledScreen( owner );
     }
 
-    interface Factory<C extends AbstractContainerMenu, T extends ContainerData>
+    interface Factory<C extends ScreenHandler, T extends ContainerData>
     {
-        C create( int id, @Nonnull Inventory inventory, T data );
+        C create( int id, @Nonnull PlayerInventory inventory, T data );
     }
 
-    interface FixedFactory<C extends AbstractContainerMenu, T extends ContainerData>
+    interface FixedFactory<C extends ScreenHandler, T extends ContainerData>
     {
-        C create( MenuType<C> type, int id, @Nonnull Inventory inventory, T data );
+        C create( ScreenHandlerType<C> type, int id, @Nonnull PlayerInventory inventory, T data );
     }
 
-    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType(
-        ResourceLocation identifier, Function<FriendlyByteBuf, T> reader, Factory<C, T> factory
+    static <C extends ScreenHandler, T extends ContainerData> ScreenHandlerType<C> toType(
+        Identifier identifier, Function<PacketByteBuf, T> reader, Factory<C, T> factory
     )
     {
-        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+        return Registry.register( Registry.SCREEN_HANDLER, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
             factory.create( id, playerInventory, reader.apply( packetByteBuf ) )
         ) );
     }
 
-    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType(
-        ResourceLocation identifier, MenuType<C> type, Function<FriendlyByteBuf, T> reader, FixedFactory<C, T> factory
+    static <C extends ScreenHandler, T extends ContainerData> ScreenHandlerType<C> toType(
+        Identifier identifier, ScreenHandlerType<C> type, Function<PacketByteBuf, T> reader, FixedFactory<C, T> factory
     )
     {
-        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+        return Registry.register( Registry.SCREEN_HANDLER, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
             factory.create( type, id, playerInventory, reader.apply( packetByteBuf ) )
         ) );
     }

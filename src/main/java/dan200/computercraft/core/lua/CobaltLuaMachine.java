@@ -14,7 +14,6 @@ import dan200.computercraft.core.computer.TimeoutState;
 import dan200.computercraft.core.tracking.Tracking;
 import dan200.computercraft.core.tracking.TrackingField;
 import dan200.computercraft.shared.util.ThreadUtils;
-import org.squiddev.cobalt.LuaTable;
 import org.squiddev.cobalt.*;
 import org.squiddev.cobalt.compiler.CompileException;
 import org.squiddev.cobalt.compiler.LoadState;

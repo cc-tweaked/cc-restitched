@@ -5,13 +5,13 @@
  */
 package dan200.computercraft.shared.common;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public interface IBundledRedstoneBlock
 {
-    boolean getBundledRedstoneConnectivity( Level world, BlockPos pos, Direction side );
+    boolean getBundledRedstoneConnectivity( World world, BlockPos pos, Direction side );
 
-    int getBundledRedstoneOutput( Level world, BlockPos pos, Direction side );
+    int getBundledRedstoneOutput( World world, BlockPos pos, Direction side );
 }

@@ -9,15 +9,14 @@ import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.shared.Peripherals;
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.util.IDAssigner;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -52,7 +51,7 @@ public final class WiredModemLocalPeripheral
      * @param direction The direction so search in
      * @return Whether the peripheral changed.
      */
-    public boolean attach( @Nonnull Level world, @Nonnull BlockPos origin, @Nonnull Direction direction )
+    public boolean attach( @Nonnull World world, @Nonnull BlockPos origin, @Nonnull Direction direction )
     {
         IPeripheral oldPeripheral = peripheral;
         IPeripheral peripheral = this.peripheral = getPeripheralFrom( world, origin, direction );
@@ -122,25 +121,25 @@ public final class WiredModemLocalPeripheral
             : Collections.singletonMap( type + "_" + id, peripheral );
     }
 
-    public void write( @Nonnull CompoundTag tag, @Nonnull String suffix )
+    public void write( @Nonnull NbtCompound tag, @Nonnull String suffix )
     {
         if( id >= 0 ) tag.putInt( NBT_PERIPHERAL_ID + suffix, id );
         if( type != null ) tag.putString( NBT_PERIPHERAL_TYPE + suffix, type );
     }
 
-    public void read( @Nonnull CompoundTag tag, @Nonnull String suffix )
+    public void read( @Nonnull NbtCompound tag, @Nonnull String suffix )
     {
-        id = tag.contains( NBT_PERIPHERAL_ID + suffix, Tag.TAG_ANY_NUMERIC )
+        id = tag.contains( NBT_PERIPHERAL_ID + suffix, NbtElement.NUMBER_TYPE )
             ? tag.getInt( NBT_PERIPHERAL_ID + suffix ) : -1;
 
-        type = tag.contains( NBT_PERIPHERAL_TYPE + suffix, Tag.TAG_STRING )
+        type = tag.contains( NBT_PERIPHERAL_TYPE + suffix, NbtElement.STRING_TYPE )
             ? tag.getString( NBT_PERIPHERAL_TYPE + suffix ) : null;
     }
 
     @Nullable
-    private IPeripheral getPeripheralFrom( Level world, BlockPos pos, Direction direction )
+    private IPeripheral getPeripheralFrom( World world, BlockPos pos, Direction direction )
     {
-        BlockPos offset = pos.relative( direction );
+        BlockPos offset = pos.offset( direction );
 
         Block block = world.getBlockState( offset ).getBlock();
         if( block == Registry.ModBlocks.WIRED_MODEM_FULL || block == Registry.ModBlocks.CABLE ) return null;

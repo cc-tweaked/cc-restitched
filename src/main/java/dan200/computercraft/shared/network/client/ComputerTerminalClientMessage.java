@@ -7,9 +7,8 @@ package dan200.computercraft.shared.network.client;
 
 
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
 
 public class ComputerTerminalClientMessage extends ComputerClientMessage
 {
@@ -21,14 +20,14 @@ public class ComputerTerminalClientMessage extends ComputerClientMessage
         this.state = state;
     }
 
-    public ComputerTerminalClientMessage( @Nonnull FriendlyByteBuf buf )
+    public ComputerTerminalClientMessage( @Nonnull PacketByteBuf buf )
     {
         super( buf );
         state = new TerminalState( buf );
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
         super.toBytes( buf );
         state.write( buf );

@@ -15,11 +15,10 @@ import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import dan200.computercraft.shared.peripheral.speaker.UpgradeSpeakerPeripheral;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.client.util.ModelIdentifier;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 import javax.annotation.Nonnull;
 
 public class TurtleSpeaker extends AbstractTurtleUpgrade
@@ -27,8 +26,8 @@ public class TurtleSpeaker extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private static class Models
     {
-        private static ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft:turtle_speaker_upgrade_left", "inventory" );
-        private static ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft:turtle_speaker_upgrade_right", "inventory" );
+        private static ModelIdentifier leftModel = new ModelIdentifier( "computercraft:turtle_speaker_upgrade_left", "inventory" );
+        private static ModelIdentifier rightModel = new ModelIdentifier( "computercraft:turtle_speaker_upgrade_right", "inventory" );
     }
 
     private static class Peripheral extends UpgradeSpeakerPeripheral
@@ -44,7 +43,7 @@ public class TurtleSpeaker extends AbstractTurtleUpgrade
         @Override
         public SpeakerPosition getPosition()
         {
-            return SpeakerPosition.of( turtle.getLevel(), Vec3.atCenterOf( turtle.getPosition() ) );
+            return SpeakerPosition.of( turtle.getLevel(), Vec3d.ofCenter( turtle.getPosition() ) );
         }
 
         @Override
@@ -54,7 +53,7 @@ public class TurtleSpeaker extends AbstractTurtleUpgrade
         }
     }
 
-    public TurtleSpeaker( ResourceLocation id, ItemStack item )
+    public TurtleSpeaker( Identifier id, ItemStack item )
     {
         super( id, TurtleUpgradeType.PERIPHERAL, UpgradeSpeakerPeripheral.ADJECTIVE, item );
     }

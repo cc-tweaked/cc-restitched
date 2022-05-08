@@ -9,9 +9,8 @@ import dan200.computercraft.shared.computer.core.IContainerComputer;
 import dan200.computercraft.shared.computer.core.InputState;
 import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
 
 public class KeyEventServerMessage extends ComputerServerMessage
 {
@@ -29,7 +28,7 @@ public class KeyEventServerMessage extends ComputerServerMessage
         this.key = key;
     }
 
-    public KeyEventServerMessage( @Nonnull FriendlyByteBuf buf )
+    public KeyEventServerMessage( @Nonnull PacketByteBuf buf )
     {
         super( buf );
         type = buf.readByte();
@@ -37,7 +36,7 @@ public class KeyEventServerMessage extends ComputerServerMessage
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
         super.toBytes( buf );
         buf.writeByte( type );

@@ -14,22 +14,21 @@ import dan200.computercraft.shared.common.ServerTerminal;
 import dan200.computercraft.shared.common.TileGeneric;
 import dan200.computercraft.shared.network.client.TerminalState;
 import dan200.computercraft.shared.util.TickScheduler;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.BlockHitResult;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -68,7 +67,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     private BlockPos bbPos;
     private BlockState bbState;
     private int bbX, bbY, bbWidth, bbHeight;
-    private AABB boundingBox;
+    private Box boundingBox;
 
     public TileMonitor( BlockEntityType<? extends TileMonitor> type, BlockPos pos, BlockState state, boolean advanced )
     {
@@ -77,9 +76,9 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     }
 
     @Override
-    public void clearRemoved() // TODO: Switch back to onLood
+    public void cancelRemoval() // TODO: Switch back to onLood
     {
-        super.clearRemoved();
+        super.cancelRemoval();
         needsValidating = true; // Same, tbh
         TickScheduler.schedule( this );
     }
@@ -90,13 +89,13 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
         // TODO: Call this before using the block
         if( destroyed ) return;
         destroyed = true;
-        if( !getLevel().isClientSide ) contractNeighbours();
+        if( !getWorld().isClient ) contractNeighbours();
     }
 
     @Override
-    public void setRemoved()
+    public void markRemoved()
     {
-        super.setRemoved();
+        super.markRemoved();
         if( clientMonitor != null && xIndex == 0 && yIndex == 0 ) clientMonitor.destroy();
     }
 
@@ -109,38 +108,38 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
 
     @Nonnull
     @Override
-    public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
+    public ActionResult onActivate( PlayerEntity player, Hand hand, BlockHitResult hit )
     {
-        if( !player.isCrouching() && getFront() == hit.getDirection() )
+        if( !player.isInSneakingPose() && getFront() == hit.getSide() )
         {
-            if( !getLevel().isClientSide )
+            if( !getWorld().isClient )
             {
                 monitorTouched(
-                    (float) (hit.getLocation().x - hit.getBlockPos().getX()),
-                    (float) (hit.getLocation().y - hit.getBlockPos().getY()),
-                    (float) (hit.getLocation().z - hit.getBlockPos().getZ())
+                    (float) (hit.getPos().x - hit.getBlockPos().getX()),
+                    (float) (hit.getPos().y - hit.getBlockPos().getY()),
+                    (float) (hit.getPos().z - hit.getBlockPos().getZ())
                 );
             }
-            return InteractionResult.SUCCESS;
+            return ActionResult.SUCCESS;
         }
 
-        return InteractionResult.PASS;
+        return ActionResult.PASS;
     }
 
     @Override
-    public void saveAdditional( CompoundTag tag )
+    public void writeNbt( NbtCompound tag )
     {
         tag.putInt( NBT_X, xIndex );
         tag.putInt( NBT_Y, yIndex );
         tag.putInt( NBT_WIDTH, width );
         tag.putInt( NBT_HEIGHT, height );
-        super.saveAdditional( tag );
+        super.writeNbt( tag );
     }
 
     @Override
-    public void load( @Nonnull CompoundTag nbt )
+    public void readNbt( @Nonnull NbtCompound nbt )
     {
-        super.load( nbt );
+        super.readNbt( nbt );
 
         int oldXIndex = xIndex;
         int oldYIndex = yIndex;
@@ -150,7 +149,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
         width = nbt.getInt( NBT_WIDTH );
         height = nbt.getInt( NBT_HEIGHT );
 
-        if( level != null && level.isClientSide )
+        if( world != null && world.isClient )
         {
             if( oldXIndex != xIndex || oldYIndex != yIndex )
             {
@@ -244,7 +243,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
         {
             // Otherwise fetch the origin and attempt to get its monitor
             // Note this may load chunks, but we don't really have a choice here.
-            BlockEntity te = level.getBlockEntity( toWorldPos( 0, 0 ) );
+            BlockEntity te = world.getBlockEntity( toWorldPos( 0, 0 ) );
             if( !(te instanceof TileMonitor) ) return null;
 
             return serverMonitor = ((TileMonitor) te).createServerMonitor();
@@ -256,7 +255,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     {
         if( clientMonitor != null ) return clientMonitor;
 
-        BlockEntity te = level.getBlockEntity( toWorldPos( 0, 0 ) );
+        BlockEntity te = world.getBlockEntity( toWorldPos( 0, 0 ) );
         if( !(te instanceof TileMonitor) ) return null;
 
         return clientMonitor = ((TileMonitor) te).clientMonitor;
@@ -266,16 +265,16 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
 
     @Nonnull
     @Override
-    public final ClientboundBlockEntityDataPacket getUpdatePacket()
+    public final BlockEntityUpdateS2CPacket toUpdatePacket()
     {
-        return ClientboundBlockEntityDataPacket.create( this );
+        return BlockEntityUpdateS2CPacket.create( this );
     }
 
     @Nonnull
     @Override
-    public final CompoundTag getUpdateTag()
+    public final NbtCompound toInitialChunkDataNbt()
     {
-        CompoundTag nbt = super.getUpdateTag();
+        NbtCompound nbt = super.toInitialChunkDataNbt();
         nbt.putInt( NBT_X, xIndex );
         nbt.putInt( NBT_Y, yIndex );
         nbt.putInt( NBT_WIDTH, width );
@@ -287,7 +286,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     {
         if( xIndex != 0 || yIndex != 0 )
         {
-            ComputerCraft.log.warn( "Receiving monitor state for non-origin terminal at {}", getBlockPos() );
+            ComputerCraft.log.warn( "Receiving monitor state for non-origin terminal at {}", getPos() );
             return;
         }
 
@@ -299,8 +298,8 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
 
     private void updateBlockState()
     {
-        getLevel().setBlock( getBlockPos(), getBlockState()
-            .setValue( BlockMonitor.STATE, MonitorEdgeState.fromConnections(
+        getWorld().setBlockState( getPos(), getCachedState()
+            .with( BlockMonitor.STATE, MonitorEdgeState.fromConnections(
                 yIndex < height - 1, yIndex > 0,
                 xIndex > 0, xIndex < width - 1 ) ), 2 );
     }
@@ -310,14 +309,14 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     {
         // Ensure we're actually a monitor block. This _should_ always be the case, but sometimes there's
         // fun problems with the block being missing on the client.
-        BlockState state = getBlockState();
-        return state.hasProperty( BlockMonitor.FACING ) ? state.getValue( BlockMonitor.FACING ) : Direction.NORTH;
+        BlockState state = getCachedState();
+        return state.contains( BlockMonitor.FACING ) ? state.get( BlockMonitor.FACING ) : Direction.NORTH;
     }
 
     public Direction getOrientation()
     {
-        BlockState state = getBlockState();
-        return state.hasProperty( BlockMonitor.ORIENTATION ) ? state.getValue( BlockMonitor.ORIENTATION ) : Direction.NORTH;
+        BlockState state = getCachedState();
+        return state.contains( BlockMonitor.ORIENTATION ) ? state.get( BlockMonitor.ORIENTATION ) : Direction.NORTH;
     }
 
     public Direction getFront()
@@ -328,7 +327,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
 
     public Direction getRight()
     {
-        return getDirection().getCounterClockWise();
+        return getDirection().rotateYCounterclockwise();
     }
 
     public Direction getDown()
@@ -376,8 +375,8 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
         if( x == xIndex && y == yIndex ) return MonitorState.present( this );
         BlockPos pos = toWorldPos( x, y );
 
-        Level world = getLevel();
-        if( world == null || !world.isLoaded( pos ) ) return MonitorState.UNLOADED;
+        World world = getWorld();
+        if( world == null || !world.canSetBlock( pos ) ) return MonitorState.UNLOADED;
 
         BlockEntity tile = world.getBlockEntity( pos );
         if( !(tile instanceof TileMonitor monitor) ) return MonitorState.MISSING;
@@ -399,8 +398,8 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
      */
     BlockPos toWorldPos( int x, int y )
     {
-        if( xIndex == x && yIndex == y ) return getBlockPos();
-        return getBlockPos().relative( getRight(), -xIndex + x ).relative( getDown(), -yIndex + y );
+        if( xIndex == x && yIndex == y ) return getPos();
+        return getPos().offset( getRight(), -xIndex + x ).offset( getDown(), -yIndex + y );
     }
 
     void resize( int width, int height )
@@ -446,13 +445,13 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
         if( serverMonitor != null ) serverMonitor.rebuild();
 
         // Update the other monitors, setting coordinates, dimensions and the server terminal
-        BlockPos pos = getBlockPos();
+        BlockPos pos = getPos();
         Direction down = getDown(), right = getRight();
         for( int x = 0; x < width; x++ )
         {
             for( int y = 0; y < height; y++ )
             {
-                BlockEntity other = getLevel().getBlockEntity( pos.relative( right, x ).relative( down, y ) );
+                BlockEntity other = getWorld().getBlockEntity( pos.offset( right, x ).offset( down, y ) );
                 if( !(other instanceof TileMonitor monitor) || !isCompatible( monitor ) ) continue;
 
                 monitor.xIndex = x;
@@ -482,17 +481,17 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     {
         if( width == 1 && height == 1 ) return;
 
-        BlockPos pos = getBlockPos();
+        BlockPos pos = getPos();
         Direction down = getDown(), right = getRight();
         BlockPos origin = toWorldPos( 0, 0 );
 
         TileMonitor toLeft = null, toAbove = null, toRight = null, toBelow = null;
-        if( xIndex > 0 ) toLeft = tryResizeAt( pos.relative( right, -xIndex ), xIndex, 1 );
+        if( xIndex > 0 ) toLeft = tryResizeAt( pos.offset( right, -xIndex ), xIndex, 1 );
         if( yIndex > 0 ) toAbove = tryResizeAt( origin, width, yIndex );
-        if( xIndex < width - 1 ) toRight = tryResizeAt( pos.relative( right, 1 ), width - xIndex - 1, 1 );
+        if( xIndex < width - 1 ) toRight = tryResizeAt( pos.offset( right, 1 ), width - xIndex - 1, 1 );
         if( yIndex < height - 1 )
         {
-            toBelow = tryResizeAt( origin.relative( down, yIndex + 1 ), width, height - yIndex - 1 );
+            toBelow = tryResizeAt( origin.offset( down, yIndex + 1 ), width, height - yIndex - 1 );
         }
 
         if( toLeft != null ) toLeft.expand();
@@ -504,7 +503,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     @Nullable
     private TileMonitor tryResizeAt( BlockPos pos, int width, int height )
     {
-        BlockEntity tile = level.getBlockEntity( pos );
+        BlockEntity tile = world.getBlockEntity( pos );
         if( tile instanceof TileMonitor monitor && isCompatible( monitor ) )
         {
             monitor.resize( width, height );
@@ -597,19 +596,19 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
     }
 
     @Nonnull
-    public AABB getRenderBoundingBox()
+    public Box getRenderBoundingBox()
     {
         // We attempt to cache the bounding box to save having to do property lookups (and allocations!) on every frame.
         // Unfortunately the AABB does depend on quite a lot of state, so we need to add a bunch of extra fields -
         // ideally these'd be a single object, but I don't think worth doing until Java has value types.
-        if( boundingBox != null && getBlockState().equals( bbState ) && getBlockPos().equals( bbPos ) &&
+        if( boundingBox != null && getCachedState().equals( bbState ) && getPos().equals( bbPos ) &&
             xIndex == bbX && yIndex == bbY && width == bbWidth && height == bbHeight )
         {
             return boundingBox;
         }
 
-        bbState = getBlockState();
-        bbPos = getBlockPos();
+        bbState = getCachedState();
+        bbPos = getPos();
         bbX = xIndex;
         bbY = yIndex;
         bbWidth = width;
@@ -617,7 +616,7 @@ public class TileMonitor extends TileGeneric implements IPeripheralTile
 
         BlockPos startPos = toWorldPos( 0, 0 );
         BlockPos endPos = toWorldPos( width, height );
-        return boundingBox = new AABB(
+        return boundingBox = new Box(
             Math.min( startPos.getX(), endPos.getX() ),
             Math.min( startPos.getY(), endPos.getY() ),
             Math.min( startPos.getZ(), endPos.getZ() ),

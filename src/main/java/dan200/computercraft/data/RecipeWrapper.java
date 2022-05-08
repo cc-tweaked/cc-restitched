@@ -6,85 +6,84 @@
 package dan200.computercraft.data;
 
 import com.google.gson.JsonObject;
-import net.minecraft.data.recipes.FinishedRecipe;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.data.server.recipe.RecipeJsonProvider;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import java.util.function.Consumer;
 
 /**
  * Adapter for recipes which overrides the serializer and adds custom item NBT.
  */
-final class RecipeWrapper implements FinishedRecipe
+final class RecipeWrapper implements RecipeJsonProvider
 {
-    private final FinishedRecipe recipe;
-    private final CompoundTag resultData;
+    private final RecipeJsonProvider recipe;
+    private final NbtCompound resultData;
     private final RecipeSerializer<?> serializer;
 
-    private RecipeWrapper( FinishedRecipe recipe, CompoundTag resultData, RecipeSerializer<?> serializer )
+    private RecipeWrapper( RecipeJsonProvider recipe, NbtCompound resultData, RecipeSerializer<?> serializer )
     {
         this.resultData = resultData;
         this.recipe = recipe;
         this.serializer = serializer;
     }
 
-    public static Consumer<FinishedRecipe> wrap( RecipeSerializer<?> serializer, Consumer<FinishedRecipe> original )
+    public static Consumer<RecipeJsonProvider> wrap( RecipeSerializer<?> serializer, Consumer<RecipeJsonProvider> original )
     {
         return x -> original.accept( new RecipeWrapper( x, null, serializer ) );
     }
 
-    public static Consumer<FinishedRecipe> wrap( RecipeSerializer<?> serializer, Consumer<FinishedRecipe> original, CompoundTag resultData )
+    public static Consumer<RecipeJsonProvider> wrap( RecipeSerializer<?> serializer, Consumer<RecipeJsonProvider> original, NbtCompound resultData )
     {
         return x -> original.accept( new RecipeWrapper( x, resultData, serializer ) );
     }
 
-    public static Consumer<FinishedRecipe> wrap( RecipeSerializer<?> serializer, Consumer<FinishedRecipe> original, Consumer<CompoundTag> resultData )
+    public static Consumer<RecipeJsonProvider> wrap( RecipeSerializer<?> serializer, Consumer<RecipeJsonProvider> original, Consumer<NbtCompound> resultData )
     {
-        CompoundTag tag = new CompoundTag();
+        NbtCompound tag = new NbtCompound();
         resultData.accept( tag );
         return x -> original.accept( new RecipeWrapper( x, tag, serializer ) );
     }
 
     @Override
-    public void serializeRecipeData( @Nonnull JsonObject jsonObject )
+    public void serialize( @Nonnull JsonObject jsonObject )
     {
-        recipe.serializeRecipeData( jsonObject );
+        recipe.serialize( jsonObject );
 
         if( resultData != null )
         {
-            JsonObject object = GsonHelper.getAsJsonObject( jsonObject, "result" );
+            JsonObject object = JsonHelper.getObject( jsonObject, "result" );
             object.addProperty( "nbt", resultData.toString() );
         }
     }
 
     @Nonnull
     @Override
-    public ResourceLocation getId()
+    public Identifier getRecipeId()
     {
-        return recipe.getId();
+        return recipe.getRecipeId();
     }
 
     @Nonnull
     @Override
-    public RecipeSerializer<?> getType()
+    public RecipeSerializer<?> getSerializer()
     {
         return serializer;
     }
 
     @Nullable
     @Override
-    public JsonObject serializeAdvancement()
+    public JsonObject toAdvancementJson()
     {
-        return recipe.serializeAdvancement();
+        return recipe.toAdvancementJson();
     }
 
     @Nullable
     @Override
-    public ResourceLocation getAdvancementId()
+    public Identifier getAdvancementId()
     {
         return recipe.getAdvancementId();
     }

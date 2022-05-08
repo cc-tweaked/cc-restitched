@@ -13,62 +13,61 @@ import dan200.computercraft.shared.turtle.core.TurtleBrain;
 import dan200.computercraft.shared.turtle.items.ITurtleItem;
 import dan200.computercraft.shared.turtle.items.TurtleItemFactory;
 import dan200.computercraft.shared.util.WaterloggableHelpers;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.ShapeContext;
+import net.minecraft.block.Waterloggable;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import java.util.function.Supplier;
 
 import static dan200.computercraft.shared.util.WaterloggableHelpers.WATERLOGGED;
 import static dan200.computercraft.shared.util.WaterloggableHelpers.getFluidStateForPlacement;
 
-public class BlockTurtle extends BlockComputerBase<TileTurtle> implements SimpleWaterloggedBlock
+public class BlockTurtle extends BlockComputerBase<TileTurtle> implements Waterloggable
 {
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
 
-    private static final VoxelShape DEFAULT_SHAPE = Shapes.box(
+    private static final VoxelShape DEFAULT_SHAPE = VoxelShapes.cuboid(
         0.125, 0.125, 0.125,
         0.875, 0.875, 0.875
     );
 
     private final BlockEntityTicker<TileTurtle> clientTicker = ( level, pos, state, computer ) -> computer.clientTick();
 
-    public BlockTurtle( Properties settings, ComputerFamily family, Supplier<BlockEntityType<TileTurtle>> type )
+    public BlockTurtle( Settings settings, ComputerFamily family, Supplier<BlockEntityType<TileTurtle>> type )
     {
         super( settings, family, type );
-        registerDefaultState( getStateDefinition().any()
-            .setValue( FACING, Direction.NORTH )
-            .setValue( WATERLOGGED, false )
+        setDefaultState( getStateManager().getDefaultState()
+            .with( FACING, Direction.NORTH )
+            .with( WATERLOGGED, false )
         );
     }
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> builder )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> builder )
     {
         builder.add( FACING, WATERLOGGED );
     }
@@ -76,28 +75,28 @@ public class BlockTurtle extends BlockComputerBase<TileTurtle> implements Simple
     @Nonnull
     @Override
     @Deprecated
-    public RenderShape getRenderShape( @Nonnull BlockState state )
+    public BlockRenderType getRenderType( @Nonnull BlockState state )
     {
-        return RenderShape.ENTITYBLOCK_ANIMATED;
+        return BlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     @Nonnull
     @Override
     @Deprecated
-    public VoxelShape getShape( @Nonnull BlockState state, BlockGetter world, @Nonnull BlockPos pos, @Nonnull CollisionContext context )
+    public VoxelShape getOutlineShape( @Nonnull BlockState state, BlockView world, @Nonnull BlockPos pos, @Nonnull ShapeContext context )
     {
         BlockEntity tile = world.getBlockEntity( pos );
-        Vec3 offset = tile instanceof TileTurtle turtle ? turtle.getRenderOffset( 1.0f ) : Vec3.ZERO;
-        return offset.equals( Vec3.ZERO ) ? DEFAULT_SHAPE : DEFAULT_SHAPE.move( offset.x, offset.y, offset.z );
+        Vec3d offset = tile instanceof TileTurtle turtle ? turtle.getRenderOffset( 1.0f ) : Vec3d.ZERO;
+        return offset.equals( Vec3d.ZERO ) ? DEFAULT_SHAPE : DEFAULT_SHAPE.offset( offset.x, offset.y, offset.z );
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement( BlockPlaceContext placement )
+    public BlockState getPlacementState( ItemPlacementContext placement )
     {
-        return defaultBlockState()
-            .setValue( FACING, placement.getHorizontalDirection() )
-            .setValue( WATERLOGGED, getFluidStateForPlacement( placement ) );
+        return getDefaultState()
+            .with( FACING, placement.getPlayerFacing() )
+            .with( WATERLOGGED, getFluidStateForPlacement( placement ) );
     }
 
     @Nonnull
@@ -111,21 +110,21 @@ public class BlockTurtle extends BlockComputerBase<TileTurtle> implements Simple
     @Nonnull
     @Override
     @Deprecated
-    public BlockState updateShape( @Nonnull BlockState state, @Nonnull Direction side, @Nonnull BlockState otherState, @Nonnull LevelAccessor world, @Nonnull BlockPos pos, @Nonnull BlockPos otherPos )
+    public BlockState getStateForNeighborUpdate( @Nonnull BlockState state, @Nonnull Direction side, @Nonnull BlockState otherState, @Nonnull WorldAccess world, @Nonnull BlockPos pos, @Nonnull BlockPos otherPos )
     {
         WaterloggableHelpers.updateShape( state, world, pos );
         return state;
     }
 
     @Override
-    public void setPlacedBy( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable LivingEntity entity, @Nonnull ItemStack stack )
+    public void onPlaced( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable LivingEntity entity, @Nonnull ItemStack stack )
     {
-        super.setPlacedBy( world, pos, state, entity, stack );
+        super.onPlaced( world, pos, state, entity, stack );
 
         BlockEntity tile = world.getBlockEntity( pos );
-        if( !world.isClientSide && tile instanceof TileTurtle turtle )
+        if( !world.isClient && tile instanceof TileTurtle turtle )
         {
-            if( entity instanceof Player player ) turtle.setOwningPlayer( player.getGameProfile() );
+            if( entity instanceof PlayerEntity player ) turtle.setOwningPlayer( player.getGameProfile() );
 
             if( stack.getItem() instanceof ITurtleItem item )
             {
@@ -142,14 +141,14 @@ public class BlockTurtle extends BlockComputerBase<TileTurtle> implements Simple
                 if( colour != -1 ) turtle.getAccess().setColour( colour );
 
                 // Set overlay
-                ResourceLocation overlay = item.getOverlay( stack );
+                Identifier overlay = item.getOverlay( stack );
                 if( overlay != null ) ((TurtleBrain) turtle.getAccess()).setOverlay( overlay );
             }
         }
     }
 
     @Override
-    public float getExplosionResistance()
+    public float getBlastResistance()
     {
         // TODO Implement below functionality
         return 2000;
@@ -176,8 +175,8 @@ public class BlockTurtle extends BlockComputerBase<TileTurtle> implements Simple
 
     @Override
     @Nullable
-    public <U extends BlockEntity> BlockEntityTicker<U> getTicker( @Nonnull Level level, @Nonnull BlockState state, @Nonnull BlockEntityType<U> type )
+    public <U extends BlockEntity> BlockEntityTicker<U> getTicker( @Nonnull World level, @Nonnull BlockState state, @Nonnull BlockEntityType<U> type )
     {
-        return level.isClientSide ? BaseEntityBlock.createTickerHelper( type, this.type.get(), clientTicker ) : super.getTicker( level, state, type );
+        return level.isClient ? BlockWithEntity.checkType( type, this.type.get(), clientTicker ) : super.getTicker( level, state, type );
     }
 }

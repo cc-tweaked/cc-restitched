@@ -67,7 +67,7 @@ public class WirelessNetwork implements IPacketNetwork
         if( receiver.getLevel() == sender.getLevel() )
         {
             double receiveRange = Math.max( range, receiver.getRange() ); // Ensure range is symmetrical
-            double distanceSq = receiver.getPosition().distanceToSqr( sender.getPosition() );
+            double distanceSq = receiver.getPosition().squaredDistanceTo( sender.getPosition() );
             if( interdimensional || receiver.isInterdimensional() || distanceSq <= receiveRange * receiveRange )
             {
                 receiver.receiveSameDimension( packet, Math.sqrt( distanceSq ) );

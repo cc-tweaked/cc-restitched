@@ -13,10 +13,9 @@ import dan200.computercraft.api.turtle.TurtleSide;
 import dan200.computercraft.api.turtle.TurtleUpgradeType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.client.util.ModelIdentifier;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 import javax.annotation.Nonnull;
 
 public class TurtleCraftingTable extends AbstractTurtleUpgrade
@@ -24,11 +23,11 @@ public class TurtleCraftingTable extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private static class Models
     {
-        private static final ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft:turtle_crafting_table_left", "inventory" );
-        private static final ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft:turtle_crafting_table_right", "inventory" );
+        private static final ModelIdentifier leftModel = new ModelIdentifier( "computercraft:turtle_crafting_table_left", "inventory" );
+        private static final ModelIdentifier rightModel = new ModelIdentifier( "computercraft:turtle_crafting_table_right", "inventory" );
     }
 
-    public TurtleCraftingTable( ResourceLocation id, ItemStack stack )
+    public TurtleCraftingTable( Identifier id, ItemStack stack )
     {
         super( id, TurtleUpgradeType.PERIPHERAL, "upgrade.minecraft.crafting_table.adjective", stack );
     }

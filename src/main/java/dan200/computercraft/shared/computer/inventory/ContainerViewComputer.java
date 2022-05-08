@@ -11,30 +11,29 @@ import dan200.computercraft.shared.computer.blocks.TileCommandComputer;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.network.container.ViewComputerContainerData;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-
 import javax.annotation.Nonnull;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 
 public class ContainerViewComputer extends ComputerMenuWithoutInventory
 {
     private final int width;
     private final int height;
 
-    public ContainerViewComputer( int id, Inventory player, ServerComputer computer )
+    public ContainerViewComputer( int id, PlayerInventory player, ServerComputer computer )
     {
         super( Registry.ModContainers.VIEW_COMPUTER, id, player, p -> canInteractWith( computer, p ), computer, computer.getFamily() );
         width = height = 0;
     }
 
-    public ContainerViewComputer( int id, Inventory player, ViewComputerContainerData data )
+    public ContainerViewComputer( int id, PlayerInventory player, ViewComputerContainerData data )
     {
         super( Registry.ModContainers.VIEW_COMPUTER, id, player, data );
         width = data.getWidth();
         height = data.getHeight();
     }
 
-    private static boolean canInteractWith( @Nonnull ServerComputer computer, @Nonnull Player player )
+    private static boolean canInteractWith( @Nonnull ServerComputer computer, @Nonnull PlayerEntity player )
     {
         // If this computer no longer exists then discard it.
         if( ComputerCraft.serverComputerRegistry.get( computer.getInstanceID() ) != computer )

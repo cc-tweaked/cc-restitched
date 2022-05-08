@@ -5,25 +5,25 @@
  */
 package dan200.computercraft.client.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.common.ContainerHeldItem;
 import dan200.computercraft.shared.media.items.ItemPrintout;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Inventory;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.text.Text;
 
 import static dan200.computercraft.client.render.PrintoutRenderer.*;
 import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMAP;
 
-public class GuiPrintout extends AbstractContainerScreen<ContainerHeldItem>
+public class GuiPrintout extends HandledScreen<ContainerHeldItem>
 {
     private final boolean book;
     private final int pages;
@@ -31,11 +31,11 @@ public class GuiPrintout extends AbstractContainerScreen<ContainerHeldItem>
     private final TextBuffer[] colours;
     private int page;
 
-    public GuiPrintout( ContainerHeldItem container, Inventory player, Component title )
+    public GuiPrintout( ContainerHeldItem container, PlayerInventory player, Text title )
     {
         super( container, player, title );
 
-        imageHeight = Y_SIZE;
+        backgroundHeight = Y_SIZE;
 
         String[] text = ItemPrintout.getText( container.getStack() );
         this.text = new TextBuffer[text.length];
@@ -97,33 +97,33 @@ public class GuiPrintout extends AbstractContainerScreen<ContainerHeldItem>
     }
 
     @Override
-    protected void renderBg( @Nonnull PoseStack transform, float partialTicks, int mouseX, int mouseY )
+    protected void drawBackground( @Nonnull MatrixStack transform, float partialTicks, int mouseX, int mouseY )
     {
         // Draw the printout
-        MultiBufferSource.BufferSource renderer = MultiBufferSource.immediate( Tesselator.getInstance().getBuilder() );
+        VertexConsumerProvider.Immediate renderer = VertexConsumerProvider.immediate( Tessellator.getInstance().getBuffer() );
 
         VertexConsumer borderBuffer = renderer.getBuffer( RenderTypes.GUI_PRINTOUT_BACKGROUND );
-        drawBorder( transform, borderBuffer, leftPos, topPos, getBlitOffset(), page, pages, book, FULL_BRIGHT_LIGHTMAP );
+        drawBorder( transform, borderBuffer, x, y, getZOffset(), page, pages, book, FULL_BRIGHT_LIGHTMAP );
 
         VertexConsumer textBuffer = renderer.getBuffer( RenderTypes.GUI_PRINTOUT_TEXT );
-        drawText( transform, textBuffer, leftPos + X_TEXT_MARGIN, topPos + Y_TEXT_MARGIN, ItemPrintout.LINES_PER_PAGE * page, FULL_BRIGHT_LIGHTMAP, text, colours );
+        drawText( transform, textBuffer, x + X_TEXT_MARGIN, y + Y_TEXT_MARGIN, ItemPrintout.LINES_PER_PAGE * page, FULL_BRIGHT_LIGHTMAP, text, colours );
 
-        renderer.endBatch();
+        renderer.draw();
     }
 
     @Override
-    public void render( @Nonnull PoseStack stack, int mouseX, int mouseY, float partialTicks )
+    public void render( @Nonnull MatrixStack stack, int mouseX, int mouseY, float partialTicks )
     {
         // We must take the background further back in order to not overlap with our printed pages.
-        setBlitOffset( getBlitOffset() - 1 );
+        setZOffset( getZOffset() - 1 );
         renderBackground( stack );
-        setBlitOffset( getBlitOffset() + 1 );
+        setZOffset( getZOffset() + 1 );
 
         super.render( stack, mouseX, mouseY, partialTicks );
     }
 
     @Override
-    protected void renderLabels( @Nonnull PoseStack transform, int mouseX, int mouseY )
+    protected void drawForeground( @Nonnull MatrixStack transform, int mouseX, int mouseY )
     {
         // Skip rendering labels.
     }

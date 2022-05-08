@@ -9,8 +9,8 @@ import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.api.network.IPacketNetwork;
 import dan200.computercraft.shared.peripheral.modem.ModemPeripheral;
 import dan200.computercraft.shared.peripheral.modem.ModemState;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 public abstract class WirelessModemPeripheral extends ModemPeripheral
 {
@@ -40,10 +40,10 @@ public abstract class WirelessModemPeripheral extends ModemPeripheral
         }
         else
         {
-            Level world = getLevel();
+            World world = getLevel();
             if( world != null )
             {
-                Vec3 position = getPosition();
+                Vec3d position = getPosition();
                 double minRange = ComputerCraft.modemRange;
                 double maxRange = ComputerCraft.modemHighAltitudeRange;
                 if( world.isRaining() && world.isThundering() )
@@ -53,7 +53,7 @@ public abstract class WirelessModemPeripheral extends ModemPeripheral
                 }
                 if( position.y > 96.0 && maxRange > minRange )
                 {
-                    return minRange + (position.y - 96.0) * ((maxRange - minRange) / ((world.getMaxBuildHeight() - 1) - 96.0));
+                    return minRange + (position.y - 96.0) * ((maxRange - minRange) / ((world.getTopY() - 1) - 96.0));
                 }
                 return minRange;
             }

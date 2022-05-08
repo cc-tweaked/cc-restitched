@@ -13,29 +13,33 @@ import dan200.computercraft.shared.media.items.ItemPrintout;
 import dan200.computercraft.shared.util.ColourUtils;
 import dan200.computercraft.shared.util.DefaultSidedInventory;
 import dan200.computercraft.shared.util.WorldUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventories;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Nameable;
+import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.*;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public final class TilePrinter extends TileGeneric implements IPeripheralTile, DefaultSidedInventory, Nameable, MenuProvider
+public final class TilePrinter extends TileGeneric implements IPeripheralTile, DefaultSidedInventory, Nameable, NamedScreenHandlerFactory
 {
     private static final String NBT_NAME = "CustomName";
     private static final String NBT_PRINTING = "Printing";
@@ -47,9 +51,9 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
     private static final int[] TOP_SLOTS = new int[] { 1, 2, 3, 4, 5, 6 };
     private static final int[] SIDE_SLOTS = new int[] { 0 };
 
-    Component customName;
+    Text customName;
 
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize( SLOTS, ItemStack.EMPTY );
+    private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize( SLOTS, ItemStack.EMPTY );
     private PrinterPeripheral peripheral;
 
     private final Terminal page = new Terminal( ItemPrintout.LINE_MAX_LENGTH, ItemPrintout.LINES_PER_PAGE );
@@ -69,20 +73,20 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     @Nonnull
     @Override
-    public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
+    public ActionResult onActivate( PlayerEntity player, Hand hand, BlockHitResult hit )
     {
-        if( player.isCrouching() ) return InteractionResult.PASS;
+        if( player.isInSneakingPose() ) return ActionResult.PASS;
 
-        if( !getLevel().isClientSide ) player.openMenu( this );
-        return InteractionResult.SUCCESS;
+        if( !getWorld().isClient ) player.openHandledScreen( this );
+        return ActionResult.SUCCESS;
     }
 
     @Override
-    public void load( @Nonnull CompoundTag nbt )
+    public void readNbt( @Nonnull NbtCompound nbt )
     {
-        super.load( nbt );
+        super.readNbt( nbt );
 
-        customName = nbt.contains( NBT_NAME ) ? Component.Serializer.fromJson( nbt.getString( NBT_NAME ) ) : null;
+        customName = nbt.contains( NBT_NAME ) ? Text.Serializer.fromJson( nbt.getString( NBT_NAME ) ) : null;
 
         // Read page
         synchronized( page )
@@ -93,13 +97,13 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
         }
 
         // Read inventory
-        ContainerHelper.loadAllItems( nbt, inventory );
+        Inventories.readNbt( nbt, inventory );
     }
 
     @Override
-    public void saveAdditional( @Nonnull CompoundTag nbt )
+    public void writeNbt( @Nonnull NbtCompound nbt )
     {
-        if( customName != null ) nbt.putString( NBT_NAME, Component.Serializer.toJson( customName ) );
+        if( customName != null ) nbt.putString( NBT_NAME, Text.Serializer.toJson( customName ) );
 
         // Write page
         synchronized( page )
@@ -110,9 +114,9 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
         }
 
         // Write inventory
-        ContainerHelper.saveAllItems( nbt, inventory );
+        Inventories.writeNbt( nbt, inventory );
 
-        super.saveAdditional( nbt );
+        super.writeNbt( nbt );
     }
 
     boolean isPrinting()
@@ -122,7 +126,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     // IInventory implementation
     @Override
-    public int getContainerSize()
+    public int size()
     {
         return inventory.size();
     }
@@ -139,32 +143,32 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     @Nonnull
     @Override
-    public ItemStack getItem( int slot )
+    public ItemStack getStack( int slot )
     {
         return inventory.get( slot );
     }
 
     @Nonnull
     @Override
-    public ItemStack removeItemNoUpdate( int slot )
+    public ItemStack removeStack( int slot )
     {
         ItemStack result = inventory.get( slot );
         inventory.set( slot, ItemStack.EMPTY );
-        setChanged();
+        markDirty();
         updateBlockState();
         return result;
     }
 
     @Nonnull
     @Override
-    public ItemStack removeItem( int slot, int count )
+    public ItemStack removeStack( int slot, int count )
     {
         ItemStack stack = inventory.get( slot );
         if( stack.isEmpty() ) return ItemStack.EMPTY;
 
         if( stack.getCount() <= count )
         {
-            setItem( slot, ItemStack.EMPTY );
+            setStack( slot, ItemStack.EMPTY );
             return stack;
         }
 
@@ -174,28 +178,28 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
             inventory.set( slot, ItemStack.EMPTY );
             updateBlockState();
         }
-        setChanged();
+        markDirty();
         return part;
     }
 
     @Override
-    public void setItem( int slot, @Nonnull ItemStack stack )
+    public void setStack( int slot, @Nonnull ItemStack stack )
     {
         inventory.set( slot, stack );
-        setChanged();
+        markDirty();
         updateBlockState();
     }
 
     @Override
-    public void clearContent()
+    public void clear()
     {
         for( int i = 0; i < inventory.size(); i++ ) inventory.set( i, ItemStack.EMPTY );
-        setChanged();
+        markDirty();
         updateBlockState();
     }
 
     @Override
-    public boolean canPlaceItem( int slot, @Nonnull ItemStack stack )
+    public boolean isValid( int slot, @Nonnull ItemStack stack )
     {
         if( slot == 0 )
         {
@@ -212,7 +216,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
     }
 
     @Override
-    public boolean stillValid( @Nonnull Player playerEntity )
+    public boolean canPlayerUse( @Nonnull PlayerEntity playerEntity )
     {
         return isUsable( playerEntity, false );
     }
@@ -221,7 +225,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     @Nonnull
     @Override
-    public int[] getSlotsForFace( @Nonnull Direction side )
+    public int[] getAvailableSlots( @Nonnull Direction side )
     {
         switch( side )
         {
@@ -336,18 +340,18 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
             page.setCursorPos( 0, 0 );
 
             // Decrement ink
-            inkStack.shrink( 1 );
+            inkStack.decrement( 1 );
             if( inkStack.isEmpty() ) inventory.set( 0, ItemStack.EMPTY );
 
             // Decrement paper
-            paperStack.shrink( 1 );
+            paperStack.decrement( 1 );
             if( paperStack.isEmpty() )
             {
                 inventory.set( i, ItemStack.EMPTY );
                 updateBlockState();
             }
 
-            setChanged();
+            markDirty();
             printing = true;
             return true;
         }
@@ -370,7 +374,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
         {
             if( inventory.get( slot ).isEmpty() )
             {
-                setItem( slot, stack );
+                setStack( slot, stack );
                 printing = false;
                 return true;
             }
@@ -386,10 +390,10 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
             if( !stack.isEmpty() )
             {
                 // Remove the stack from the inventory
-                setItem( i, ItemStack.EMPTY );
+                setStack( i, ItemStack.EMPTY );
 
                 // Spawn the item in the world
-                WorldUtil.dropItemStack( stack, getLevel(), Vec3.atLowerCornerOf( getBlockPos() ).add( 0.5, 0.75, 0.5 ) );
+                WorldUtil.dropItemStack( stack, getWorld(), Vec3d.of( getPos() ).add( 0.5, 0.75, 0.5 ) );
             }
         }
     }
@@ -421,12 +425,12 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     private void updateBlockState( boolean top, boolean bottom )
     {
-        if( remove || level == null ) return;
+        if( removed || world == null ) return;
 
-        BlockState state = getBlockState();
-        if( state.getValue( BlockPrinter.TOP ) == top & state.getValue( BlockPrinter.BOTTOM ) == bottom ) return;
+        BlockState state = getCachedState();
+        if( state.get( BlockPrinter.TOP ) == top & state.get( BlockPrinter.BOTTOM ) == bottom ) return;
 
-        getLevel().setBlockAndUpdate( getBlockPos(), state.setValue( BlockPrinter.TOP, top ).setValue( BlockPrinter.BOTTOM, bottom ) );
+        getWorld().setBlockState( getPos(), state.with( BlockPrinter.TOP, top ).with( BlockPrinter.BOTTOM, bottom ) );
     }
 
     @Nonnull
@@ -445,28 +449,28 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
     @Nullable
     @Override
-    public Component getCustomName()
+    public Text getCustomName()
     {
         return customName;
     }
 
     @Nonnull
     @Override
-    public Component getName()
+    public Text getName()
     {
-        return customName != null ? customName : new TranslatableComponent( getBlockState().getBlock().getDescriptionId() );
+        return customName != null ? customName : new TranslatableText( getCachedState().getBlock().getTranslationKey() );
     }
 
     @Nonnull
     @Override
-    public Component getDisplayName()
+    public Text getDisplayName()
     {
         return Nameable.super.getDisplayName();
     }
 
     @Nonnull
     @Override
-    public AbstractContainerMenu createMenu( int id, @Nonnull Inventory inventory, @Nonnull Player player )
+    public ScreenHandler createMenu( int id, @Nonnull PlayerInventory inventory, @Nonnull PlayerEntity player )
     {
         return new ContainerPrinter( id, inventory, this );
     }

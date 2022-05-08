@@ -11,15 +11,14 @@ import dan200.computercraft.shared.common.TileGeneric;
 import dan200.computercraft.shared.peripheral.modem.ModemPeripheral;
 import dan200.computercraft.shared.peripheral.modem.ModemState;
 import dan200.computercraft.shared.util.TickScheduler;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 public class TileWirelessModem extends TileGeneric implements IPeripheralTile
 {
@@ -35,16 +34,16 @@ public class TileWirelessModem extends TileGeneric implements IPeripheralTile
 
         @Nonnull
         @Override
-        public Level getLevel()
+        public World getLevel()
         {
-            return entity.getLevel();
+            return entity.getWorld();
         }
 
         @Nonnull
         @Override
-        public Vec3 getPosition()
+        public Vec3d getPosition()
         {
-            return Vec3.atLowerCornerOf( entity.getBlockPos().relative( entity.getDirection() ) );
+            return Vec3d.of( entity.getPos().offset( entity.getDirection() ) );
         }
 
         @Override
@@ -74,9 +73,9 @@ public class TileWirelessModem extends TileGeneric implements IPeripheralTile
     }
 
     @Override
-    public void clearRemoved()
+    public void cancelRemoval()
     {
-        super.clearRemoved(); // TODO: Replace with onLoad
+        super.cancelRemoval(); // TODO: Replace with onLoad
         TickScheduler.schedule( this );
     }
 
@@ -99,16 +98,16 @@ public class TileWirelessModem extends TileGeneric implements IPeripheralTile
     @Nonnull
     private Direction getDirection()
     {
-        return getBlockState().getValue( BlockWirelessModem.FACING );
+        return getCachedState().get( BlockWirelessModem.FACING );
     }
 
     private void updateBlockState()
     {
         boolean on = modem.getModemState().isOpen();
-        BlockState state = getBlockState();
-        if( state.getValue( BlockWirelessModem.ON ) != on )
+        BlockState state = getCachedState();
+        if( state.get( BlockWirelessModem.ON ) != on )
         {
-            getLevel().setBlockAndUpdate( getBlockPos(), state.setValue( BlockWirelessModem.ON, on ) );
+            getWorld().setBlockState( getPos(), state.with( BlockWirelessModem.ON, on ) );
         }
     }
 

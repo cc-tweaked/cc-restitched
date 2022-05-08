@@ -10,10 +10,9 @@ import dan200.computercraft.shared.network.NetworkMessage;
 import dan200.computercraft.shared.network.PacketContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Identifier;
 import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
@@ -28,11 +27,11 @@ public class SpeakerPlayClientMessage implements NetworkMessage
 {
     private final UUID source;
     private final SpeakerPosition.Message pos;
-    private final ResourceLocation sound;
+    private final Identifier sound;
     private final float volume;
     private final float pitch;
 
-    public SpeakerPlayClientMessage( UUID source, SpeakerPosition pos, ResourceLocation event, float volume, float pitch )
+    public SpeakerPlayClientMessage( UUID source, SpeakerPosition pos, Identifier event, float volume, float pitch )
     {
         this.source = source;
         this.pos = pos.asMessage();
@@ -41,21 +40,21 @@ public class SpeakerPlayClientMessage implements NetworkMessage
         this.pitch = pitch;
     }
 
-    public SpeakerPlayClientMessage( FriendlyByteBuf buf )
+    public SpeakerPlayClientMessage( PacketByteBuf buf )
     {
-        source = buf.readUUID();
+        source = buf.readUuid();
         pos = SpeakerPosition.Message.read( buf );
-        sound = buf.readResourceLocation();
+        sound = buf.readIdentifier();
         volume = buf.readFloat();
         pitch = buf.readFloat();
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
-        buf.writeUUID( source );
+        buf.writeUuid( source );
         pos.write( buf );
-        buf.writeResourceLocation( sound );
+        buf.writeIdentifier( sound );
         buf.writeFloat( volume );
         buf.writeFloat( pitch );
     }

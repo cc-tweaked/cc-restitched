@@ -37,16 +37,16 @@ import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.event.client.ClientSpriteRegistryCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.item.ClampedItemPropertyFunction;
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
+import net.minecraft.client.item.ModelPredicateProviderRegistry;
+import net.minecraft.client.item.UnclampedModelPredicateProvider;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.PlayerScreenHandler;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,11 +85,11 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
         registerContainers();
 
         // While turtles themselves are not transparent, their upgrades may be.
-        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.TURTLE_NORMAL, RenderType.translucent() );
-        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.TURTLE_ADVANCED, RenderType.translucent() );
+        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.TURTLE_NORMAL, RenderLayer.getTranslucent() );
+        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.TURTLE_ADVANCED, RenderLayer.getTranslucent() );
         // Monitors' textures have transparent fronts and so count as cutouts.
-        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.MONITOR_NORMAL, RenderType.cutout() );
-        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.MONITOR_ADVANCED, RenderType.cutout() );
+        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.MONITOR_NORMAL, RenderLayer.getCutout() );
+        BlockRenderLayerMap.INSTANCE.putBlock( Registry.ModBlocks.MONITOR_ADVANCED, RenderLayer.getCutout() );
 
         // Setup TESRs
         BlockEntityRendererRegistry.register( Registry.ModBlockEntities.MONITOR_NORMAL, TileEntityMonitorRenderer::new );
@@ -97,7 +97,7 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
         BlockEntityRendererRegistry.register( Registry.ModBlockEntities.TURTLE_NORMAL, TileEntityTurtleRenderer::new );
         BlockEntityRendererRegistry.register( Registry.ModBlockEntities.TURTLE_ADVANCED, TileEntityTurtleRenderer::new );
 
-        ClientSpriteRegistryCallback.event( InventoryMenu.BLOCK_ATLAS )
+        ClientSpriteRegistryCallback.event( PlayerScreenHandler.BLOCK_ATLAS_TEXTURE )
             .register( ClientRegistry::onTextureStitchEvent );
         ModelLoadingRegistry.INSTANCE.registerModelProvider( ClientRegistry::onModelBakeEvent );
         ModelLoadingRegistry.INSTANCE.registerResourceProvider( loader -> ( name, context ) -> TurtleModelLoader.INSTANCE.accepts( name ) ?
@@ -121,42 +121,42 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
     // My IDE doesn't think so, but we do actually need these generics.
     private static void registerContainers()
     {
-        MenuScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.COMPUTER, GuiComputer::create );
-        MenuScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER, GuiComputer::createPocket );
-        MenuScreens.<ContainerComputerBase, NoTermComputerScreen<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER_NO_TERM, NoTermComputerScreen::new );
-        MenuScreens.<ContainerTurtle, GuiTurtle>register( Registry.ModContainers.TURTLE, GuiTurtle::new );
+        HandledScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.COMPUTER, GuiComputer::create );
+        HandledScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER, GuiComputer::createPocket );
+        HandledScreens.<ContainerComputerBase, NoTermComputerScreen<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER_NO_TERM, NoTermComputerScreen::new );
+        HandledScreens.<ContainerTurtle, GuiTurtle>register( Registry.ModContainers.TURTLE, GuiTurtle::new );
 
-        MenuScreens.<ContainerPrinter, GuiPrinter>register( Registry.ModContainers.PRINTER, GuiPrinter::new );
-        MenuScreens.<ContainerDiskDrive, GuiDiskDrive>register( Registry.ModContainers.DISK_DRIVE, GuiDiskDrive::new );
-        MenuScreens.<ContainerHeldItem, GuiPrintout>register( Registry.ModContainers.PRINTOUT, GuiPrintout::new );
+        HandledScreens.<ContainerPrinter, GuiPrinter>register( Registry.ModContainers.PRINTER, GuiPrinter::new );
+        HandledScreens.<ContainerDiskDrive, GuiDiskDrive>register( Registry.ModContainers.DISK_DRIVE, GuiDiskDrive::new );
+        HandledScreens.<ContainerHeldItem, GuiPrintout>register( Registry.ModContainers.PRINTOUT, GuiPrintout::new );
 
-        MenuScreens.<ContainerViewComputer, GuiComputer<ContainerViewComputer>>register( Registry.ModContainers.VIEW_COMPUTER,
+        HandledScreens.<ContainerViewComputer, GuiComputer<ContainerViewComputer>>register( Registry.ModContainers.VIEW_COMPUTER,
             GuiComputer::createView );
     }
 
     @SafeVarargs
-    private static void registerItemProperty( String name, ClampedItemPropertyFunction getter, Supplier<? extends Item>... items )
+    private static void registerItemProperty( String name, UnclampedModelPredicateProvider getter, Supplier<? extends Item>... items )
     {
-        ResourceLocation id = new ResourceLocation( ComputerCraft.MOD_ID, name );
+        Identifier id = new Identifier( ComputerCraft.MOD_ID, name );
         // Terrible hack, but some of our properties return values greater than 1, so we don't want to clamp.
-        var unclampedGetter = new ClampedItemPropertyFunction()
+        var unclampedGetter = new UnclampedModelPredicateProvider()
         {
             @Override
             @Deprecated
-            public float call( @NotNull ItemStack itemStack, @Nullable ClientLevel clientLevel, @Nullable LivingEntity livingEntity, int i )
+            public float call( @NotNull ItemStack itemStack, @Nullable ClientWorld clientLevel, @Nullable LivingEntity livingEntity, int i )
             {
                 return getter.unclampedCall( itemStack, clientLevel, livingEntity, i );
             }
 
             @Override
-            public float unclampedCall( ItemStack itemStack, @Nullable ClientLevel clientLevel, @Nullable LivingEntity livingEntity, int i )
+            public float unclampedCall( ItemStack itemStack, @Nullable ClientWorld clientLevel, @Nullable LivingEntity livingEntity, int i )
             {
                 return getter.unclampedCall( itemStack, clientLevel, livingEntity, i );
             }
         };
         for( Supplier<? extends Item> item : items )
         {
-            ItemProperties.register( item.get(), id, unclampedGetter );
+            ModelPredicateProviderRegistry.register( item.get(), id, unclampedGetter );
         }
     }
 }

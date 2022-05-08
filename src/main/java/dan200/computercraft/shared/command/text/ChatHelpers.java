@@ -5,95 +5,102 @@
  */
 package dan200.computercraft.shared.command.text;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 
 /**
  * Various helpers for building chat messages.
  */
 public final class ChatHelpers
 {
-    private static final ChatFormatting HEADER = ChatFormatting.LIGHT_PURPLE;
+    private static final Formatting HEADER = Formatting.LIGHT_PURPLE;
 
     private ChatHelpers() {}
 
-    public static MutableComponent coloured( String text, ChatFormatting colour )
+    public static MutableText coloured( String text, Formatting colour )
     {
-        return new TextComponent( text == null ? "" : text ).withStyle( colour );
+        return new LiteralText( text == null ? "" : text ).formatted( colour );
     }
 
-    public static <T extends MutableComponent> T coloured( T component, ChatFormatting colour )
+    public static <T extends MutableText> T coloured( T component, Formatting colour )
     {
-        component.withStyle( colour );
+        component.formatted( colour );
         return component;
     }
 
-    public static MutableComponent text( String text )
+    public static MutableText text( String text )
     {
-        return new TextComponent( text == null ? "" : text );
+        return new LiteralText( text == null ? "" : text );
     }
 
-    public static MutableComponent translate( String text )
+    public static MutableText translate( String text )
     {
-        return new TranslatableComponent( text == null ? "" : text );
+        return new TranslatableText( text == null ? "" : text );
     }
 
-    public static MutableComponent translate( String text, Object... args )
+    public static MutableText translate( String text, Object... args )
     {
-        return new TranslatableComponent( text == null ? "" : text, args );
+        return new TranslatableText( text == null ? "" : text, args );
     }
 
-    public static MutableComponent list( Component... children )
+    public static MutableText list( Text... children )
     {
-        MutableComponent component = new TextComponent( "" );
-        for( Component child : children )
+        MutableText component = new LiteralText( "" );
+        for( Text child : children )
         {
             component.append( child );
         }
         return component;
     }
 
-    public static MutableComponent position( BlockPos pos )
+    public static MutableText position( BlockPos pos )
     {
         if( pos == null ) return translate( "commands.computercraft.generic.no_position" );
         return translate( "commands.computercraft.generic.position", pos.getX(), pos.getY(), pos.getZ() );
     }
 
-    public static MutableComponent bool( boolean value )
+    public static MutableText bool( boolean value )
     {
         return value
-            ? coloured( translate( "commands.computercraft.generic.yes" ), ChatFormatting.GREEN )
-            : coloured( translate( "commands.computercraft.generic.no" ), ChatFormatting.RED );
+            ? coloured( translate( "commands.computercraft.generic.yes" ), Formatting.GREEN )
+            : coloured( translate( "commands.computercraft.generic.no" ), Formatting.RED );
     }
 
-    public static Component link( MutableComponent component, String command, Component toolTip )
+    public static Text link( MutableText component, String command, Text toolTip )
     {
         return link( component, new ClickEvent( ClickEvent.Action.RUN_COMMAND, command ), toolTip );
     }
 
-    public static Component link( Component component, ClickEvent click, Component toolTip )
+    public static Text link( Text component, ClickEvent click, Text toolTip )
     {
         Style style = component.getStyle();
 
-        if( style.getColor() == null ) style = style.withColor( ChatFormatting.YELLOW );
+        if( style.getColor() == null ) style = style.withColor( Formatting.YELLOW );
         style = style.withClickEvent( click );
         style = style.withHoverEvent( new HoverEvent( HoverEvent.Action.SHOW_TEXT, toolTip ) );
 
-        return component.copy().withStyle( style );
+        return component.shallowCopy().fillStyle( style );
     }
 
-    public static MutableComponent header( String text )
+    public static MutableText header( String text )
     {
         return coloured( text, HEADER );
     }
 
-    public static MutableComponent copy( String text )
+    public static MutableText copy( String text )
     {
-        TextComponent name = new TextComponent( text );
+        LiteralText name = new LiteralText( text );
         Style style = name.getStyle()
             .withClickEvent( new ClickEvent( ClickEvent.Action.COPY_TO_CLIPBOARD, text ) )
-            .withHoverEvent( new HoverEvent( HoverEvent.Action.SHOW_TEXT, new TranslatableComponent( "gui.computercraft.tooltip.copy" ) ) );
-        return name.withStyle( style );
+            .withHoverEvent( new HoverEvent( HoverEvent.Action.SHOW_TEXT, new TranslatableText( "gui.computercraft.tooltip.copy" ) ) );
+        return name.fillStyle( style );
     }
 }

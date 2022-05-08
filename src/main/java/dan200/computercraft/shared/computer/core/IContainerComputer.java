@@ -7,16 +7,15 @@ package dan200.computercraft.shared.computer.core;
 
 import dan200.computercraft.shared.computer.upload.FileSlice;
 import dan200.computercraft.shared.computer.upload.FileUpload;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * An instance of {@link AbstractContainerMenu} which provides a computer. You should implement this
+ * An instance of {@link ScreenHandler} which provides a computer. You should implement this
  * if you provide custom computers/GUIs to interact with them.
  */
 public interface IContainerComputer
@@ -61,7 +60,7 @@ public interface IContainerComputer
      * @param uploader The player uploading files.
      * @param uploadId The unique ID of this upload.
      */
-    void finishUpload( @Nonnull ServerPlayer uploader, @Nonnull UUID uploadId );
+    void finishUpload( @Nonnull ServerPlayerEntity uploader, @Nonnull UUID uploadId );
 
     /**
      * Continue an upload.
@@ -69,5 +68,5 @@ public interface IContainerComputer
      * @param uploader  The player uploading files.
      * @param overwrite Whether the files should be overwritten or not.
      */
-    void confirmUpload( @Nonnull ServerPlayer uploader, boolean overwrite );
+    void confirmUpload( @Nonnull ServerPlayerEntity uploader, boolean overwrite );
 }

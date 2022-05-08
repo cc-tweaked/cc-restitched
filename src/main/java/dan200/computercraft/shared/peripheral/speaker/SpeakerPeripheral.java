@@ -17,17 +17,17 @@ import dan200.computercraft.shared.network.client.SpeakerAudioClientMessage;
 import dan200.computercraft.shared.network.client.SpeakerMoveClientMessage;
 import dan200.computercraft.shared.network.client.SpeakerPlayClientMessage;
 import dan200.computercraft.shared.network.client.SpeakerStopClientMessage;
+import dan200.computercraft.shared.peripheral.speaker.SpeakerPeripheral.PendingSound;
 import dan200.computercraft.shared.util.PauseAwareTimer;
-import net.minecraft.ResourceLocationException;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.block.enums.Instrument;
+import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
-import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.util.*;
 
@@ -72,8 +72,8 @@ public abstract class SpeakerPeripheral implements IPeripheral
         clock++;
 
         SpeakerPosition position = getPosition();
-        Level level = position.level();
-        Vec3 pos = position.position();
+        World level = position.level();
+        Vec3d pos = position.position();
         if( level == null ) return;
         MinecraftServer server = level.getServer();
 
@@ -82,9 +82,9 @@ public abstract class SpeakerPeripheral implements IPeripheral
             for( PendingSound sound : pendingNotes )
             {
                 lastPlayTime = clock;
-                server.getPlayerList().broadcast(
-                    null, pos.x, pos.y, pos.z, sound.volume * 16, level.dimension(),
-                    new ClientboundCustomSoundPacket( sound.location, SoundSource.RECORDS, pos, sound.volume, sound.pitch )
+                server.getPlayerManager().sendToAround(
+                    null, pos.x, pos.y, pos.z, sound.volume * 16, level.getRegistryKey(),
+                    new PlaySoundIdS2CPacket( sound.location, SoundCategory.RECORDS, pos, sound.volume, sound.pitch )
                 );
             }
             pendingNotes.clear();
@@ -136,7 +136,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
             // free again.
             NetworkHandler.sendToAllTracking(
                 new SpeakerAudioClientMessage( getSource(), position, dfpwmState.getVolume(), dfpwmState.pullPending( now ) ),
-                level.getChunkAt( new BlockPos( pos ) )
+                level.getWorldChunk( new BlockPos( pos ) )
             );
             syncedPosition( position );
 
@@ -158,7 +158,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
             // TODO: What to do when entities move away? How do we notify people left behind that they're gone.
             NetworkHandler.sendToAllTracking(
                 new SpeakerMoveClientMessage( getSource(), position ),
-                level.getChunkAt( new BlockPos( pos ) )
+                level.getWorldChunk( new BlockPos( pos ) )
             );
             syncedPosition( position );
         }
@@ -220,10 +220,10 @@ public abstract class SpeakerPeripheral implements IPeripheral
         float volume = (float) checkFinite( 1, volumeA.orElse( 1.0 ) );
         float pitch = (float) checkFinite( 2, pitchA.orElse( 1.0 ) );
 
-        NoteBlockInstrument instrument = null;
-        for( NoteBlockInstrument testInstrument : NoteBlockInstrument.values() )
+        Instrument instrument = null;
+        for( Instrument testInstrument : Instrument.values() )
         {
-            if( testInstrument.getSerializedName().equalsIgnoreCase( instrumentA ) )
+            if( testInstrument.asString().equalsIgnoreCase( instrumentA ) )
             {
                 instrument = testInstrument;
                 break;
@@ -236,7 +236,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
         synchronized( pendingNotes )
         {
             if( pendingNotes.size() >= ComputerCraft.maxNotesPerTick ) return false;
-            pendingNotes.add( new PendingSound( instrument.getSoundEvent().getLocation(), volume, (float) Math.pow( 2.0, (pitch - 12.0) / 12.0 ) ) );
+            pendingNotes.add( new PendingSound( instrument.getSound().getId(), volume, (float) Math.pow( 2.0, (pitch - 12.0) / 12.0 ) ) );
         }
         return true;
     }
@@ -269,12 +269,12 @@ public abstract class SpeakerPeripheral implements IPeripheral
         float volume = (float) checkFinite( 1, volumeA.orElse( 1.0 ) );
         float pitch = (float) checkFinite( 2, pitchA.orElse( 1.0 ) );
 
-        ResourceLocation identifier;
+        Identifier identifier;
         try
         {
-            identifier = new ResourceLocation( name );
+            identifier = new Identifier( name );
         }
-        catch( ResourceLocationException e )
+        catch( InvalidIdentifierException e )
         {
             throw new LuaException( "Malformed sound name '" + name + "' " );
         }

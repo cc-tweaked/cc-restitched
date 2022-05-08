@@ -8,11 +8,10 @@ package dan200.computercraft.shared;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.api.redstone.IBundledRedstoneProvider;
 import dan200.computercraft.shared.common.DefaultBundledRedstoneProvider;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -28,14 +27,14 @@ public final class BundledRedstone
         if( !providers.contains( provider ) ) providers.add( provider );
     }
 
-    public static int getDefaultOutput( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull Direction side )
+    public static int getDefaultOutput( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull Direction side )
     {
-        return world.isInWorldBounds( pos ) ? DefaultBundledRedstoneProvider.getDefaultBundledRedstoneOutput( world, pos, side ) : -1;
+        return world.isInBuildLimit( pos ) ? DefaultBundledRedstoneProvider.getDefaultBundledRedstoneOutput( world, pos, side ) : -1;
     }
 
-    private static int getUnmaskedOutput( Level world, BlockPos pos, Direction side )
+    private static int getUnmaskedOutput( World world, BlockPos pos, Direction side )
     {
-        if( !world.isInWorldBounds( pos ) ) return -1;
+        if( !world.isInBuildLimit( pos ) ) return -1;
 
         // Try the providers in order:
         int combinedSignal = -1;
@@ -58,7 +57,7 @@ public final class BundledRedstone
         return combinedSignal;
     }
 
-    public static int getOutput( Level world, BlockPos pos, Direction side )
+    public static int getOutput( World world, BlockPos pos, Direction side )
     {
         int signal = getUnmaskedOutput( world, pos, side );
         return signal >= 0 ? signal : 0;

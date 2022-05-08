@@ -7,32 +7,31 @@ package dan200.computercraft.shared.common;
 
 import dan200.computercraft.shared.util.ColourTracker;
 import dan200.computercraft.shared.util.ColourUtils;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.SpecialCraftingRecipe;
+import net.minecraft.recipe.SpecialRecipeSerializer;
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 
-public final class ColourableRecipe extends CustomRecipe
+public final class ColourableRecipe extends SpecialCraftingRecipe
 {
-    private ColourableRecipe( ResourceLocation id )
+    private ColourableRecipe( Identifier id )
     {
         super( id );
     }
 
     @Override
-    public boolean matches( @Nonnull CraftingContainer inv, @Nonnull Level world )
+    public boolean matches( @Nonnull CraftingInventory inv, @Nonnull World world )
     {
         boolean hasColourable = false;
         boolean hasDye = false;
-        for( int i = 0; i < inv.getContainerSize(); i++ )
+        for( int i = 0; i < inv.size(); i++ )
         {
-            ItemStack stack = inv.getItem( i );
+            ItemStack stack = inv.getStack( i );
             if( stack.isEmpty() ) continue;
 
             if( stack.getItem() instanceof IColouredItem )
@@ -55,15 +54,15 @@ public final class ColourableRecipe extends CustomRecipe
 
     @Nonnull
     @Override
-    public ItemStack assemble( @Nonnull CraftingContainer inv )
+    public ItemStack assemble( @Nonnull CraftingInventory inv )
     {
         ItemStack colourable = ItemStack.EMPTY;
 
         ColourTracker tracker = new ColourTracker();
 
-        for( int i = 0; i < inv.getContainerSize(); i++ )
+        for( int i = 0; i < inv.size(); i++ )
         {
-            ItemStack stack = inv.getItem( i );
+            ItemStack stack = inv.getStack( i );
 
             if( stack.isEmpty() ) continue;
 
@@ -86,7 +85,7 @@ public final class ColourableRecipe extends CustomRecipe
     }
 
     @Override
-    public boolean canCraftInDimensions( int x, int y )
+    public boolean fits( int x, int y )
     {
         return x >= 2 && y >= 2;
     }
@@ -98,5 +97,5 @@ public final class ColourableRecipe extends CustomRecipe
         return SERIALIZER;
     }
 
-    public static final SimpleRecipeSerializer<?> SERIALIZER = new SimpleRecipeSerializer<>( ColourableRecipe::new );
+    public static final SpecialRecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>( ColourableRecipe::new );
 }

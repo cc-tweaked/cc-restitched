@@ -6,10 +6,9 @@
 package dan200.computercraft.shared.network.container;
 
 import dan200.computercraft.shared.common.ContainerHeldItem;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.InteractionHand;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Hand;
 
 /**
  * Opens a printout GUI based on the currently held item.
@@ -19,26 +18,26 @@ import javax.annotation.Nonnull;
  */
 public class HeldItemContainerData implements ContainerData
 {
-    private final InteractionHand hand;
+    private final Hand hand;
 
-    public HeldItemContainerData( InteractionHand hand )
+    public HeldItemContainerData( Hand hand )
     {
         this.hand = hand;
     }
 
-    public HeldItemContainerData( FriendlyByteBuf buffer )
+    public HeldItemContainerData( PacketByteBuf buffer )
     {
-        hand = buffer.readEnum( InteractionHand.class );
+        hand = buffer.readEnumConstant( Hand.class );
     }
 
     @Override
-    public void toBytes( FriendlyByteBuf buf )
+    public void toBytes( PacketByteBuf buf )
     {
-        buf.writeEnum( hand );
+        buf.writeEnumConstant( hand );
     }
 
     @Nonnull
-    public InteractionHand getHand()
+    public Hand getHand()
     {
         return hand;
     }

@@ -20,25 +20,24 @@ import dan200.computercraft.shared.util.DirectionUtil;
 import dan200.computercraft.shared.util.RedstoneUtil;
 import joptsimple.internal.Strings;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.Nameable;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Nameable;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -72,7 +71,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     {
         if( instanceID >= 0 )
         {
-            if( !getLevel().isClientSide ) ComputerCraft.serverComputerRegistry.remove( instanceID );
+            if( !getWorld().isClient ) ComputerCraft.serverComputerRegistry.remove( instanceID );
             instanceID = -1;
         }
     }
@@ -83,7 +82,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         unload();
         for( Direction dir : DirectionUtil.FACINGS )
         {
-            RedstoneUtil.propagateRedstoneOutput( getLevel(), getBlockPos(), dir );
+            RedstoneUtil.propagateRedstoneOutput( getWorld(), getPos(), dir );
         }
     }
 
@@ -94,44 +93,44 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     }
 
     @Override
-    public void setRemoved()
+    public void markRemoved()
     {
         unload();
-        super.setRemoved();
+        super.markRemoved();
     }
 
-    protected boolean canNameWithTag( Player player )
+    protected boolean canNameWithTag( PlayerEntity player )
     {
         return false;
     }
 
     @Nonnull
     @Override
-    public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
+    public ActionResult onActivate( PlayerEntity player, Hand hand, BlockHitResult hit )
     {
-        ItemStack currentItem = player.getItemInHand( hand );
-        if( !currentItem.isEmpty() && currentItem.getItem() == Items.NAME_TAG && canNameWithTag( player ) && currentItem.hasCustomHoverName() )
+        ItemStack currentItem = player.getStackInHand( hand );
+        if( !currentItem.isEmpty() && currentItem.getItem() == Items.NAME_TAG && canNameWithTag( player ) && currentItem.hasCustomName() )
         {
             // Label to rename computer
-            if( !getLevel().isClientSide )
+            if( !getWorld().isClient )
             {
-                setLabel( currentItem.getHoverName().getString() );
-                currentItem.shrink( 1 );
+                setLabel( currentItem.getName().getString() );
+                currentItem.decrement( 1 );
             }
-            return InteractionResult.SUCCESS;
+            return ActionResult.SUCCESS;
         }
-        else if( !player.isCrouching() )
+        else if( !player.isInSneakingPose() )
         {
             // Regular right click to activate computer
-            if( !getLevel().isClientSide && isUsable( player, false ) )
+            if( !getWorld().isClient && isUsable( player, false ) )
             {
                 createServerComputer().turnOn();
                 createServerComputer().sendTerminalState( player );
                 new ComputerContainerData( createServerComputer() ).open( player, this );
             }
-            return InteractionResult.SUCCESS;
+            return ActionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return ActionResult.PASS;
     }
 
     @Override
@@ -184,20 +183,20 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     protected abstract void updateBlockState( ComputerState newState );
 
     @Override
-    public void saveAdditional( @Nonnull CompoundTag nbt )
+    public void writeNbt( @Nonnull NbtCompound nbt )
     {
         // Save ID, label and power state
         if( computerID >= 0 ) nbt.putInt( NBT_ID, computerID );
         if( label != null ) nbt.putString( NBT_LABEL, label );
         nbt.putBoolean( NBT_ON, on );
 
-        super.saveAdditional( nbt );
+        super.writeNbt( nbt );
     }
 
     @Override
-    public void load( @Nonnull CompoundTag nbt )
+    public void readNbt( @Nonnull NbtCompound nbt )
     {
-        super.load( nbt );
+        super.readNbt( nbt );
 
         // Load ID, label and power state
         computerID = nbt.contains( NBT_ID ) ? nbt.getInt( NBT_ID ) : -1;
@@ -234,8 +233,8 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         Direction offsetSide = dir.getOpposite();
         ComputerSide localDir = remapToLocalSide( dir );
 
-        computer.setRedstoneInput( localDir, RedstoneUtil.getRedstoneInput( level, targetPos, dir ) );
-        computer.setBundledRedstoneInput( localDir, BundledRedstone.getOutput( getLevel(), targetPos, offsetSide ) );
+        computer.setRedstoneInput( localDir, RedstoneUtil.getRedstoneInput( world, targetPos, dir ) );
+        computer.setBundledRedstoneInput( localDir, BundledRedstone.getOutput( getWorld(), targetPos, offsetSide ) );
     }
 
     private void refreshPeripheral( @Nonnull ServerComputer computer, Direction dir )
@@ -246,7 +245,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         if( isPeripheralBlockedOnSide( localDir ) ) return;
 
         Direction offsetSide = dir.getOpposite();
-        IPeripheral peripheral = Peripherals.getPeripheral( getLevel(), getBlockPos().relative( dir ), offsetSide );
+        IPeripheral peripheral = Peripherals.getPeripheral( getWorld(), getPos().offset( dir ), offsetSide );
         computer.setPeripheral( localDir, peripheral );
     }
 
@@ -267,10 +266,10 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
      */
     private void updateInputsImmediately( @Nonnull ServerComputer computer )
     {
-        BlockPos pos = getBlockPos();
+        BlockPos pos = getPos();
         for( Direction dir : DirectionUtil.FACINGS )
         {
-            updateRedstoneInput( computer, dir, pos.relative( dir ) );
+            updateRedstoneInput( computer, dir, pos.offset( dir ) );
             refreshPeripheral( computer, dir );
         }
     }
@@ -282,7 +281,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
 
         for( Direction dir : DirectionUtil.FACINGS )
         {
-            BlockPos offset = getBlockPos().relative( dir );
+            BlockPos offset = getPos().offset( dir );
             if( offset.equals( neighbour ) )
             {
                 updateRedstoneInput( computer, dir, offset );
@@ -293,8 +292,8 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
 
         // If the position is not any adjacent one, update all inputs. This is pretty terrible, but some redstone mods
         // handle this incorrectly.
-        BlockPos pos = getBlockPos();
-        for( Direction dir : DirectionUtil.FACINGS ) updateRedstoneInput( computer, dir, pos.relative( dir ) );
+        BlockPos pos = getPos();
+        for( Direction dir : DirectionUtil.FACINGS ) updateRedstoneInput( computer, dir, pos.offset( dir ) );
         invalidSides = (1 << 6) - 1; // Mark all peripherals as dirty.
     }
 
@@ -306,7 +305,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         updateBlock();
         for( Direction dir : DirectionUtil.FACINGS )
         {
-            RedstoneUtil.propagateRedstoneOutput( getLevel(), getBlockPos(), dir );
+            RedstoneUtil.propagateRedstoneOutput( getWorld(), getPos(), dir );
         }
     }
 
@@ -327,23 +326,23 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     @Override
     public final void setComputerID( int id )
     {
-        if( getLevel().isClientSide || computerID == id ) return;
+        if( getWorld().isClient || computerID == id ) return;
 
         computerID = id;
         ServerComputer computer = getServerComputer();
         if( computer != null ) computer.setID( computerID );
-        setChanged();
+        markDirty();
     }
 
     @Override
     public final void setLabel( String label )
     {
-        if( getLevel().isClientSide || Objects.equals( this.label, label ) ) return;
+        if( getWorld().isClient || Objects.equals( this.label, label ) ) return;
 
         this.label = label;
         ServerComputer computer = getServerComputer();
         if( computer != null ) computer.setLabel( label );
-        setChanged();
+        markDirty();
     }
 
     @Override
@@ -355,7 +354,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     @Nonnull
     public ServerComputer createServerComputer()
     {
-        if( getLevel().isClientSide ) throw new IllegalStateException( "Cannot access server computer on the client." );
+        if( getWorld().isClient ) throw new IllegalStateException( "Cannot access server computer on the client." );
 
         boolean changed = false;
         if( instanceID < 0 )
@@ -380,24 +379,24 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     @Nullable
     public ServerComputer getServerComputer()
     {
-        return getLevel().isClientSide ? null : ComputerCraft.serverComputerRegistry.get( instanceID );
+        return getWorld().isClient ? null : ComputerCraft.serverComputerRegistry.get( instanceID );
     }
 
     // Networking stuff
 
     @Nonnull
     @Override
-    public final ClientboundBlockEntityDataPacket getUpdatePacket()
+    public final BlockEntityUpdateS2CPacket toUpdatePacket()
     {
-        return ClientboundBlockEntityDataPacket.create( this );
+        return BlockEntityUpdateS2CPacket.create( this );
     }
 
     @Nonnull
     @Override
-    public CompoundTag getUpdateTag()
+    public NbtCompound toInitialChunkDataNbt()
     {
         // We need this for pick block on the client side.
-        CompoundTag nbt = super.getUpdateTag();
+        NbtCompound nbt = super.toInitialChunkDataNbt();
         if( label != null ) nbt.putString( NBT_LABEL, label );
         if( computerID >= 0 ) nbt.putInt( NBT_ID, computerID );
         return nbt;
@@ -434,11 +433,11 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
 
     @Nonnull
     @Override
-    public Component getName()
+    public Text getName()
     {
         return hasCustomName()
-            ? new TextComponent( label )
-            : new TranslatableComponent( getBlockState().getBlock().getDescriptionId() );
+            ? new LiteralText( label )
+            : new TranslatableText( getCachedState().getBlock().getTranslationKey() );
     }
 
     @Override
@@ -449,22 +448,22 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
 
     @Nullable
     @Override
-    public Component getCustomName()
+    public Text getCustomName()
     {
-        return hasCustomName() ? new TextComponent( label ) : null;
+        return hasCustomName() ? new LiteralText( label ) : null;
     }
 
     @Nonnull
     @Override
-    public Component getDisplayName()
+    public Text getDisplayName()
     {
         return Nameable.super.getDisplayName();
     }
 
     @Override
-    public void writeScreenOpeningData( ServerPlayer serverPlayerEntity, FriendlyByteBuf packetByteBuf )
+    public void writeScreenOpeningData( ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf )
     {
         packetByteBuf.writeInt( getServerComputer().getInstanceID() );
-        packetByteBuf.writeEnum( getServerComputer().getFamily() );
+        packetByteBuf.writeEnumConstant( getServerComputer().getFamily() );
     }
 }

@@ -5,10 +5,9 @@
  */
 package dan200.computercraft.shared.peripheral.generic.data;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.Property;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.BlockState;
+import net.minecraft.state.property.Property;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +19,7 @@ public class BlockData
         data.put( "name", DataHelpers.getId( state.getBlock() ) );
 
         Map<Object, Object> stateTable = new HashMap<>();
-        for( Map.Entry<Property<?>, ? extends Comparable<?>> entry : state.getValues().entrySet() )
+        for( Map.Entry<Property<?>, ? extends Comparable<?>> entry : state.getEntries().entrySet() )
         {
             Property<?> property = entry.getKey();
             stateTable.put( property.getName(), getPropertyValue( property, entry.getValue() ) );
@@ -35,6 +34,6 @@ public class BlockData
     private static Object getPropertyValue( Property property, Comparable value )
     {
         if( value instanceof String || value instanceof Number || value instanceof Boolean ) return value;
-        return property.getName( value );
+        return property.name( value );
     }
 }

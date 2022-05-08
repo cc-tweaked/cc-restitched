@@ -5,10 +5,6 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.Terminal;
@@ -16,10 +12,13 @@ import dan200.computercraft.shared.computer.core.ClientComputer;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.util.Colour;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
 
 import static dan200.computercraft.client.render.ComputerBorderRenderer.*;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
@@ -37,7 +36,7 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
     }
 
     @Override
-    protected void renderItem( PoseStack transform, MultiBufferSource bufferSource, ItemStack stack, int light )
+    protected void renderItem( MatrixStack transform, VertexConsumerProvider bufferSource, ItemStack stack, int light )
     {
         ClientComputer computer = ItemPocketComputer.createClientComputer( stack );
         Terminal terminal = computer == null ? null : computer.getTerminal();
@@ -59,15 +58,15 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
 
         // Setup various transformations. Note that these are partially adapted from the corresponding method
         // in ItemRenderer
-        transform.pushPose();
-        transform.mulPose( Vector3f.YP.rotationDegrees( 180f ) );
-        transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
+        transform.push();
+        transform.multiply( Vec3f.POSITIVE_Y.getDegreesQuaternion( 180f ) );
+        transform.multiply( Vec3f.POSITIVE_Z.getDegreesQuaternion( 180f ) );
         transform.scale( 0.5f, 0.5f, 0.5f );
 
         float scale = 0.75f / Math.max( width + BORDER * 2, height + BORDER * 2 + LIGHT_HEIGHT );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( scale, scale, -1.0f ) );
-        transform.last().normal().mul( -1.0f );
+        transform.peek().getPositionMatrix().multiply( Matrix4f.scale( scale, scale, -1.0f ) );
+        transform.peek().getNormalMatrix().multiply( -1.0f );
         transform.translate( -0.5 * width, -0.5 * height, 0 );
 
         // Render the main frame
@@ -97,12 +96,12 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
             );
         }
 
-        transform.popPose();
+        transform.pop();
     }
 
-    private static void renderFrame( PoseStack transform, MultiBufferSource render, ComputerFamily family, int colour, int light, int width, int height )
+    private static void renderFrame( MatrixStack transform, VertexConsumerProvider render, ComputerFamily family, int colour, int light, int width, int height )
     {
-        ResourceLocation texture = colour != -1 ? ComputerBorderRenderer.BACKGROUND_COLOUR : ComputerBorderRenderer.getTexture( family );
+        Identifier texture = colour != -1 ? ComputerBorderRenderer.BACKGROUND_COLOUR : ComputerBorderRenderer.getTexture( family );
 
         float r = ((colour >>> 16) & 0xFF) / 255.0f;
         float g = ((colour >>> 8) & 0xFF) / 255.0f;
@@ -112,7 +111,7 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         ComputerBorderRenderer.render( transform, buffer, 0, 0, 0, light, width, height, true, r, g, b );
     }
 
-    private static void renderLight( PoseStack transform, MultiBufferSource render, int colour, int width, int height )
+    private static void renderLight( MatrixStack transform, VertexConsumerProvider render, int colour, int width, int height )
     {
         byte r = (byte) ((colour >>> 16) & 0xFF);
         byte g = (byte) ((colour >>> 8) & 0xFF);

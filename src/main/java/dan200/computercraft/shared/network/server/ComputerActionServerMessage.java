@@ -8,9 +8,8 @@ package dan200.computercraft.shared.network.server;
 import dan200.computercraft.shared.computer.core.IContainerComputer;
 import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
 
 public class ComputerActionServerMessage extends ComputerServerMessage
 {
@@ -22,17 +21,17 @@ public class ComputerActionServerMessage extends ComputerServerMessage
         this.action = action;
     }
 
-    public ComputerActionServerMessage( @Nonnull FriendlyByteBuf buf )
+    public ComputerActionServerMessage( @Nonnull PacketByteBuf buf )
     {
         super( buf );
-        action = buf.readEnum( Action.class );
+        action = buf.readEnumConstant( Action.class );
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
         super.toBytes( buf );
-        buf.writeEnum( action );
+        buf.writeEnumConstant( action );
     }
 
     @Override

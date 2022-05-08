@@ -7,9 +7,8 @@ package dan200.computercraft.shared.command;
 
 import dan200.computercraft.shared.util.IDAssigner;
 import me.shedaniel.cloth.api.utils.v1.GameInstanceUtils;
-import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
-
+import net.minecraft.util.Util;
 import java.io.File;
 
 /**
@@ -31,7 +30,7 @@ public final class ClientCommands
         if( message.startsWith( OPEN_COMPUTER ) )
         {
             MinecraftServer server = GameInstanceUtils.getServer();
-            if( server == null || server.isDedicatedServer() ) return false;
+            if( server == null || server.isDedicated() ) return false;
 
             String idStr = message.substring( OPEN_COMPUTER.length() ).trim();
             int id;
@@ -47,7 +46,7 @@ public final class ClientCommands
             File file = new File( IDAssigner.getDir(), "computer/" + id );
             if( !file.isDirectory() ) return true;
 
-            Util.getPlatform().openFile( file );
+            Util.getOperatingSystem().open( file );
             return true;
         }
         return false;

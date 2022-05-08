@@ -6,10 +6,6 @@
 package dan200.computercraft.fabric.mixin;
 
 import dan200.computercraft.shared.util.DropConsumer;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,11 +13,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.function.Supplier;
+import net.minecraft.block.Block;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 /**
  * Captures block drops.
  *
- * @see Block#popResource(Level, Supplier, ItemStack)
+ * @see Block#dropStack(World, Supplier, ItemStack)
  */
 @Mixin( Block.class )
 public class MixinBlock
@@ -34,9 +34,9 @@ public class MixinBlock
         ),
         locals = LocalCapture.CAPTURE_FAILSOFT,
         cancellable = true )
-    private static void dropStack( Level world, Supplier<ItemEntity> itemEntitySupplier, ItemStack stack, CallbackInfo callbackInfo, ItemEntity itemEntity )
+    private static void dropStack( World world, Supplier<ItemEntity> itemEntitySupplier, ItemStack stack, CallbackInfo callbackInfo, ItemEntity itemEntity )
     {
-        if( DropConsumer.onHarvestDrops( world, itemEntity.blockPosition(), stack ) )
+        if( DropConsumer.onHarvestDrops( world, itemEntity.getBlockPos(), stack ) )
         {
             callbackInfo.cancel();
         }

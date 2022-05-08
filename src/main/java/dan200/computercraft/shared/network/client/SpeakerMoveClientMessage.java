@@ -11,8 +11,7 @@ import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import dan200.computercraft.shared.network.PacketContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.network.FriendlyByteBuf;
-
+import net.minecraft.network.PacketByteBuf;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
@@ -34,16 +33,16 @@ public class SpeakerMoveClientMessage implements NetworkMessage
         this.pos = pos.asMessage();
     }
 
-    public SpeakerMoveClientMessage( FriendlyByteBuf buf )
+    public SpeakerMoveClientMessage( PacketByteBuf buf )
     {
-        source = buf.readUUID();
+        source = buf.readUuid();
         pos = SpeakerPosition.Message.read( buf );
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
-        buf.writeUUID( source );
+        buf.writeUuid( source );
         pos.write( buf );
     }
 

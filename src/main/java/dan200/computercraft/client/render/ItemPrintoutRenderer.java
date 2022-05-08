@@ -5,12 +5,12 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import dan200.computercraft.shared.media.items.ItemPrintout;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
 
 import static dan200.computercraft.client.render.PrintoutRenderer.*;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
@@ -29,16 +29,16 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
     {
     }
 
-    public boolean renderInFrame( PoseStack transform, MultiBufferSource renderer, ItemStack stack, int light )
+    public boolean renderInFrame( MatrixStack transform, VertexConsumerProvider renderer, ItemStack stack, int light )
     {
         if( !(stack.getItem() instanceof ItemPrintout) ) return false;
 
         // Move a little bit forward to ensure we're not clipping with the frame
         transform.translate( 0.0f, 0.0f, -0.001f );
-        transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
+        transform.multiply( Vec3f.POSITIVE_Z.getDegreesQuaternion( 180f ) );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.95f, 0.95f, -0.95f ) );
-        transform.last().normal().mul( -1.0f );
+        transform.peek().getPositionMatrix().multiply( Matrix4f.scale( 0.95f, 0.95f, -0.95f ) );
+        transform.peek().getNormalMatrix().multiply( -1.0f );
 
         //transform.last().normal().mul( -1.0f );
         transform.translate( -0.5f, -0.5f, 0.0f );
@@ -49,18 +49,18 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
     }
 
     @Override
-    protected void renderItem( PoseStack transform, MultiBufferSource renderer, ItemStack stack, int light )
+    protected void renderItem( MatrixStack transform, VertexConsumerProvider renderer, ItemStack stack, int light )
     {
-        transform.mulPose( Vector3f.XP.rotationDegrees( 180f ) );
+        transform.multiply( Vec3f.POSITIVE_X.getDegreesQuaternion( 180f ) );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.42f, 0.42f, -0.42f ) );
-        transform.last().normal().mul( -1.0f );
+        transform.peek().getPositionMatrix().multiply( Matrix4f.scale( 0.42f, 0.42f, -0.42f ) );
+        transform.peek().getNormalMatrix().multiply( -1.0f );
         transform.translate( -0.5f, -0.48f, 0.0f );
 
         drawPrintout( transform, renderer, stack, light );
     }
 
-    private static void drawPrintout( PoseStack transform, MultiBufferSource renderer, ItemStack stack, int light )
+    private static void drawPrintout( MatrixStack transform, VertexConsumerProvider renderer, ItemStack stack, int light )
     {
         int pages = ItemPrintout.getPageCount( stack );
         boolean book = ((ItemPrintout) stack.getItem()).getType() == ItemPrintout.Type.BOOK;

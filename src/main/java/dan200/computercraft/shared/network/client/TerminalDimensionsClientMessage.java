@@ -8,9 +8,8 @@ package dan200.computercraft.shared.network.client;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.network.NetworkMessage;
 import dan200.computercraft.shared.network.PacketContext;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
 
 /**
  * The terminal and portable computer server-side configured dimensions.
@@ -35,7 +34,7 @@ public class TerminalDimensionsClientMessage implements NetworkMessage
         this.monitorHeight = ComputerCraft.monitorHeight;
     }
 
-    public TerminalDimensionsClientMessage( @Nonnull FriendlyByteBuf buf )
+    public TerminalDimensionsClientMessage( @Nonnull PacketByteBuf buf )
     {
         computerTermWidth = buf.readVarInt();
         computerTermHeight = buf.readVarInt();
@@ -46,7 +45,7 @@ public class TerminalDimensionsClientMessage implements NetworkMessage
     }
 
     @Override
-    public void toBytes( FriendlyByteBuf buf )
+    public void toBytes( PacketByteBuf buf )
     {
         buf.writeVarInt( computerTermWidth );
         buf.writeVarInt( computerTermHeight );

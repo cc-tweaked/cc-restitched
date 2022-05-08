@@ -5,18 +5,18 @@
  */
 package dan200.computercraft.fabric.mixin;
 
-import com.mojang.blaze3d.audio.Channel;
 import dan200.computercraft.fabric.events.CustomClientEvents;
-import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.client.sounds.AudioStream;
-import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.sound.AudioStream;
+import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.sound.SoundSystem;
+import net.minecraft.client.sound.Source;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin( SoundEngine.class )
+@Mixin( SoundSystem.class )
 public class MixinSoundEngine
 {
     // Used to capture the SoundInstance argument passed to SoundEngine#play and the SoundEngine instance.
@@ -24,14 +24,14 @@ public class MixinSoundEngine
     @Unique
     private static SoundInstance soundInstanceCapture;
     @Unique
-    private static SoundEngine thisCapture;
+    private static SoundSystem thisCapture;
 
     @Inject(
         method = "method_19755(Lnet/minecraft/client/sounds/AudioStream;Lcom/mojang/blaze3d/audio/Channel;)V",
         at = @At( "HEAD" ),
         cancellable = true
     )
-    private static void onStreamingSourcePlay( AudioStream audioStream, Channel channel, CallbackInfo ci )
+    private static void onStreamingSourcePlay( AudioStream audioStream, Source channel, CallbackInfo ci )
     {
         if( CustomClientEvents.PLAY_STREAMING_AUDIO_EVENT.invoker().onPlayStreamingAudio( thisCapture, soundInstanceCapture, channel ) )
         {
@@ -46,6 +46,6 @@ public class MixinSoundEngine
     void onPlay( SoundInstance soundInstance, CallbackInfo ci )
     {
         soundInstanceCapture = soundInstance;
-        thisCapture = (SoundEngine) (Object) this;
+        thisCapture = (SoundSystem) (Object) this;
     }
 }

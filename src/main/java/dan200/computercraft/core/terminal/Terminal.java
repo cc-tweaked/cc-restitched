@@ -7,10 +7,9 @@ package dan200.computercraft.core.terminal;
 
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 
 public class Terminal
 {
@@ -310,7 +309,7 @@ public class Terminal
         if( onChanged != null ) onChanged.run();
     }
 
-    public synchronized void write( FriendlyByteBuf buffer )
+    public synchronized void write( PacketByteBuf buffer )
     {
         buffer.writeInt( cursorX );
         buffer.writeInt( cursorY );
@@ -336,7 +335,7 @@ public class Terminal
         palette.write( buffer );
     }
 
-    public synchronized void read( FriendlyByteBuf buffer )
+    public synchronized void read( PacketByteBuf buffer )
     {
         cursorX = buffer.readInt();
         cursorY = buffer.readInt();
@@ -366,7 +365,7 @@ public class Terminal
         setChanged();
     }
 
-    public synchronized CompoundTag writeToNBT( CompoundTag nbt )
+    public synchronized NbtCompound writeToNBT( NbtCompound nbt )
     {
         nbt.putInt( "term_cursorX", cursorX );
         nbt.putInt( "term_cursorY", cursorY );
@@ -384,7 +383,7 @@ public class Terminal
         return nbt;
     }
 
-    public synchronized void readFromNBT( CompoundTag nbt )
+    public synchronized void readFromNBT( NbtCompound nbt )
     {
         cursorX = nbt.getInt( "term_cursorX" );
         cursorY = nbt.getInt( "term_cursorY" );

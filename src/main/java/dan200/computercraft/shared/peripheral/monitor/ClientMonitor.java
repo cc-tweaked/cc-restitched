@@ -11,7 +11,7 @@ import dan200.computercraft.client.util.DirectVertexBuffer;
 import dan200.computercraft.shared.common.ClientTerminal;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;

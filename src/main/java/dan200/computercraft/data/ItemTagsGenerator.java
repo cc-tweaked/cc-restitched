@@ -9,8 +9,8 @@ import dan200.computercraft.api.ComputerCraftTags.Blocks;
 import dan200.computercraft.shared.Registry;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.item.Items;
+import net.minecraft.item.Items;
+import net.minecraft.tag.ItemTags;
 
 import static dan200.computercraft.api.ComputerCraftTags.Items.*;
 
@@ -26,18 +26,18 @@ class ItemTagsGenerator extends FabricTagProvider.ItemTagProvider
     {
         copy( Blocks.COMPUTER, COMPUTER );
         copy( Blocks.TURTLE, TURTLE );
-        tag( WIRED_MODEM ).add( Registry.ModItems.WIRED_MODEM, Registry.ModItems.WIRED_MODEM_FULL );
+        getOrCreateTagBuilder( WIRED_MODEM ).add( Registry.ModItems.WIRED_MODEM, Registry.ModItems.WIRED_MODEM_FULL );
         copy( Blocks.MONITOR, MONITOR );
 
-        tag( ItemTags.PIGLIN_LOVED ).add(
+        getOrCreateTagBuilder( ItemTags.PIGLIN_LOVED ).add(
             Registry.ModItems.COMPUTER_ADVANCED, Registry.ModItems.TURTLE_ADVANCED,
             Registry.ModItems.WIRELESS_MODEM_ADVANCED, Registry.ModItems.POCKET_COMPUTER_ADVANCED,
             Registry.ModItems.MONITOR_ADVANCED
         );
 
-        tag( ExtraConventionalItemTags.ENDER_PEARLS ).add( Items.ENDER_PEARL );
-        tag( ExtraConventionalItemTags.GOLD_BLOCKS ).add( Items.GOLD_BLOCK );
-        tag( ExtraConventionalItemTags.SKULLS ).add(
+        getOrCreateTagBuilder( ExtraConventionalItemTags.ENDER_PEARLS ).add( Items.ENDER_PEARL );
+        getOrCreateTagBuilder( ExtraConventionalItemTags.GOLD_BLOCKS ).add( Items.GOLD_BLOCK );
+        getOrCreateTagBuilder( ExtraConventionalItemTags.SKULLS ).add(
             Items.CREEPER_HEAD,
             Items.DRAGON_HEAD,
             Items.PLAYER_HEAD,
@@ -45,7 +45,7 @@ class ItemTagsGenerator extends FabricTagProvider.ItemTagProvider
             Items.WITHER_SKELETON_SKULL,
             Items.ZOMBIE_HEAD
         );
-        tag( ExtraConventionalItemTags.STONES ).add(
+        getOrCreateTagBuilder( ExtraConventionalItemTags.STONES ).add(
             Items.ANDESITE,
             Items.DIORITE,
             Items.GRANITE,
@@ -59,7 +59,7 @@ class ItemTagsGenerator extends FabricTagProvider.ItemTagProvider
             Items.INFESTED_DEEPSLATE,
             Items.TUFF
         );
-        tag( ExtraConventionalItemTags.WOODEN_CHESTS ).add(
+        getOrCreateTagBuilder( ExtraConventionalItemTags.WOODEN_CHESTS ).add(
             Items.CHEST,
             Items.TRAPPED_CHEST
         );

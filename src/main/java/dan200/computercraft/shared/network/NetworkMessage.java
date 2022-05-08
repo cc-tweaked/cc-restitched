@@ -5,9 +5,8 @@
  */
 package dan200.computercraft.shared.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.network.PacketByteBuf;
 
 /**
  * The base interface for any message which will be sent to the client or server.
@@ -21,7 +20,7 @@ public interface NetworkMessage
      *
      * @param buf The buffer to write data to.
      */
-    void toBytes( @Nonnull FriendlyByteBuf buf );
+    void toBytes( @Nonnull PacketByteBuf buf );
 
     /**
      * Handle this {@link NetworkMessage}.

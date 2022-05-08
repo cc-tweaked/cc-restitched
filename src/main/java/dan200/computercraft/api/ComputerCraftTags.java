@@ -7,10 +7,10 @@ package dan200.computercraft.api;
 
 import dan200.computercraft.ComputerCraft;
 import net.fabricmc.fabric.api.tag.TagFactory;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.Tag;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.tag.Tag;
+import net.minecraft.util.Identifier;
 
 /**
  * Tags provided by ComputerCraft.
@@ -26,7 +26,7 @@ public class ComputerCraftTags
 
         private static Tag.Named<Item> make( String name )
         {
-            return TagFactory.ITEM.create( new ResourceLocation( ComputerCraft.MOD_ID, name ) );
+            return TagFactory.ITEM.create( new Identifier( ComputerCraft.MOD_ID, name ) );
         }
     }
 
@@ -59,7 +59,7 @@ public class ComputerCraftTags
 
         private static Tag.Named<Block> make( String name )
         {
-            return TagFactory.BLOCK.create( new ResourceLocation( ComputerCraft.MOD_ID, name ) );
+            return TagFactory.BLOCK.create( new Identifier( ComputerCraft.MOD_ID, name ) );
         }
     }
 }

@@ -9,21 +9,20 @@ import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.computer.apis.CommandAPI;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.core.ServerComputer;
-import net.minecraft.commands.CommandSource;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.server.command.CommandOutput;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ import java.util.UUID;
 
 public class TileCommandComputer extends TileComputer
 {
-    public class CommandReceiver implements CommandSource
+    public class CommandReceiver implements CommandOutput
     {
         private final Map<Integer, String> output = new HashMap<>();
 
@@ -51,27 +50,27 @@ public class TileCommandComputer extends TileComputer
         }
 
         @Override
-        public void sendMessage( @Nonnull Component textComponent, @Nonnull UUID id )
+        public void sendSystemMessage( @Nonnull Text textComponent, @Nonnull UUID id )
         {
             output.put( output.size() + 1, textComponent.getString() );
         }
 
         @Override
-        public boolean acceptsSuccess()
+        public boolean shouldReceiveFeedback()
         {
             return true;
         }
 
         @Override
-        public boolean acceptsFailure()
+        public boolean shouldTrackOutput()
         {
             return true;
         }
 
         @Override
-        public boolean shouldInformAdmins()
+        public boolean shouldBroadcastConsoleToOps()
         {
-            return getLevel().getGameRules().getBoolean( GameRules.RULE_COMMANDBLOCKOUTPUT );
+            return getWorld().getGameRules().getBoolean( GameRules.COMMAND_BLOCK_OUTPUT );
         }
     }
 
@@ -88,7 +87,7 @@ public class TileCommandComputer extends TileComputer
         return receiver;
     }
 
-    public CommandSourceStack getSource()
+    public ServerCommandSource getSource()
     {
         ServerComputer computer = getServerComputer();
         String name = "@";
@@ -98,11 +97,11 @@ public class TileCommandComputer extends TileComputer
             if( label != null ) name = label;
         }
 
-        return new CommandSourceStack( receiver,
-            Vec3.atCenterOf( worldPosition ), Vec2.ZERO,
-            (ServerLevel) getLevel(), 2,
-            name, new TextComponent( name ),
-            getLevel().getServer(), null
+        return new ServerCommandSource( receiver,
+            Vec3d.ofCenter( pos ), Vec2f.ZERO,
+            (ServerWorld) getWorld(), 2,
+            name, new LiteralText( name ),
+            getWorld().getServer(), null
         );
     }
 
@@ -115,22 +114,22 @@ public class TileCommandComputer extends TileComputer
     }
 
     @Override
-    public boolean isUsable( Player player, boolean ignoreRange )
+    public boolean isUsable( PlayerEntity player, boolean ignoreRange )
     {
         return isUsable( player ) && super.isUsable( player, ignoreRange );
     }
 
-    public static boolean isUsable( Player player )
+    public static boolean isUsable( PlayerEntity player )
     {
         MinecraftServer server = player.getServer();
-        if( server == null || !server.isCommandBlockEnabled() )
+        if( server == null || !server.areCommandBlocksEnabled() )
         {
-            player.displayClientMessage( new TranslatableComponent( "advMode.notEnabled" ), true );
+            player.sendMessage( new TranslatableText( "advMode.notEnabled" ), true );
             return false;
         }
-        else if( ComputerCraft.commandRequireCreative ? !player.canUseGameMasterBlocks() : !server.getPlayerList().isOp( player.getGameProfile() ) )
+        else if( ComputerCraft.commandRequireCreative ? !player.isCreativeLevelTwoOp() : !server.getPlayerManager().isOperator( player.getGameProfile() ) )
         {
-            player.displayClientMessage( new TranslatableComponent( "advMode.notAllowed" ), true );
+            player.sendMessage( new TranslatableText( "advMode.notAllowed" ), true );
             return false;
         }
 

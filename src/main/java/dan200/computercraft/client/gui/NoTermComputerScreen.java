@@ -5,30 +5,30 @@
  */
 package dan200.computercraft.client.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.client.gui.widgets.WidgetTerminal;
 import dan200.computercraft.shared.computer.core.ClientComputer;
 import dan200.computercraft.shared.computer.inventory.ContainerComputerBase;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.entity.player.Inventory;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.ScreenHandlerProvider;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import java.util.List;
 
-public class NoTermComputerScreen<T extends ContainerComputerBase> extends Screen implements MenuAccess<T>
+public class NoTermComputerScreen<T extends ContainerComputerBase> extends Screen implements ScreenHandlerProvider<T>
 {
     private final T menu;
     private WidgetTerminal terminal;
 
-    public NoTermComputerScreen( T menu, Inventory player, Component title )
+    public NoTermComputerScreen( T menu, PlayerInventory player, Text title )
     {
         super( title );
         this.menu = menu;
@@ -36,7 +36,7 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
 
     @Nonnull
     @Override
-    public T getMenu()
+    public T getScreenHandler()
     {
         return menu;
     }
@@ -47,14 +47,14 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
         passEvents = true; // Pass mouse vents through to the game's mouse handler.
         // First ensure we're still grabbing the mouse, so the user can look around. Then reset bits of state that
         // grabbing unsets.
-        minecraft.mouseHandler.grabMouse();
-        minecraft.screen = this;
-        KeyMapping.releaseAll();
+        client.mouse.lockCursor();
+        client.currentScreen = this;
+        KeyBinding.unpressAll();
 
         super.init();
-        minecraft.keyboardHandler.setSendRepeatsToGui( true );
+        client.keyboard.setRepeatEvents( true );
 
-        terminal = addWidget( new WidgetTerminal( (ClientComputer) menu.getComputer(), 0, 0, ComputerCraft.pocketTermWidth, ComputerCraft.pocketTermHeight ) );
+        terminal = addSelectableChild( new WidgetTerminal( (ClientComputer) menu.getComputer(), 0, 0, ComputerCraft.pocketTermWidth, ComputerCraft.pocketTermHeight ) );
         terminal.visible = false;
         terminal.active = false;
         setFocused( terminal );
@@ -64,7 +64,7 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
     public final void removed()
     {
         super.removed();
-        minecraft.keyboardHandler.setSendRepeatsToGui( false );
+        client.keyboard.setRepeatEvents( false );
     }
 
     @Override
@@ -77,19 +77,19 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
     @Override
     public boolean mouseScrolled( double pMouseX, double pMouseY, double pDelta )
     {
-        minecraft.player.getInventory().swapPaint( pDelta );
+        client.player.getInventory().scrollInHotbar( pDelta );
         return super.mouseScrolled( pMouseX, pMouseY, pDelta );
     }
 
     @Override
     public void onClose()
     {
-        minecraft.player.closeContainer();
+        client.player.closeHandledScreen();
         super.onClose();
     }
 
     @Override
-    public boolean isPauseScreen()
+    public boolean shouldPause()
     {
         return false;
     }
@@ -107,16 +107,16 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
     }
 
     @Override
-    public void render( @Nonnull PoseStack transform, int mouseX, int mouseY, float partialTicks )
+    public void render( @Nonnull MatrixStack transform, int mouseX, int mouseY, float partialTicks )
     {
         super.render( transform, mouseX, mouseY, partialTicks );
 
-        Font font = minecraft.font;
-        List<FormattedCharSequence> lines = font.split( new TranslatableComponent( "gui.computercraft.pocket_computer_overlay" ), (int) (width * 0.8) );
+        TextRenderer font = client.textRenderer;
+        List<OrderedText> lines = font.wrapLines( new TranslatableText( "gui.computercraft.pocket_computer_overlay" ), (int) (width * 0.8) );
         float y = 10.0f;
-        for( FormattedCharSequence line : lines )
+        for( OrderedText line : lines )
         {
-            font.drawShadow( transform, line, (float) ((width / 2) - (minecraft.font.width( line ) / 2)), y, 0xFFFFFF );
+            font.drawWithShadow( transform, line, (float) ((width / 2) - (client.textRenderer.getWidth( line ) / 2)), y, 0xFFFFFF );
             y += 9.0f;
         }
     }

@@ -5,9 +5,6 @@
  */
 package dan200.computercraft.client.render.text;
 
-import com.mojang.blaze3d.platform.MemoryTracker;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
@@ -15,6 +12,9 @@ import dan200.computercraft.shared.util.Palette;
 import org.lwjgl.system.MemoryUtil;
 
 import javax.annotation.Nonnull;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.util.GlAllocationUtils;
 import java.nio.ByteBuffer;
 
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.*;
@@ -27,8 +27,8 @@ import static org.lwjgl.system.MemoryUtil.*;
  * There are some limitations here:
  * <ul>
  *   <li>No transformation matrix (not needed for VBOs).</li>
- *   <li>Only works with {@link DefaultVertexFormat#POSITION_COLOR_TEX_LIGHTMAP}.</li>
- *   <li>The buffer <strong>MUST</strong> be allocated with {@link MemoryTracker}, and not through any other means.</li>
+ *   <li>Only works with {@link VertexFormats#POSITION_COLOR_TEXTURE_LIGHT}.</li>
+ *   <li>The buffer <strong>MUST</strong> be allocated with {@link GlAllocationUtils}, and not through any other means.</li>
  * </ul>
  *
  * Note this is almost an exact copy of {@link FixedWidthFontRenderer}. While the code duplication is unfortunate,

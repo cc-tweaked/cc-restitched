@@ -9,12 +9,11 @@ import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.api.peripheral.IPeripheralProvider;
 import dan200.computercraft.shared.peripheral.generic.GenericPeripheralProvider;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -32,13 +31,13 @@ public final class Peripherals
     }
 
     @Nullable
-    public static IPeripheral getPeripheral( Level world, BlockPos pos, Direction side )
+    public static IPeripheral getPeripheral( World world, BlockPos pos, Direction side )
     {
-        return world.isInWorldBounds( pos ) && !world.isClientSide ? getPeripheralAt( world, pos, side ) : null;
+        return world.isInBuildLimit( pos ) && !world.isClient ? getPeripheralAt( world, pos, side ) : null;
     }
 
     @Nullable
-    private static IPeripheral getPeripheralAt( Level world, BlockPos pos, Direction side )
+    private static IPeripheral getPeripheralAt( World world, BlockPos pos, Direction side )
     {
         // Try the handlers in order:
         for( IPeripheralProvider peripheralProvider : providers )

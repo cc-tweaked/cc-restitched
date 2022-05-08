@@ -15,32 +15,38 @@ import dan200.computercraft.shared.peripheral.monitor.BlockMonitor;
 import dan200.computercraft.shared.peripheral.monitor.MonitorEdgeState;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
-import net.minecraft.core.Direction;
-import net.minecraft.data.models.BlockModelGenerators;
-import net.minecraft.data.models.ItemModelGenerators;
-import net.minecraft.data.models.blockstates.MultiVariantGenerator;
-import net.minecraft.data.models.blockstates.PropertyDispatch;
-import net.minecraft.data.models.blockstates.Variant;
-import net.minecraft.data.models.blockstates.VariantProperties;
+import net.minecraft.data.client.ItemModelGenerator;
+import net.minecraft.data.client.model.BlockStateModelGenerator;
+import net.minecraft.data.client.model.BlockStateVariant;
+import net.minecraft.data.client.model.BlockStateVariantMap;
+import net.minecraft.data.client.model.BlockStateVariantMap.DoubleProperty;
+import net.minecraft.data.client.model.BlockStateVariantMap.TripleProperty;
+import net.minecraft.data.client.model.Model;
+import net.minecraft.data.client.model.Models;
+import net.minecraft.data.client.model.Texture;
+import net.minecraft.data.client.model.TextureKey;
+import net.minecraft.data.client.model.TexturedModel;
+import net.minecraft.data.client.model.VariantSettings;
+import net.minecraft.data.client.model.VariantsBlockStateSupplier;
 import net.minecraft.data.models.model.*;
-import net.minecraft.resources.ResourceLocation;
-
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import java.util.Optional;
 
-import static net.minecraft.data.models.model.ModelLocationUtils.getModelLocation;
-import static net.minecraft.data.models.model.TextureMapping.getBlockTexture;
+import static net.minecraft.data.client.model.ModelIds.getItemSubModelId;
+import static net.minecraft.data.client.model.Texture.getSubId;
 
 public class BlockModelProvider extends FabricModelProvider
 {
-    private static final ModelTemplate MONITOR_BASE = new ModelTemplate(
-        Optional.of( new ResourceLocation( ComputerCraft.MOD_ID, "block/monitor_base" ) ),
+    private static final Model MONITOR_BASE = new Model(
+        Optional.of( new Identifier( ComputerCraft.MOD_ID, "block/monitor_base" ) ),
         Optional.empty(),
-        TextureSlot.FRONT, TextureSlot.SIDE, TextureSlot.TOP, TextureSlot.BACK
+        TextureKey.FRONT, TextureKey.SIDE, TextureKey.TOP, TextureKey.BACK
     );
-    private static final ModelTemplate MODEM = new ModelTemplate(
-        Optional.of( new ResourceLocation( ComputerCraft.MOD_ID, "block/modem" ) ),
+    private static final Model MODEM = new Model(
+        Optional.of( new Identifier( ComputerCraft.MOD_ID, "block/modem" ) ),
         Optional.empty(),
-        TextureSlot.FRONT, TextureSlot.BACK
+        TextureKey.FRONT, TextureKey.BACK
     );
 
     public BlockModelProvider( FabricDataGenerator dataGenerator )
@@ -49,7 +55,7 @@ public class BlockModelProvider extends FabricModelProvider
     }
 
     @Override
-    public void generateBlockStateModels( BlockModelGenerators generators )
+    public void generateBlockStateModels( BlockStateModelGenerator generators )
     {
         registerComputer( generators, Registry.ModBlocks.COMPUTER_NORMAL );
         registerComputer( generators, Registry.ModBlocks.COMPUTER_ADVANCED );
@@ -63,108 +69,108 @@ public class BlockModelProvider extends FabricModelProvider
         registerMonitors( generators, Registry.ModBlocks.MONITOR_NORMAL );
         registerMonitors( generators, Registry.ModBlocks.MONITOR_ADVANCED );
 
-        generators.createHorizontallyRotatedBlock( Registry.ModBlocks.SPEAKER, TexturedModel.ORIENTABLE_ONLY_TOP );
-        generators.delegateItemModel( Registry.ModBlocks.SPEAKER, getModelLocation( Registry.ModBlocks.SPEAKER ) );
+        generators.registerNorthDefaultHorizontalRotated( Registry.ModBlocks.SPEAKER, TexturedModel.ORIENTABLE );
+        generators.registerParentedItemModel( Registry.ModBlocks.SPEAKER, getBlockModelId( Registry.ModBlocks.SPEAKER ) );
     }
 
     @Override
-    public void generateItemModels( ItemModelGenerators itemModelGenerator )
+    public void generateItemModels( ItemModelGenerator itemModelGenerator )
     {
 
     }
 
-    private void registerComputer( BlockModelGenerators generators, BlockComputer<?> block )
+    private void registerComputer( BlockStateModelGenerator generators, BlockComputer<?> block )
     {
-        var generator = PropertyDispatch.properties( BlockComputer.STATE, BlockComputer.FACING );
-        for( ComputerState state : BlockComputer.STATE.getPossibleValues() )
+        var generator = BlockStateVariantMap.create( BlockComputer.STATE, BlockComputer.FACING );
+        for( ComputerState state : BlockComputer.STATE.getValues() )
         {
-            var model = ModelTemplates.CUBE_ORIENTABLE.create(
-                getModelLocation( block, "_" + state ),
-                new TextureMapping()
-                    .put( TextureSlot.SIDE, getBlockTexture( block, "_side" ) )
-                    .put( TextureSlot.FRONT, getBlockTexture( block, "_front" + state.getTexture() ) )
-                    .put( TextureSlot.TOP, getBlockTexture( block, "_top" ) ),
-                generators.modelOutput
+            var model = Models.ORIENTABLE.upload(
+                getBlockSubModelId( block, "_" + state ),
+                new Texture()
+                    .put( TextureKey.SIDE, getSubId( block, "_side" ) )
+                    .put( TextureKey.FRONT, getSubId( block, "_front" + state.getTexture() ) )
+                    .put( TextureKey.TOP, getSubId( block, "_top" ) ),
+                generators.modelCollector
             );
 
-            for( Direction facing : BlockComputer.FACING.getPossibleValues() )
+            for( Direction facing : BlockComputer.FACING.getValues() )
             {
-                generator.select( state, facing, Variant.variant()
-                    .with( VariantProperties.Y_ROT, toYAngle( facing ) )
-                    .with( VariantProperties.MODEL, model )
+                generator.register( state, facing, BlockStateVariant.create()
+                    .put( VariantSettings.Y, toYAngle( facing ) )
+                    .put( VariantSettings.MODEL, model )
                 );
             }
         }
 
-        generators.blockStateOutput.accept( MultiVariantGenerator.multiVariant( block ).with( generator ) );
-        generators.delegateItemModel( block, getModelLocation( block, "_blinking" ) );
+        generators.blockStateCollector.accept( VariantsBlockStateSupplier.create( block ).coordinate( generator ) );
+        generators.registerParentedItemModel( block, getBlockSubModelId( block, "_blinking" ) );
     }
 
-    private void registerWirelessModem( BlockModelGenerators generators, BlockWirelessModem block )
+    private void registerWirelessModem( BlockStateModelGenerator generators, BlockWirelessModem block )
     {
-        var generator = PropertyDispatch.properties( BlockWirelessModem.FACING, BlockWirelessModem.ON );
+        var generator = BlockStateVariantMap.create( BlockWirelessModem.FACING, BlockWirelessModem.ON );
 
-        for( boolean on : BlockWirelessModem.ON.getPossibleValues() )
+        for( boolean on : BlockWirelessModem.ON.getValues() )
         {
-            var model = modemModel( generators, getModelLocation( block, on ? "_on" : "_off" ), getBlockTexture( block, "_face" + (on ? "_on" : "") ) );
+            var model = modemModel( generators, getBlockSubModelId( block, on ? "_on" : "_off" ), getSubId( block, "_face" + (on ? "_on" : "") ) );
 
-            for( Direction facing : BlockWirelessModem.FACING.getPossibleValues() )
+            for( Direction facing : BlockWirelessModem.FACING.getValues() )
             {
-                generator.select( facing, on, Variant.variant()
-                    .with( VariantProperties.X_ROT, toXAngle( facing ) )
-                    .with( VariantProperties.Y_ROT, toYAngle( facing ) )
-                    .with( VariantProperties.MODEL, model )
+                generator.register( facing, on, BlockStateVariant.create()
+                    .put( VariantSettings.X, toXAngle( facing ) )
+                    .put( VariantSettings.Y, toYAngle( facing ) )
+                    .put( VariantSettings.MODEL, model )
                 );
             }
         }
 
-        generators.blockStateOutput.accept( MultiVariantGenerator.multiVariant( block ).with( generator ) );
-        generators.delegateItemModel( block, getModelLocation( block, "_off" ) );
+        generators.blockStateCollector.accept( VariantsBlockStateSupplier.create( block ).coordinate( generator ) );
+        generators.registerParentedItemModel( block, getBlockSubModelId( block, "_off" ) );
     }
 
-    private void registerWiredModems( BlockModelGenerators generators )
+    private void registerWiredModems( BlockStateModelGenerator generators )
     {
         BlockWiredModemFull fullBlock = Registry.ModBlocks.WIRED_MODEM_FULL;
-        var fullBlockGenerator = PropertyDispatch.properties( BlockWiredModemFull.MODEM_ON, BlockWiredModemFull.PERIPHERAL_ON );
-        for( boolean on : BlockWiredModemFull.MODEM_ON.getPossibleValues() )
+        var fullBlockGenerator = BlockStateVariantMap.create( BlockWiredModemFull.MODEM_ON, BlockWiredModemFull.PERIPHERAL_ON );
+        for( boolean on : BlockWiredModemFull.MODEM_ON.getValues() )
         {
-            for( boolean peripheral : BlockWiredModemFull.PERIPHERAL_ON.getPossibleValues() )
+            for( boolean peripheral : BlockWiredModemFull.PERIPHERAL_ON.getValues() )
             {
                 String suffix = (on ? "_on" : "_off") + (peripheral ? "_peripheral" : "");
-                ResourceLocation faceTexture = new ResourceLocation(
+                Identifier faceTexture = new Identifier(
                     ComputerCraft.MOD_ID,
                     "block/wired_modem_face" + (peripheral ? "_peripheral" : "") + (on ? "_on" : "")
                 );
-                var fullBlockModel = ModelTemplates.CUBE_ALL.create(
-                    getModelLocation( fullBlock, suffix ),
-                    new TextureMapping().put( TextureSlot.ALL, faceTexture ),
-                    generators.modelOutput
+                var fullBlockModel = Models.CUBE_ALL.upload(
+                    getBlockSubModelId( fullBlock, suffix ),
+                    new Texture().put( TextureKey.ALL, faceTexture ),
+                    generators.modelCollector
                 );
 
-                fullBlockGenerator.select( on, peripheral, Variant.variant().with( VariantProperties.MODEL, fullBlockModel ) );
+                fullBlockGenerator.register( on, peripheral, BlockStateVariant.create().put( VariantSettings.MODEL, fullBlockModel ) );
 
-                modemModel( generators, new ResourceLocation( ComputerCraft.MOD_ID, "block/wired_modem" + suffix ), faceTexture );
+                modemModel( generators, new Identifier( ComputerCraft.MOD_ID, "block/wired_modem" + suffix ), faceTexture );
             }
         }
 
 
-        generators.blockStateOutput.accept( MultiVariantGenerator.multiVariant( fullBlock ).with( fullBlockGenerator ) );
-        generators.delegateItemModel( fullBlock, getModelLocation( fullBlock, "_off" ) );
-        generators.delegateItemModel( Registry.ModItems.WIRED_MODEM, new ResourceLocation( ComputerCraft.MOD_ID, "block/wired_modem_off" ) );
+        generators.blockStateCollector.accept( VariantsBlockStateSupplier.create( fullBlock ).coordinate( fullBlockGenerator ) );
+        generators.registerParentedItemModel( fullBlock, getBlockSubModelId( fullBlock, "_off" ) );
+        generators.registerParentedItemModel( Registry.ModItems.WIRED_MODEM, new Identifier( ComputerCraft.MOD_ID, "block/wired_modem_off" ) );
     }
 
-    private ResourceLocation modemModel( BlockModelGenerators generators, ResourceLocation name, ResourceLocation texture )
+    private Identifier modemModel( BlockStateModelGenerator generators, Identifier name, Identifier texture )
     {
-        return MODEM.create(
+        return MODEM.upload(
             name,
-            new TextureMapping()
-                .put( TextureSlot.FRONT, texture )
-                .put( TextureSlot.BACK, new ResourceLocation( ComputerCraft.MOD_ID, "block/modem_back" ) ),
-            generators.modelOutput
+            new Texture()
+                .put( TextureKey.FRONT, texture )
+                .put( TextureKey.BACK, new Identifier( ComputerCraft.MOD_ID, "block/modem_back" ) ),
+            generators.modelCollector
         );
     }
 
-    private void registerMonitors( BlockModelGenerators generators, BlockMonitor block )
+    private void registerMonitors( BlockStateModelGenerator generators, BlockMonitor block )
     {
         monitorModel( generators, block, "", 16, 4, 0, 32 );
         monitorModel( generators, block, "_d", 20, 7, 0, 36 );
@@ -183,68 +189,68 @@ public class BlockModelProvider extends FabricModelProvider
         monitorModel( generators, block, "_u", 22, 5, 0, 38 );
         monitorModel( generators, block, "_ud", 21, 6, 0, 37 );
 
-        var generator = PropertyDispatch.properties( BlockMonitor.STATE, BlockMonitor.FACING, BlockMonitor.ORIENTATION );
-        for( MonitorEdgeState edge : BlockMonitor.STATE.getPossibleValues() )
+        var generator = BlockStateVariantMap.create( BlockMonitor.STATE, BlockMonitor.FACING, BlockMonitor.ORIENTATION );
+        for( MonitorEdgeState edge : BlockMonitor.STATE.getValues() )
         {
-            String suffix = edge == MonitorEdgeState.NONE ? "" : "_" + edge.getSerializedName();
-            var model = getModelLocation( block, suffix );
+            String suffix = edge == MonitorEdgeState.NONE ? "" : "_" + edge.asString();
+            var model = getBlockSubModelId( block, suffix );
 
-            for( Direction facing : BlockMonitor.FACING.getPossibleValues() )
+            for( Direction facing : BlockMonitor.FACING.getValues() )
             {
-                for( Direction orientation : BlockMonitor.ORIENTATION.getPossibleValues() )
+                for( Direction orientation : BlockMonitor.ORIENTATION.getValues() )
                 {
-                    generator.select( edge, facing, orientation, Variant.variant()
-                        .with( VariantProperties.MODEL, model )
-                        .with( VariantProperties.X_ROT, toXAngle( orientation ) )
-                        .with( VariantProperties.Y_ROT, toYAngle( facing ) )
+                    generator.register( edge, facing, orientation, BlockStateVariant.create()
+                        .put( VariantSettings.MODEL, model )
+                        .put( VariantSettings.X, toXAngle( orientation ) )
+                        .put( VariantSettings.Y, toYAngle( facing ) )
                     );
                 }
             }
         }
 
-        generators.blockStateOutput.accept( MultiVariantGenerator.multiVariant( block ).with( generator ) );
-        generators.delegateItemModel( block, monitorModel( generators, block, "_item", 15, 4, 0, 32 ) );
+        generators.blockStateCollector.accept( VariantsBlockStateSupplier.create( block ).coordinate( generator ) );
+        generators.registerParentedItemModel( block, monitorModel( generators, block, "_item", 15, 4, 0, 32 ) );
     }
 
-    private ResourceLocation monitorModel( BlockModelGenerators generators, BlockMonitor block, String corners, int front, int side, int top, int back )
+    private Identifier monitorModel( BlockStateModelGenerator generators, BlockMonitor block, String corners, int front, int side, int top, int back )
     {
-        return MONITOR_BASE.create(
-            getModelLocation( block, corners ),
-            new TextureMapping()
-                .put( TextureSlot.FRONT, getBlockTexture( block, "_" + front ) )
-                .put( TextureSlot.SIDE, getBlockTexture( block, "_" + side ) )
-                .put( TextureSlot.TOP, getBlockTexture( block, "_" + top ) )
-                .put( TextureSlot.BACK, getBlockTexture( block, "_" + back ) ),
-            generators.modelOutput
+        return MONITOR_BASE.upload(
+            getBlockSubModelId( block, corners ),
+            new Texture()
+                .put( TextureKey.FRONT, getSubId( block, "_" + front ) )
+                .put( TextureKey.SIDE, getSubId( block, "_" + side ) )
+                .put( TextureKey.TOP, getSubId( block, "_" + top ) )
+                .put( TextureKey.BACK, getSubId( block, "_" + back ) ),
+            generators.modelCollector
         );
     }
 
-    private static VariantProperties.Rotation toXAngle( Direction direction )
+    private static VariantSettings.Rotation toXAngle( Direction direction )
     {
         switch( direction )
         {
             default:
-                return VariantProperties.Rotation.R0;
+                return VariantSettings.Rotation.R0;
             case UP:
-                return VariantProperties.Rotation.R270;
+                return VariantSettings.Rotation.R270;
             case DOWN:
-                return VariantProperties.Rotation.R90;
+                return VariantSettings.Rotation.R90;
         }
     }
 
-    private static VariantProperties.Rotation toYAngle( Direction direction )
+    private static VariantSettings.Rotation toYAngle( Direction direction )
     {
         switch( direction )
         {
             default:
             case NORTH:
-                return VariantProperties.Rotation.R0;
+                return VariantSettings.Rotation.R0;
             case SOUTH:
-                return VariantProperties.Rotation.R180;
+                return VariantSettings.Rotation.R180;
             case EAST:
-                return VariantProperties.Rotation.R90;
+                return VariantSettings.Rotation.R90;
             case WEST:
-                return VariantProperties.Rotation.R270;
+                return VariantSettings.Rotation.R270;
         }
     }
 }

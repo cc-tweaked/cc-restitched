@@ -6,10 +6,9 @@
 package dan200.computercraft.api.peripheral;
 
 import dan200.computercraft.api.lua.GenericSource;
-import net.minecraft.world.Container;
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import javax.annotation.Nonnull;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.inventory.Inventory;
 
 /**
  * A {@link GenericSource} which provides methods for a peripheral.
@@ -32,7 +31,7 @@ public interface GenericPeripheral extends GenericSource
      * lexicographically smallest will be chosen. In order to avoid this conflict, this method should only be
      * implemented when your peripheral targets a single tile entity <strong>AND</strong> it's likely that you're the
      * only mod to do so. Similarly this should <strong>NOT</strong> be implemented when your methods target an
-     * interface (i.e. {@link Container}).
+     * interface (i.e. {@link Inventory}).
      *
      * @return The type of this peripheral or {@link PeripheralType#untyped()}.
      * @see IPeripheral#getType()

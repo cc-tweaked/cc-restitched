@@ -9,10 +9,14 @@ import com.mojang.datafixers.util.Pair;
 import dan200.computercraft.ComputerCraft;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.render.model.ModelBakeSettings;
+import net.minecraft.client.render.model.ModelLoader;
+import net.minecraft.client.render.model.UnbakedModel;
 import net.minecraft.client.resources.model.*;
-import net.minecraft.resources.ResourceLocation;
-
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.SpriteIdentifier;
+import net.minecraft.util.Identifier;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,15 +28,15 @@ import java.util.stream.Collectors;
 public final class TurtleModelLoader
 {
     public static final TurtleModelLoader INSTANCE = new TurtleModelLoader();
-    private static final ResourceLocation NORMAL_TURTLE_MODEL = new ResourceLocation( ComputerCraft.MOD_ID, "block/turtle_normal" );
-    private static final ResourceLocation ADVANCED_TURTLE_MODEL = new ResourceLocation( ComputerCraft.MOD_ID, "block/turtle_advanced" );
-    private static final ResourceLocation COLOUR_TURTLE_MODEL = new ResourceLocation( ComputerCraft.MOD_ID, "block/turtle_colour" );
+    private static final Identifier NORMAL_TURTLE_MODEL = new Identifier( ComputerCraft.MOD_ID, "block/turtle_normal" );
+    private static final Identifier ADVANCED_TURTLE_MODEL = new Identifier( ComputerCraft.MOD_ID, "block/turtle_advanced" );
+    private static final Identifier COLOUR_TURTLE_MODEL = new Identifier( ComputerCraft.MOD_ID, "block/turtle_colour" );
 
     private TurtleModelLoader()
     {
     }
 
-    public boolean accepts( @Nonnull ResourceLocation name )
+    public boolean accepts( @Nonnull Identifier name )
     {
         return name.getNamespace()
             .equals( ComputerCraft.MOD_ID ) && (name.getPath()
@@ -41,7 +45,7 @@ public final class TurtleModelLoader
     }
 
     @Nonnull
-    public UnbakedModel loadModel( @Nonnull ResourceLocation name )
+    public UnbakedModel loadModel( @Nonnull Identifier name )
     {
         if( name.getNamespace()
             .equals( ComputerCraft.MOD_ID ) )
@@ -60,39 +64,39 @@ public final class TurtleModelLoader
 
     private static final class TurtleModel implements UnbakedModel
     {
-        private final ResourceLocation family;
+        private final Identifier family;
 
-        private TurtleModel( ResourceLocation family )
+        private TurtleModel( Identifier family )
         {
             this.family = family;
         }
 
         @Override
-        public Collection<Material> getMaterials( Function<ResourceLocation, UnbakedModel> modelGetter,
+        public Collection<SpriteIdentifier> getTextureDependencies( Function<Identifier, UnbakedModel> modelGetter,
                                                   Set<Pair<String, String>> missingTextureErrors )
         {
-            return getDependencies()
+            return getModelDependencies()
                 .stream()
                 .flatMap( x -> modelGetter.apply( x )
-                    .getMaterials( modelGetter, missingTextureErrors )
+                    .getTextureDependencies( modelGetter, missingTextureErrors )
                     .stream() )
                 .collect( Collectors.toSet() );
         }
 
         @Nonnull
         @Override
-        public Collection<ResourceLocation> getDependencies()
+        public Collection<Identifier> getModelDependencies()
         {
             return Arrays.asList( family, COLOUR_TURTLE_MODEL );
         }
 
         @Override
-        public BakedModel bake( @Nonnull ModelBakery loader, @Nonnull Function<Material, TextureAtlasSprite> spriteGetter, @Nonnull ModelState state,
-                                ResourceLocation modelId )
+        public BakedModel bake( @Nonnull ModelLoader loader, @Nonnull Function<SpriteIdentifier, Sprite> spriteGetter, @Nonnull ModelBakeSettings state,
+                                Identifier modelId )
         {
-            return new TurtleSmartItemModel( loader.getModel( family )
+            return new TurtleSmartItemModel( loader.getOrLoadModel( family )
                 .bake( loader, spriteGetter, state, modelId ),
-                loader.getModel( COLOUR_TURTLE_MODEL )
+                loader.getOrLoadModel( COLOUR_TURTLE_MODEL )
                     .bake( loader, spriteGetter, state, modelId ) );
         }
     }

@@ -23,22 +23,21 @@ import dan200.computercraft.shared.computer.inventory.ContainerViewComputer;
 import dan200.computercraft.shared.network.container.ViewComputerContainerData;
 import dan200.computercraft.shared.util.IDAssigner;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.Level;
-
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.*;
@@ -53,7 +52,7 @@ import static dan200.computercraft.shared.command.builder.CommandBuilder.args;
 import static dan200.computercraft.shared.command.builder.CommandBuilder.command;
 import static dan200.computercraft.shared.command.builder.HelpingArgumentBuilder.choice;
 import static dan200.computercraft.shared.command.text.ChatHelpers.*;
-import static net.minecraft.commands.Commands.literal;
+import static net.minecraft.server.command.CommandManager.literal;
 
 public final class CommandComputerCraft
 {
@@ -67,7 +66,7 @@ public final class CommandComputerCraft
     {
     }
 
-    public static void register( CommandDispatcher<CommandSourceStack> dispatcher, Boolean dedicated )
+    public static void register( CommandDispatcher<ServerCommandSource> dispatcher, Boolean dedicated )
     {
         dispatcher.register( choice( "computercraft" )
             .then( literal( "dump" )
@@ -75,17 +74,17 @@ public final class CommandComputerCraft
                 .executes( context -> {
                     TableBuilder table = new TableBuilder( DUMP_LIST_ID, "Computer", "On", "Position" );
 
-                    CommandSourceStack source = context.getSource();
+                    ServerCommandSource source = context.getSource();
                     List<ServerComputer> computers = new ArrayList<>( ComputerCraft.serverComputerRegistry.getComputers() );
 
                     // Unless we're on a server, limit the number of rows we can send.
-                    Level world = source.getLevel();
+                    World world = source.getWorld();
                     BlockPos pos = new BlockPos( source.getPosition() );
 
                     computers.sort( ( a, b ) -> {
                         if( a.getLevel() == b.getLevel() && a.getLevel() == world )
                         {
-                            return Double.compare( a.getPosition().distSqr( pos ), b.getPosition().distSqr( pos ) );
+                            return Double.compare( a.getPosition().getSquaredDistance( pos ), b.getPosition().getSquaredDistance( pos ) );
                         }
                         else if( a.getLevel() == world )
                         {
@@ -149,7 +148,7 @@ public final class CommandComputerCraft
                         if( computer.isOn() ) shutdown++;
                         computer.shutdown();
                     }
-                    context.getSource().sendSuccess( translate( "commands.computercraft.shutdown.done", shutdown, computers.size() ), false );
+                    context.getSource().sendFeedback( translate( "commands.computercraft.shutdown.done", shutdown, computers.size() ), false );
                     return shutdown;
                 } ) )
 
@@ -163,7 +162,7 @@ public final class CommandComputerCraft
                         if( !computer.isOn() ) on++;
                         computer.turnOn();
                     }
-                    context.getSource().sendSuccess( translate( "commands.computercraft.turn_on.done", on, computers.size() ), false );
+                    context.getSource().sendFeedback( translate( "commands.computercraft.turn_on.done", on, computers.size() ), false );
                     return on;
                 } ) )
 
@@ -172,24 +171,24 @@ public final class CommandComputerCraft
                 .arg( "computer", oneComputer() )
                 .executes( context -> {
                     ServerComputer computer = getComputerArgument( context, "computer" );
-                    Level world = computer.getLevel();
+                    World world = computer.getLevel();
                     BlockPos pos = computer.getPosition();
 
                     if( world == null || pos == null ) throw TP_NOT_THERE.create();
 
-                    Entity entity = context.getSource().getEntityOrException();
-                    if( !(entity instanceof ServerPlayer player) ) throw TP_NOT_PLAYER.create();
+                    Entity entity = context.getSource().getEntityOrThrow();
+                    if( !(entity instanceof ServerPlayerEntity player) ) throw TP_NOT_PLAYER.create();
 
-                    if( player.getCommandSenderWorld() == world )
+                    if( player.getEntityWorld() == world )
                     {
-                        player.connection.teleport(
+                        player.networkHandler.requestTeleport(
                             pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0,
-                            EnumSet.noneOf( ClientboundPlayerPositionPacket.RelativeArgument.class )
+                            EnumSet.noneOf( PlayerPositionLookS2CPacket.Flag.class )
                         );
                     }
                     else
                     {
-                        player.teleportTo( (ServerLevel) world,
+                        player.teleport( (ServerWorld) world,
                             pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0
                         );
                     }
@@ -222,28 +221,28 @@ public final class CommandComputerCraft
                 .requires( UserLevel.OP )
                 .arg( "computer", oneComputer() )
                 .executes( context -> {
-                    ServerPlayer player = context.getSource().getPlayerOrException();
+                    ServerPlayerEntity player = context.getSource().getPlayer();
                     ServerComputer computer = getComputerArgument( context, "computer" );
                     computer.sendTerminalState( player );
                     ViewComputerContainerData container = new ViewComputerContainerData( computer );
                     container.open( player, new ExtendedScreenHandlerFactory()
                     {
                         @Override
-                        public void writeScreenOpeningData( ServerPlayer player, FriendlyByteBuf buf )
+                        public void writeScreenOpeningData( ServerPlayerEntity player, PacketByteBuf buf )
                         {
                             container.toBytes( buf );
                         }
 
                         @Nonnull
                         @Override
-                        public Component getDisplayName()
+                        public Text getDisplayName()
                         {
-                            return new TranslatableComponent( "gui.computercraft.view_computer" );
+                            return new TranslatableText( "gui.computercraft.view_computer" );
                         }
 
                         @Nonnull
                         @Override
-                        public AbstractContainerMenu createMenu( int id, @Nonnull Inventory player, @Nonnull Player entity )
+                        public ScreenHandler createMenu( int id, @Nonnull PlayerInventory player, @Nonnull PlayerEntity entity )
                         {
                             return new ContainerViewComputer( id, player, computer );
                         }
@@ -258,7 +257,7 @@ public final class CommandComputerCraft
                         getTimingContext( context.getSource() ).start();
 
                         String stopCommand = "/computercraft track stop";
-                        context.getSource().sendSuccess( translate( "commands.computercraft.track.start.stop",
+                        context.getSource().sendFeedback( translate( "commands.computercraft.track.start.stop",
                             link( text( stopCommand ), stopCommand, translate( "commands.computercraft.track.stop.action" ) ) ), false );
                         return 1;
                     } ) )
@@ -292,9 +291,9 @@ public final class CommandComputerCraft
         );
     }
 
-    private static Component linkComputer( CommandSourceStack source, ServerComputer serverComputer, int computerId )
+    private static Text linkComputer( ServerCommandSource source, ServerComputer serverComputer, int computerId )
     {
-        MutableComponent out = new TextComponent( "" );
+        MutableText out = new LiteralText( "" );
 
         // Append the computer instance
         if( serverComputer == null )
@@ -333,14 +332,14 @@ public final class CommandComputerCraft
 
         if( UserLevel.OWNER.test( source ) && isPlayer( source ) )
         {
-            Component linkPath = linkStorage( computerId );
+            Text linkPath = linkStorage( computerId );
             if( linkPath != null ) out.append( " " ).append( linkPath );
         }
 
         return out;
     }
 
-    private static Component linkPosition( CommandSourceStack context, ServerComputer computer )
+    private static Text linkPosition( ServerCommandSource context, ServerComputer computer )
     {
         if( UserLevel.OP.test( context ) )
         {
@@ -356,7 +355,7 @@ public final class CommandComputerCraft
         }
     }
 
-    private static Component linkStorage( int id )
+    private static Text linkStorage( int id )
     {
         File file = new File( IDAssigner.getDir(), "computer/" + id );
         if( !file.isDirectory() ) return null;
@@ -369,20 +368,20 @@ public final class CommandComputerCraft
     }
 
     @Nonnull
-    private static TrackingContext getTimingContext( CommandSourceStack source )
+    private static TrackingContext getTimingContext( ServerCommandSource source )
     {
         Entity entity = source.getEntity();
-        return entity instanceof Player ? Tracking.getContext( entity.getUUID() ) : Tracking.getContext( SYSTEM_UUID );
+        return entity instanceof PlayerEntity ? Tracking.getContext( entity.getUuid() ) : Tracking.getContext( SYSTEM_UUID );
     }
 
     private static final List<TrackingField> DEFAULT_FIELDS = Arrays.asList( TrackingField.TASKS, TrackingField.TOTAL_TIME, TrackingField.AVERAGE_TIME, TrackingField.MAX_TIME );
 
-    private static int displayTimings( CommandSourceStack source, TrackingField sortField, List<TrackingField> fields ) throws CommandSyntaxException
+    private static int displayTimings( ServerCommandSource source, TrackingField sortField, List<TrackingField> fields ) throws CommandSyntaxException
     {
         return displayTimings( source, getTimingContext( source ).getTimings(), sortField, fields );
     }
 
-    private static int displayTimings( CommandSourceStack source, @Nonnull List<ComputerTracker> timings, @Nonnull TrackingField sortField, @Nonnull List<TrackingField> fields ) throws CommandSyntaxException
+    private static int displayTimings( ServerCommandSource source, @Nonnull List<ComputerTracker> timings, @Nonnull TrackingField sortField, @Nonnull List<TrackingField> fields ) throws CommandSyntaxException
     {
         if( timings.isEmpty() ) throw NO_TIMINGS_EXCEPTION.create();
 
@@ -398,7 +397,7 @@ public final class CommandComputerCraft
 
         timings.sort( Comparator.<ComputerTracker, Long>comparing( x -> x.get( sortField ) ).reversed() );
 
-        Component[] headers = new Component[1 + fields.size()];
+        Text[] headers = new Text[1 + fields.size()];
         headers[0] = translate( "commands.computercraft.track.dump.computer" );
         for( int i = 0; i < fields.size(); i++ ) headers[i + 1] = translate( fields.get( i ).translationKey() );
         TableBuilder table = new TableBuilder( TRACK_ID, headers );
@@ -408,9 +407,9 @@ public final class CommandComputerCraft
             Computer computer = entry.getComputer();
             ServerComputer serverComputer = computer == null ? null : lookup.get( computer );
 
-            Component computerComponent = linkComputer( source, serverComputer, entry.getComputerId() );
+            Text computerComponent = linkComputer( source, serverComputer, entry.getComputerId() );
 
-            Component[] row = new Component[1 + fields.size()];
+            Text[] row = new Text[1 + fields.size()];
             row[0] = computerComponent;
             for( int i = 0; i < fields.size(); i++ ) row[i + 1] = text( entry.getFormatted( fields.get( i ) ) );
             table.row( row );

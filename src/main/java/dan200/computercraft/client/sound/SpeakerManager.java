@@ -6,13 +6,12 @@
 package dan200.computercraft.client.sound;
 
 import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
-import com.mojang.blaze3d.audio.Channel;
-import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.client.sounds.SoundEngine;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.sound.SoundSystem;
+import net.minecraft.client.sound.Source;
 
 /**
  * Maps speakers source IDs to a {@link SpeakerInstance}.
@@ -22,15 +21,15 @@ public class SpeakerManager
     private static final Map<UUID, SpeakerInstance> sounds = new ConcurrentHashMap<>();
 
     // A return value of true cancels the event
-    public static boolean playStreaming( SoundEngine engine, SoundInstance soundInstance, Channel channel )
+    public static boolean playStreaming( SoundSystem engine, SoundInstance soundInstance, Source channel )
     {
         if( !(soundInstance instanceof SpeakerSound sound) || sound.stream == null ) return false;
 
-        channel.attachBufferStream( sound.stream );
+        channel.setStream( sound.stream );
         channel.play();
 
         sound.channel = channel;
-        sound.executor = engine.executor;
+        sound.executor = engine.taskQueue;
         return true;
     }
 

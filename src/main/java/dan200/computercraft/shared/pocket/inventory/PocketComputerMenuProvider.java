@@ -10,31 +10,30 @@ import dan200.computercraft.shared.computer.core.ServerComputer;
 import dan200.computercraft.shared.computer.inventory.ComputerMenuWithoutInventory;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
-
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class PocketComputerMenuProvider implements MenuProvider, ExtendedScreenHandlerFactory
+public class PocketComputerMenuProvider implements NamedScreenHandlerFactory, ExtendedScreenHandlerFactory
 {
     private final ServerComputer computer;
-    private final Component name;
+    private final Text name;
     private final ItemPocketComputer item;
-    private final InteractionHand hand;
+    private final Hand hand;
     private final boolean isTypingOnly;
 
-    public PocketComputerMenuProvider( ServerComputer computer, ItemStack stack, ItemPocketComputer item, InteractionHand hand, boolean isTypingOnly )
+    public PocketComputerMenuProvider( ServerComputer computer, ItemStack stack, ItemPocketComputer item, Hand hand, boolean isTypingOnly )
     {
         this.computer = computer;
-        name = stack.getHoverName();
+        name = stack.getName();
         this.item = item;
         this.hand = hand;
         this.isTypingOnly = isTypingOnly;
@@ -43,19 +42,19 @@ public class PocketComputerMenuProvider implements MenuProvider, ExtendedScreenH
 
     @Nonnull
     @Override
-    public Component getDisplayName()
+    public Text getDisplayName()
     {
         return name;
     }
 
     @Nullable
     @Override
-    public AbstractContainerMenu createMenu( int id, @Nonnull Inventory inventory, @Nonnull Player entity )
+    public ScreenHandler createMenu( int id, @Nonnull PlayerInventory inventory, @Nonnull PlayerEntity entity )
     {
         return new ComputerMenuWithoutInventory(
             isTypingOnly ? Registry.ModContainers.POCKET_COMPUTER_NO_TERM : Registry.ModContainers.POCKET_COMPUTER, id, inventory,
             p -> {
-                ItemStack stack = p.getItemInHand( hand );
+                ItemStack stack = p.getStackInHand( hand );
                 return stack.getItem() == item && ItemPocketComputer.getServerComputer( stack ) == computer;
             },
             computer, item.getFamily()
@@ -63,9 +62,9 @@ public class PocketComputerMenuProvider implements MenuProvider, ExtendedScreenH
     }
 
     @Override
-    public void writeScreenOpeningData( ServerPlayer player, FriendlyByteBuf packetByteBuf )
+    public void writeScreenOpeningData( ServerPlayerEntity player, PacketByteBuf packetByteBuf )
     {
         packetByteBuf.writeInt( computer.getInstanceID() );
-        packetByteBuf.writeEnum( computer.getFamily() );
+        packetByteBuf.writeEnumConstant( computer.getFamily() );
     }
 }

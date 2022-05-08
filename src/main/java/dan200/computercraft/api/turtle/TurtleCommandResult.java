@@ -5,10 +5,9 @@
  */
 package dan200.computercraft.api.turtle;
 
-import net.minecraft.core.Direction;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.util.math.Direction;
 
 /**
  * Used to indicate the result of executing a turtle command.

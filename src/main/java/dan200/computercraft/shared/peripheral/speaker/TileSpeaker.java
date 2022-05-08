@@ -10,14 +10,13 @@ import dan200.computercraft.api.peripheral.IPeripheralTile;
 import dan200.computercraft.shared.common.TileGeneric;
 import dan200.computercraft.shared.network.NetworkHandler;
 import dan200.computercraft.shared.network.client.SpeakerStopClientMessage;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import java.util.UUID;
 
 public class TileSpeaker extends TileGeneric implements IPeripheralTile
@@ -37,10 +36,10 @@ public class TileSpeaker extends TileGeneric implements IPeripheralTile
     }
 
     @Override
-    public void setRemoved()
+    public void markRemoved()
     {
-        super.setRemoved();
-        if( level != null && !level.isClientSide )
+        super.markRemoved();
+        if( world != null && !world.isClient )
         {
             NetworkHandler.sendToAllPlayers( new SpeakerStopClientMessage( peripheral.getSource() ) );
         }
@@ -66,7 +65,7 @@ public class TileSpeaker extends TileGeneric implements IPeripheralTile
         @Override
         public SpeakerPosition getPosition()
         {
-            return SpeakerPosition.of( speaker.getLevel(), Vec3.atCenterOf( speaker.getBlockPos() ) );
+            return SpeakerPosition.of( speaker.getWorld(), Vec3d.ofCenter( speaker.getPos() ) );
         }
 
         @Override

@@ -6,15 +6,14 @@
 package dan200.computercraft.shared.computer.recipe;
 
 import dan200.computercraft.shared.computer.items.IComputerItem;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.Ingredient;
+import net.minecraft.recipe.ShapedRecipe;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.world.World;
 
 /**
  * Represents a recipe which converts a computer from one form into another.
@@ -23,7 +22,7 @@ public abstract class ComputerConvertRecipe extends ShapedRecipe
 {
     private final String group;
 
-    public ComputerConvertRecipe( ResourceLocation identifier, String group, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result )
+    public ComputerConvertRecipe( Identifier identifier, String group, int width, int height, DefaultedList<Ingredient> ingredients, ItemStack result )
     {
         super( identifier, group, width, height, ingredients, result );
         this.group = group;
@@ -33,13 +32,13 @@ public abstract class ComputerConvertRecipe extends ShapedRecipe
     protected abstract ItemStack convert( @Nonnull IComputerItem item, @Nonnull ItemStack stack );
 
     @Override
-    public boolean matches( @Nonnull CraftingContainer inventory, @Nonnull Level world )
+    public boolean matches( @Nonnull CraftingInventory inventory, @Nonnull World world )
     {
         if( !super.matches( inventory, world ) ) return false;
 
-        for( int i = 0; i < inventory.getContainerSize(); i++ )
+        for( int i = 0; i < inventory.size(); i++ )
         {
-            if( inventory.getItem( i ).getItem() instanceof IComputerItem ) return true;
+            if( inventory.getStack( i ).getItem() instanceof IComputerItem ) return true;
         }
 
         return false;
@@ -47,12 +46,12 @@ public abstract class ComputerConvertRecipe extends ShapedRecipe
 
     @Nonnull
     @Override
-    public ItemStack assemble( @Nonnull CraftingContainer inventory )
+    public ItemStack craft( @Nonnull CraftingInventory inventory )
     {
         // Find our computer item and convert it.
-        for( int i = 0; i < inventory.getContainerSize(); i++ )
+        for( int i = 0; i < inventory.size(); i++ )
         {
-            ItemStack stack = inventory.getItem( i );
+            ItemStack stack = inventory.getStack( i );
             if( stack.getItem() instanceof IComputerItem ) return convert( (IComputerItem) stack.getItem(), stack );
         }
 

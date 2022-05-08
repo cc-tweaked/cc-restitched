@@ -7,17 +7,16 @@ package dan200.computercraft.shared.peripheral.generic.data;
 
 import com.google.gson.JsonParseException;
 import dan200.computercraft.shared.util.NBTUtil;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.EnchantedBookItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.item.EnchantedBookItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.text.Text;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,7 +38,7 @@ public class ItemData
     public static <T extends Map<? super String, Object>> T fillBasic( @Nonnull T data, @Nonnull ItemStack stack )
     {
         fillBasicSafe( data, stack );
-        String hash = NBTUtil.getNBTHash( stack.getTag() );
+        String hash = NBTUtil.getNBTHash( stack.getNbt() );
         if( hash != null ) data.put( "nbt", hash );
         return data;
     }
@@ -51,33 +50,33 @@ public class ItemData
 
         fillBasic( data, stack );
 
-        data.put( "displayName", stack.getHoverName().getString() );
-        data.put( "maxCount", stack.getMaxStackSize() );
+        data.put( "displayName", stack.getName().getString() );
+        data.put( "maxCount", stack.getMaxCount() );
 
-        if( stack.isDamageableItem() )
+        if( stack.isDamageable() )
         {
-            data.put( "damage", stack.getDamageValue() );
+            data.put( "damage", stack.getDamage() );
             data.put( "maxDamage", stack.getMaxDamage() );
         }
 
-        if( stack.getItem().isBarVisible( stack ) )
+        if( stack.getItem().isItemBarVisible( stack ) )
         {
-            data.put( "durability", stack.getItem().getBarWidth( stack ) / 13.0 );
+            data.put( "durability", stack.getItem().getItemBarStep( stack ) / 13.0 );
         }
 
         data.put( "tags", DataHelpers.getTags( stack.getTags() ) );
 
-        CompoundTag tag = stack.getTag();
-        if( tag != null && tag.contains( "display", Tag.TAG_COMPOUND ) )
+        NbtCompound tag = stack.getNbt();
+        if( tag != null && tag.contains( "display", NbtElement.COMPOUND_TYPE ) )
         {
-            CompoundTag displayTag = tag.getCompound( "display" );
-            if( displayTag.contains( "Lore", Tag.TAG_LIST ) )
+            NbtCompound displayTag = tag.getCompound( "display" );
+            if( displayTag.contains( "Lore", NbtElement.LIST_TYPE ) )
             {
-                ListTag loreTag = displayTag.getList( "Lore", Tag.TAG_STRING );
+                NbtList loreTag = displayTag.getList( "Lore", NbtElement.STRING_TYPE );
                 data.put( "lore", loreTag.stream()
                     .map( ItemData::parseTextComponent )
                     .filter( Objects::nonNull )
-                    .map( Component::getString )
+                    .map( Text::getString )
                     .collect( Collectors.toList() ) );
             }
         }
@@ -101,11 +100,11 @@ public class ItemData
     }
 
     @Nullable
-    private static Component parseTextComponent( @Nonnull Tag x )
+    private static Text parseTextComponent( @Nonnull NbtElement x )
     {
         try
         {
-            return Component.Serializer.fromJson( x.getAsString() );
+            return Text.Serializer.fromJson( x.asString() );
         }
         catch( JsonParseException e )
         {
@@ -127,17 +126,17 @@ public class ItemData
 
         if( stack.getItem() instanceof EnchantedBookItem && (hideFlags & 32) == 0 )
         {
-            addEnchantments( EnchantedBookItem.getEnchantments( stack ), enchants );
+            addEnchantments( EnchantedBookItem.getEnchantmentNbt( stack ), enchants );
         }
 
-        if( stack.isEnchanted() && (hideFlags & 1) == 0 )
+        if( stack.hasEnchantments() && (hideFlags & 1) == 0 )
         {
             /*
              * Mimic the EnchantmentHelper.getEnchantments(ItemStack stack) behavior without special case for Enchanted book.
              * I'll do that to have the same data than ones displayed in tooltip.
              * @see EnchantmentHelper.getEnchantments(ItemStack stack)
              */
-            addEnchantments( stack.getEnchantmentTags(), enchants );
+            addEnchantments( stack.getEnchantments(), enchants );
         }
 
         return enchants;
@@ -150,20 +149,20 @@ public class ItemData
      * @param enchants    The enchantment map to add it to.
      * @see EnchantmentHelper
      */
-    private static void addEnchantments( @Nonnull ListTag rawEnchants, @Nonnull ArrayList<Map<String, Object>> enchants )
+    private static void addEnchantments( @Nonnull NbtList rawEnchants, @Nonnull ArrayList<Map<String, Object>> enchants )
     {
         if( rawEnchants.isEmpty() ) return;
 
         enchants.ensureCapacity( enchants.size() + rawEnchants.size() );
 
-        for( Map.Entry<Enchantment, Integer> entry : EnchantmentHelper.deserializeEnchantments( rawEnchants ).entrySet() )
+        for( Map.Entry<Enchantment, Integer> entry : EnchantmentHelper.fromNbt( rawEnchants ).entrySet() )
         {
             Enchantment enchantment = entry.getKey();
             Integer level = entry.getValue();
             HashMap<String, Object> enchant = new HashMap<>( 3 );
             enchant.put( "name", DataHelpers.getId( enchantment ) );
             enchant.put( "level", level );
-            enchant.put( "displayName", enchantment.getFullname( level ).getString() );
+            enchant.put( "displayName", enchantment.getName( level ).getString() );
             enchants.add( enchant );
         }
     }

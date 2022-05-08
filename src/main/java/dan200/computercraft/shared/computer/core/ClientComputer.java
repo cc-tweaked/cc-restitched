@@ -8,7 +8,7 @@ package dan200.computercraft.shared.computer.core;
 import dan200.computercraft.shared.common.ClientTerminal;
 import dan200.computercraft.shared.network.NetworkHandler;
 import dan200.computercraft.shared.network.server.*;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 
 public class ClientComputer extends ClientTerminal implements IComputer
 {
@@ -16,7 +16,7 @@ public class ClientComputer extends ClientTerminal implements IComputer
 
     private boolean on = false;
     private boolean blinking = false;
-    private CompoundTag userData = null;
+    private NbtCompound userData = null;
 
     public ClientComputer( int instanceID )
     {
@@ -24,7 +24,7 @@ public class ClientComputer extends ClientTerminal implements IComputer
         this.instanceID = instanceID;
     }
 
-    public CompoundTag getUserData()
+    public NbtCompound getUserData()
     {
         return userData;
     }
@@ -119,7 +119,7 @@ public class ClientComputer extends ClientTerminal implements IComputer
         NetworkHandler.sendToServer( new MouseEventServerMessage( instanceID, MouseEventServerMessage.TYPE_SCROLL, direction, x, y ) );
     }
 
-    public void setState( ComputerState state, CompoundTag userData )
+    public void setState( ComputerState state, NbtCompound userData )
     {
         on = state != ComputerState.OFF;
         blinking = state == ComputerState.BLINKING;

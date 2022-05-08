@@ -12,24 +12,23 @@ import dan200.computercraft.api.turtle.ITurtleAccess;
 import dan200.computercraft.shared.util.DirectionUtil;
 import dan200.computercraft.shared.util.InventoryUtil;
 import dan200.computercraft.shared.util.WorldUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.passive.HorseBaseEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import java.util.OptionalInt;
 import java.util.UUID;
 
@@ -40,14 +39,14 @@ public final class TurtlePlayer extends FakePlayer
         "[ComputerCraft]"
     );
 
-    private TurtlePlayer( ServerLevel world, GameProfile name )
+    private TurtlePlayer( ServerWorld world, GameProfile name )
     {
         super( world, name );
     }
 
     private static TurtlePlayer create( ITurtleAccess turtle )
     {
-        ServerLevel world = (ServerLevel) turtle.getLevel();
+        ServerWorld world = (ServerWorld) turtle.getLevel();
         GameProfile profile = turtle.getOwningPlayer();
 
         TurtlePlayer player = new TurtlePlayer( world, getProfile( profile ) );
@@ -58,8 +57,8 @@ public final class TurtlePlayer extends FakePlayer
             // Constructing a player overrides the "active player" variable in advancements. As fake players cannot
             // get advancements, this prevents a normal player who has placed a turtle from getting advancements.
             // We try to locate the "actual" player and restore them.
-            ServerPlayer actualPlayer = world.getServer().getPlayerList().getPlayer( profile.getId() );
-            if( actualPlayer != null ) player.getAdvancements().setPlayer( actualPlayer );
+            ServerPlayerEntity actualPlayer = world.getServer().getPlayerManager().getPlayer( profile.getId() );
+            if( actualPlayer != null ) player.getAdvancementTracker().setOwner( actualPlayer );
         }
 
         return player;
@@ -76,7 +75,7 @@ public final class TurtlePlayer extends FakePlayer
 
         TurtlePlayer player = brain.cachedPlayer;
         if( player == null || player.getGameProfile() != getProfile( access.getOwningPlayer() )
-            || player.getCommandSenderWorld() != access.getLevel() )
+            || player.getEntityWorld() != access.getLevel() )
         {
             player = brain.cachedPlayer = create( brain );
         }
@@ -97,18 +96,18 @@ public final class TurtlePlayer extends FakePlayer
 
     private void setState( ITurtleAccess turtle )
     {
-        if( containerMenu != inventoryMenu )
+        if( currentScreenHandler != playerScreenHandler )
         {
-            ComputerCraft.log.warn( "Turtle has open container ({})", containerMenu );
-            doCloseContainer();
+            ComputerCraft.log.warn( "Turtle has open container ({})", currentScreenHandler );
+            closeScreenHandler();
         }
 
         BlockPos position = turtle.getPosition();
-        setPosRaw( position.getX() + 0.5, position.getY() + 0.5, position.getZ() + 0.5 );
+        setPos( position.getX() + 0.5, position.getY() + 0.5, position.getZ() + 0.5 );
 
-        setRot( turtle.getDirection().toYRot(), 0 );
+        setRotation( turtle.getDirection().asRotation(), 0 );
 
-        getInventory().clearContent();
+        getInventory().clear();
     }
 
     public void setPosition( ITurtleAccess turtle, BlockPos position, Direction direction )
@@ -120,50 +119,50 @@ public final class TurtlePlayer extends FakePlayer
         // Stop intersection with the turtle itself
         if( turtle.getPosition().equals( position ) )
         {
-            posX += 0.48 * direction.getStepX();
-            posY += 0.48 * direction.getStepY();
-            posZ += 0.48 * direction.getStepZ();
+            posX += 0.48 * direction.getOffsetX();
+            posY += 0.48 * direction.getOffsetY();
+            posZ += 0.48 * direction.getOffsetZ();
         }
 
         if( direction.getAxis() != Direction.Axis.Y )
         {
-            setRot( direction.toYRot(), 0 );
+            setRotation( direction.asRotation(), 0 );
         }
         else
         {
-            setRot( turtle.getDirection().toYRot(), DirectionUtil.toPitchAngle( direction ) );
+            setRotation( turtle.getDirection().asRotation(), DirectionUtil.toPitchAngle( direction ) );
         }
 
-        setPosRaw( posX, posY, posZ );
-        xo = posX;
-        yo = posY;
-        zo = posZ;
-        xRotO = getXRot();
-        yRotO = getYRot();
+        setPos( posX, posY, posZ );
+        prevX = posX;
+        prevY = posY;
+        prevZ = posZ;
+        prevPitch = getPitch();
+        prevYaw = getYaw();
 
-        yHeadRot = getYRot();
-        yHeadRotO = yHeadRot;
+        headYaw = getYaw();
+        prevHeadYaw = headYaw;
     }
 
     public void loadInventory( @Nonnull ItemStack stack )
     {
-        getInventory().clearContent();
-        getInventory().selected = 0;
-        getInventory().setItem( 0, stack );
+        getInventory().clear();
+        getInventory().selectedSlot = 0;
+        getInventory().setStack( 0, stack );
     }
 
     public void loadInventory( @Nonnull ITurtleAccess turtle )
     {
-        getInventory().clearContent();
+        getInventory().clear();
 
         int currentSlot = turtle.getSelectedSlot();
         int slots = turtle.getItemHandler().size();
 
         // Load up the fake inventory
-        getInventory().selected = 0;
+        getInventory().selectedSlot = 0;
         for( int i = 0; i < slots; i++ )
         {
-            getInventory().setItem( i, turtle.getItemHandler().getStack( (currentSlot + i) % slots ) );
+            getInventory().setStack( i, turtle.getItemHandler().getStack( (currentSlot + i) % slots ) );
         }
     }
 
@@ -173,42 +172,42 @@ public final class TurtlePlayer extends FakePlayer
         int slots = turtle.getItemHandler().size();
 
         // Load up the fake inventory
-        getInventory().selected = 0;
+        getInventory().selectedSlot = 0;
         for( int i = 0; i < slots; i++ )
         {
-            turtle.getItemHandler().setStack( (currentSlot + i) % slots, getInventory().getItem( i ) );
+            turtle.getItemHandler().setStack( (currentSlot + i) % slots, getInventory().getStack( i ) );
         }
 
         // Store (or drop) anything else we found
         BlockPos dropPosition = turtle.getPosition();
         Direction dropDirection = turtle.getDirection().getOpposite();
-        int totalSize = getInventory().getContainerSize();
+        int totalSize = getInventory().size();
         for( int i = slots; i < totalSize; i++ )
         {
-            ItemStack remainder = InventoryUtil.storeItems( getInventory().getItem( i ), turtle.getItemHandler(), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( getInventory().getStack( i ), turtle.getItemHandler(), turtle.getSelectedSlot() );
             if( !remainder.isEmpty() )
             {
                 WorldUtil.dropItemStack( remainder, turtle.getLevel(), dropPosition, dropDirection );
             }
         }
 
-        getInventory().setChanged();
+        getInventory().markDirty();
     }
 
     @Override
-    public Vec3 position()
+    public Vec3d getPos()
     {
-        return new Vec3( getX(), getY(), getZ() );
+        return new Vec3d( getX(), getY(), getZ() );
     }
 
     @Override
-    public float getEyeHeight( @Nonnull Pose pose )
+    public float getEyeHeight( @Nonnull EntityPose pose )
     {
         return 0;
     }
 
     @Override
-    public float getStandingEyeHeight( @Nonnull Pose pose, @Nonnull EntityDimensions size )
+    public float getActiveEyeHeight( @Nonnull EntityPose pose, @Nonnull EntityDimensions size )
     {
         return 0;
     }
@@ -216,18 +215,18 @@ public final class TurtlePlayer extends FakePlayer
     //region Code which depends on the connection
     @Nonnull
     @Override
-    public OptionalInt openMenu( @Nullable MenuProvider prover )
+    public OptionalInt openHandledScreen( @Nullable NamedScreenHandlerFactory prover )
     {
         return OptionalInt.empty();
     }
 
     @Override
-    public void onEnterCombat()
+    public void enterCombat()
     {
     }
 
     @Override
-    public void onLeaveCombat()
+    public void endCombat()
     {
     }
 
@@ -243,27 +242,27 @@ public final class TurtlePlayer extends FakePlayer
     }
 
     @Override
-    public void openTextEdit( @Nonnull SignBlockEntity signTile )
+    public void openEditSignScreen( @Nonnull SignBlockEntity signTile )
     {
     }
 
     @Override
-    public void openHorseInventory( @Nonnull AbstractHorse horse, @Nonnull Container inventory )
+    public void openHorseInventory( @Nonnull HorseBaseEntity horse, @Nonnull Inventory inventory )
     {
     }
 
     @Override
-    public void openItemGui( @Nonnull ItemStack stack, @Nonnull InteractionHand hand )
+    public void useBook( @Nonnull ItemStack stack, @Nonnull Hand hand )
     {
     }
 
     @Override
-    public void closeContainer()
+    public void closeHandledScreen()
     {
     }
 
     @Override
-    protected void onEffectRemoved( @Nonnull MobEffectInstance effect )
+    protected void onStatusEffectRemoved( @Nonnull StatusEffectInstance effect )
     {
     }
     //endregion

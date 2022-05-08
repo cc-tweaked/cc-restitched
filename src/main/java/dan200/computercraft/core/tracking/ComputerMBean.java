@@ -8,10 +8,9 @@ package dan200.computercraft.core.tracking;
 import com.google.common.base.CaseFormat;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.core.computer.Computer;
-import net.minecraft.locale.Language;
-
 import javax.annotation.Nonnull;
 import javax.management.*;
+import net.minecraft.util.Language;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -139,11 +138,11 @@ public final class ComputerMBean implements DynamicMBean, Tracker
         Counter counter = new Counter();
         values.put( field, counter );
 
-        String prettyName = Language.getInstance().getOrDefault( field.translationKey() );
+        String prettyName = Language.getInstance().get( field.translationKey() );
         attributes.add( addAttribute( name, prettyName, counter.value::longValue ) );
         if( count != null )
         {
-            String countName = Language.getInstance().getOrDefault( count.translationKey() );
+            String countName = Language.getInstance().get( count.translationKey() );
             attributes.add( addAttribute( name + "Count", countName, counter.count::longValue ) );
         }
     }

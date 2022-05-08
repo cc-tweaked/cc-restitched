@@ -10,15 +10,14 @@ import dan200.computercraft.api.lua.ILuaCallback;
 import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.shared.util.ItemStorage;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.Container;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 /**
  * The interface passed to turtle by turtles, providing methods that they can call.
@@ -34,7 +33,7 @@ public interface ITurtleAccess
      * @return the world in which the turtle resides.
      */
     @Nonnull
-    Level getLevel();
+    World getLevel();
 
     /**
      * Returns a vector containing the integer co-ordinates at which the turtle resides.
@@ -56,7 +55,7 @@ public interface ITurtleAccess
      * was cancelled.
      * @throws UnsupportedOperationException When attempting to teleport on the client side.
      */
-    boolean teleportTo( @Nonnull Level world, @Nonnull BlockPos pos );
+    boolean teleportTo( @Nonnull World world, @Nonnull BlockPos pos );
 
     /**
      * Returns a vector containing the floating point co-ordinates at which the turtle is rendered.
@@ -67,7 +66,7 @@ public interface ITurtleAccess
      * @see #getVisualYaw(float)
      */
     @Nonnull
-    Vec3 getVisualPosition( float f );
+    Vec3d getVisualPosition( float f );
 
     /**
      * Returns the yaw the turtle is facing when it is rendered.
@@ -151,7 +150,7 @@ public interface ITurtleAccess
      * @see #getItemHandler()
      */
     @Nonnull
-    Container getInventory();
+    Inventory getInventory();
 
     /**
      * Get the inventory of this turtle as an {@link ItemStorage}.
@@ -289,7 +288,7 @@ public interface ITurtleAccess
      * @see #updateUpgradeNBTData(TurtleSide)
      */
     @Nonnull
-    CompoundTag getUpgradeNBTData( @Nullable TurtleSide side );
+    NbtCompound getUpgradeNBTData( @Nullable TurtleSide side );
 
     /**
      * Mark the upgrade-specific data as dirty on a specific side. This is required for the data to be synced to the

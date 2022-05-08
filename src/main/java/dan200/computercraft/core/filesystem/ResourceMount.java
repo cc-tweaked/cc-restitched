@@ -14,12 +14,11 @@ import dan200.computercraft.core.apis.handles.ArrayByteChannel;
 import dan200.computercraft.shared.util.IoUtil;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.SimpleResourceReloadListener;
-import net.minecraft.ResourceLocationException;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
-
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
+import net.minecraft.util.profiler.Profiler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
@@ -63,7 +62,7 @@ public final class ResourceMount implements IMount
     /**
      * Maintain a cache of currently loaded resource mounts. This cache is invalidated when currentManager changes.
      */
-    private static final Map<ResourceLocation, ResourceMount> MOUNT_CACHE = new HashMap<>( 2 );
+    private static final Map<Identifier, ResourceMount> MOUNT_CACHE = new HashMap<>( 2 );
 
     private final String namespace;
     private final String subPath;
@@ -74,7 +73,7 @@ public final class ResourceMount implements IMount
 
     public static ResourceMount get( String namespace, String subPath, ResourceManager manager )
     {
-        ResourceLocation path = new ResourceLocation( namespace, subPath );
+        Identifier path = new Identifier( namespace, subPath );
         synchronized( MOUNT_CACHE )
         {
             ResourceMount mount = MOUNT_CACHE.get( path );
@@ -95,8 +94,8 @@ public final class ResourceMount implements IMount
         boolean hasAny = false;
         String existingNamespace = null;
 
-        FileEntry newRoot = new FileEntry( new ResourceLocation( namespace, subPath ) );
-        for( ResourceLocation file : manager.listResources( subPath, s -> true ) )
+        FileEntry newRoot = new FileEntry( new Identifier( namespace, subPath ) );
+        for( Identifier file : manager.findResources( subPath, s -> true ) )
         {
             existingNamespace = file.getNamespace();
 
@@ -152,12 +151,12 @@ public final class ResourceMount implements IMount
             FileEntry nextEntry = lastEntry.children.get( part );
             if( nextEntry == null )
             {
-                ResourceLocation childPath;
+                Identifier childPath;
                 try
                 {
-                    childPath = new ResourceLocation( namespace, subPath + "/" + path );
+                    childPath = new Identifier( namespace, subPath + "/" + path );
                 }
-                catch( ResourceLocationException e )
+                catch( InvalidIdentifierException e )
                 {
                     ComputerCraft.log.warn( "Cannot create resource location for {} ({})", part, e.getMessage() );
                     return;
@@ -263,11 +262,11 @@ public final class ResourceMount implements IMount
 
     private static class FileEntry
     {
-        final ResourceLocation identifier;
+        final Identifier identifier;
         Map<String, FileEntry> children;
         long size = -1;
 
-        FileEntry( ResourceLocation identifier )
+        FileEntry( Identifier identifier )
         {
             this.identifier = identifier;
         }
@@ -290,13 +289,13 @@ public final class ResourceMount implements IMount
     public static final IdentifiableResourceReloadListener RELOAD_LISTENER = new SimpleResourceReloadListener<Void>()
     {
         @Override
-        public ResourceLocation getFabricId()
+        public Identifier getFabricId()
         {
-            return new ResourceLocation( ComputerCraft.MOD_ID, "resource_mount_reload_listener" );
+            return new Identifier( ComputerCraft.MOD_ID, "resource_mount_reload_listener" );
         }
 
         @Override
-        public CompletableFuture<Void> load( ResourceManager manager, ProfilerFiller profiler, Executor executor )
+        public CompletableFuture<Void> load( ResourceManager manager, Profiler profiler, Executor executor )
         {
             return CompletableFuture.runAsync( () -> {
                 profiler.push( "Reloading ComputerCraft mounts" );
@@ -312,7 +311,7 @@ public final class ResourceMount implements IMount
         }
 
         @Override
-        public CompletableFuture<Void> apply( Void data, ResourceManager manager, ProfilerFiller profiler, Executor executor )
+        public CompletableFuture<Void> apply( Void data, ResourceManager manager, Profiler profiler, Executor executor )
         {
             return CompletableFuture.runAsync( () -> {}, executor );
         }

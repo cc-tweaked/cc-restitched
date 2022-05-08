@@ -7,14 +7,13 @@ package dan200.computercraft.shared.computer.items;
 
 import dan200.computercraft.shared.computer.blocks.BlockComputer;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.LiteralText;
 
 public class ItemComputer extends ItemComputerBase
 {
-    public ItemComputer( BlockComputer<?> block, Properties settings )
+    public ItemComputer( BlockComputer<?> block, Settings settings )
     {
         super( block, settings );
     }
@@ -22,8 +21,8 @@ public class ItemComputer extends ItemComputerBase
     public ItemStack create( int id, String label )
     {
         ItemStack result = new ItemStack( this );
-        if( id >= 0 ) result.getOrCreateTag().putInt( NBT_ID, id );
-        if( label != null ) result.setHoverName( new TextComponent( label ) );
+        if( id >= 0 ) result.getOrCreateNbt().putInt( NBT_ID, id );
+        if( label != null ) result.setCustomName( new LiteralText( label ) );
         return result;
     }
 
@@ -31,7 +30,7 @@ public class ItemComputer extends ItemComputerBase
     public ItemStack withFamily( @Nonnull ItemStack stack, @Nonnull ComputerFamily family )
     {
         ItemStack result = ComputerItemFactory.create( getComputerID( stack ), null, family );
-        if( stack.hasCustomHoverName() ) result.setHoverName( stack.getHoverName() );
+        if( stack.hasCustomName() ) result.setCustomName( stack.getName() );
         return result;
     }
 }

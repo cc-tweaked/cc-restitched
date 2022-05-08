@@ -5,14 +5,15 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
+import dan200.computercraft.client.render.text.FixedWidthFontRenderer.QuadEmitter;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Palette;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Matrix4f;
 
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
 import static dan200.computercraft.shared.media.items.ItemPrintout.LINES_PER_PAGE;
@@ -56,7 +57,7 @@ public final class PrintoutRenderer
 
     private PrintoutRenderer() {}
 
-    public static void drawText( PoseStack transform, VertexConsumer buffer, int x, int y, int start, int light, TextBuffer[] text, TextBuffer[] colours )
+    public static void drawText( MatrixStack transform, VertexConsumer buffer, int x, int y, int start, int light, TextBuffer[] text, TextBuffer[] colours )
     {
         var emitter = FixedWidthFontRenderer.toVertexConsumer( transform, buffer );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
@@ -68,7 +69,7 @@ public final class PrintoutRenderer
         }
     }
 
-    public static void drawText( PoseStack transform, VertexConsumer buffer, int x, int y, int start, int light, String[] text, String[] colours )
+    public static void drawText( MatrixStack transform, VertexConsumer buffer, int x, int y, int start, int light, String[] text, String[] colours )
     {
         var emitter = FixedWidthFontRenderer.toVertexConsumer( transform, buffer );
         for( int line = 0; line < LINES_PER_PAGE && line < text.length; line++ )
@@ -81,7 +82,7 @@ public final class PrintoutRenderer
         }
     }
 
-    public static void drawBorder( PoseStack transform, VertexConsumer buffer, float x, float y, float z, int page, int pages, boolean isBook, int light )
+    public static void drawBorder( MatrixStack transform, VertexConsumer buffer, float x, float y, float z, int page, int pages, boolean isBook, int light )
     {
         int leftPages = page;
         int rightPages = pages - page - 1;
@@ -142,20 +143,20 @@ public final class PrintoutRenderer
         }
     }
 
-    private static void drawTexture( PoseStack transform, VertexConsumer buffer, float x, float y, float z, float u, float v, float width, float height, int light )
+    private static void drawTexture( MatrixStack transform, VertexConsumer buffer, float x, float y, float z, float u, float v, float width, float height, int light )
     {
-        Matrix4f poseMatrix = transform.last().pose();
-        Matrix3f normalMatrix = transform.last().normal();
+        Matrix4f poseMatrix = transform.peek().getPositionMatrix();
+        Matrix3f normalMatrix = transform.peek().getNormalMatrix();
         vertex( poseMatrix, normalMatrix, buffer, x, y + height, z, u / BG_SIZE, (v + height) / BG_SIZE, light );
         vertex( poseMatrix, normalMatrix, buffer, x + width, y + height, z, (u + width) / BG_SIZE, (v + height) / BG_SIZE, light );
         vertex( poseMatrix, normalMatrix, buffer, x + width, y, z, (u + width) / BG_SIZE, v / BG_SIZE, light );
         vertex( poseMatrix, normalMatrix, buffer, x, y, z, u / BG_SIZE, v / BG_SIZE, light );
     }
 
-    private static void drawTexture( PoseStack transform, VertexConsumer buffer, float x, float y, float z, float width, float height, float u, float v, float tWidth, float tHeight, int light )
+    private static void drawTexture( MatrixStack transform, VertexConsumer buffer, float x, float y, float z, float width, float height, float u, float v, float tWidth, float tHeight, int light )
     {
-        Matrix4f poseMatrix = transform.last().pose();
-        Matrix3f normalMatrix = transform.last().normal();
+        Matrix4f poseMatrix = transform.peek().getPositionMatrix();
+        Matrix3f normalMatrix = transform.peek().getNormalMatrix();
         vertex( poseMatrix, normalMatrix, buffer, x, y + height, z, u / BG_SIZE, (v + tHeight) / BG_SIZE, light );
         vertex( poseMatrix, normalMatrix, buffer, x + width, y + height, z, (u + tWidth) / BG_SIZE, (v + tHeight) / BG_SIZE, light );
         vertex( poseMatrix, normalMatrix, buffer, x + width, y, z, (u + tWidth) / BG_SIZE, v / BG_SIZE, light );
@@ -164,7 +165,7 @@ public final class PrintoutRenderer
 
     private static void vertex( Matrix4f poseMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float x, float y, float z, float u, float v, int light )
     {
-        buffer.vertex( poseMatrix, x, y, z ).color( 255, 255, 255, 255 ).uv( u, v ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( light ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        buffer.vertex( poseMatrix, x, y, z ).color( 255, 255, 255, 255 ).texture( u, v ).overlay( OverlayTexture.DEFAULT_UV ).light( light ).normal( normalMatrix, 0f, 0f, 1f ).next();
     }
 
     public static float offsetAt( int page )

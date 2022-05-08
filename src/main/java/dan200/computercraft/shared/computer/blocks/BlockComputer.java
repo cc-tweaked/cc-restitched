@@ -8,46 +8,45 @@ package dan200.computercraft.shared.computer.blocks;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.core.ComputerState;
 import dan200.computercraft.shared.computer.items.ComputerItemFactory;
-import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.math.Direction;
 import java.util.function.Supplier;
 
 public class BlockComputer<T extends TileComputer> extends BlockComputerBase<T>
 {
-    public static final EnumProperty<ComputerState> STATE = EnumProperty.create( "state", ComputerState.class );
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<ComputerState> STATE = EnumProperty.of( "state", ComputerState.class );
+    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
 
-    public BlockComputer( Properties settings, ComputerFamily family, Supplier<BlockEntityType<T>> type )
+    public BlockComputer( Settings settings, ComputerFamily family, Supplier<BlockEntityType<T>> type )
     {
         super( settings, family, type );
-        registerDefaultState( defaultBlockState()
-            .setValue( FACING, Direction.NORTH )
-            .setValue( STATE, ComputerState.OFF )
+        setDefaultState( getDefaultState()
+            .with( FACING, Direction.NORTH )
+            .with( STATE, ComputerState.OFF )
         );
     }
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> builder )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> builder )
     {
         builder.add( FACING, STATE );
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement( BlockPlaceContext placement )
+    public BlockState getPlacementState( ItemPlacementContext placement )
     {
-        return defaultBlockState().setValue( FACING, placement.getHorizontalDirection().getOpposite() );
+        return getDefaultState().with( FACING, placement.getPlayerFacing().getOpposite() );
     }
 
     @Nonnull

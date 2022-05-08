@@ -7,89 +7,88 @@ package dan200.computercraft.shared.peripheral.diskdrive;
 
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.common.BlockGeneric;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.stats.Stats;
-import net.minecraft.world.Nameable;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.stat.Stats;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.Nameable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public class BlockDiskDrive extends BlockGeneric
 {
-    static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final EnumProperty<DiskDriveState> STATE = EnumProperty.create( "state", DiskDriveState.class );
+    static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final EnumProperty<DiskDriveState> STATE = EnumProperty.of( "state", DiskDriveState.class );
 
     private static final BlockEntityTicker<TileDiskDrive> serverTicker = ( level, pos, state, drive ) -> drive.serverTick();
 
-    public BlockDiskDrive( Properties settings )
+    public BlockDiskDrive( Settings settings )
     {
         super( settings, () -> Registry.ModBlockEntities.DISK_DRIVE );
-        registerDefaultState( getStateDefinition().any()
-            .setValue( FACING, Direction.NORTH )
-            .setValue( STATE, DiskDriveState.EMPTY ) );
+        setDefaultState( getStateManager().getDefaultState()
+            .with( FACING, Direction.NORTH )
+            .with( STATE, DiskDriveState.EMPTY ) );
     }
 
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> properties )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> properties )
     {
         properties.add( FACING, STATE );
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement( BlockPlaceContext placement )
+    public BlockState getPlacementState( ItemPlacementContext placement )
     {
-        return defaultBlockState().setValue( FACING, placement.getHorizontalDirection().getOpposite() );
+        return getDefaultState().with( FACING, placement.getPlayerFacing().getOpposite() );
     }
 
     @Override
-    public void playerDestroy( @Nonnull Level world, @Nonnull Player player, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable BlockEntity te, @Nonnull ItemStack stack )
+    public void afterBreak( @Nonnull World world, @Nonnull PlayerEntity player, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable BlockEntity te, @Nonnull ItemStack stack )
     {
         if( te instanceof Nameable nameable && nameable.hasCustomName() )
         {
-            player.awardStat( Stats.BLOCK_MINED.get( this ) );
-            player.causeFoodExhaustion( 0.005F );
+            player.incrementStat( Stats.MINED.getOrCreateStat( this ) );
+            player.addExhaustion( 0.005F );
 
             ItemStack result = new ItemStack( this );
-            result.setHoverName( nameable.getCustomName() );
-            popResource( world, pos, result );
+            result.setCustomName( nameable.getCustomName() );
+            dropStack( world, pos, result );
         }
         else
         {
-            super.playerDestroy( world, player, pos, state, te, stack );
+            super.afterBreak( world, player, pos, state, te, stack );
         }
     }
 
     @Override
-    public void setPlacedBy( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull BlockState state, LivingEntity placer, ItemStack stack )
+    public void onPlaced( @Nonnull World world, @Nonnull BlockPos pos, @Nonnull BlockState state, LivingEntity placer, ItemStack stack )
     {
-        if( stack.hasCustomHoverName() && world.getBlockEntity( pos ) instanceof TileDiskDrive drive )
+        if( stack.hasCustomName() && world.getBlockEntity( pos ) instanceof TileDiskDrive drive )
         {
-            drive.customName = stack.getHoverName();
+            drive.customName = stack.getName();
         }
     }
 
     @Override
     @Nullable
-    public <U extends BlockEntity> BlockEntityTicker<U> getTicker( @Nonnull Level level, @Nonnull BlockState state, @Nonnull BlockEntityType<U> type )
+    public <U extends BlockEntity> BlockEntityTicker<U> getTicker( @Nonnull World level, @Nonnull BlockState state, @Nonnull BlockEntityType<U> type )
     {
-        return level.isClientSide ? null : BaseEntityBlock.createTickerHelper( type, Registry.ModBlockEntities.DISK_DRIVE, serverTicker );
+        return level.isClient ? null : BlockWithEntity.checkType( type, Registry.ModBlockEntities.DISK_DRIVE, serverTicker );
     }
 }

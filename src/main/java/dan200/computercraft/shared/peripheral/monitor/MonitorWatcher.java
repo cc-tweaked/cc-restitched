@@ -11,16 +11,15 @@ import dan200.computercraft.shared.network.NetworkHandler;
 import dan200.computercraft.shared.network.client.MonitorClientMessage;
 import dan200.computercraft.shared.network.client.TerminalState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.BlockPos;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunk;
-
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -48,9 +47,9 @@ public final class MonitorWatcher
         watching.add( monitor );
     }
 
-    public static void onWatch( ServerPlayer serverPlayer, ChunkPos chunkPos )
+    public static void onWatch( ServerPlayerEntity serverPlayer, ChunkPos chunkPos )
     {
-        LevelChunk chunk = (LevelChunk) serverPlayer.getLevel().getChunk( chunkPos.x, chunkPos.z, ChunkStatus.FULL, false );
+        WorldChunk chunk = (WorldChunk) serverPlayer.getWorld().getChunk( chunkPos.x, chunkPos.z, ChunkStatus.FULL, false );
         if( chunk == null ) return;
 
         for( BlockEntity te : chunk.getBlockEntities().values() )
@@ -79,10 +78,10 @@ public final class MonitorWatcher
 
             // Some basic sanity checks to the player. It's possible they're no longer within range, but that's harder
             // to track efficiently.
-            ServerPlayer player = playerUpdate.player;
-            if( !player.isAlive() || player.getLevel() != tile.getLevel() ) continue;
+            ServerPlayerEntity player = playerUpdate.player;
+            if( !player.isAlive() || player.getWorld() != tile.getWorld() ) continue;
 
-            NetworkHandler.sendToPlayer( playerUpdate.player, new MonitorClientMessage( tile.getBlockPos(), getState( tile, monitor ) ) );
+            NetworkHandler.sendToPlayer( playerUpdate.player, new MonitorClientMessage( tile.getPos(), getState( tile, monitor ) ) );
         }
 
         long limit = ComputerCraft.monitorBandwidth;
@@ -95,12 +94,12 @@ public final class MonitorWatcher
             ServerMonitor monitor = getMonitor( tile );
             if( monitor == null ) continue;
 
-            BlockPos pos = tile.getBlockPos();
-            Level world = tile.getLevel();
-            if( !(world instanceof ServerLevel) ) continue;
+            BlockPos pos = tile.getPos();
+            World world = tile.getWorld();
+            if( !(world instanceof ServerWorld) ) continue;
 
-            LevelChunk chunk = world.getChunkAt( pos );
-            if( ((ServerLevel) world).getChunkSource().chunkMap.getPlayers( chunk.getPos(), false ).isEmpty() )
+            WorldChunk chunk = world.getWorldChunk( pos );
+            if( ((ServerWorld) world).getChunkManager().threadedAnvilChunkStorage.getPlayersWatchingChunk( chunk.getPos(), false ).isEmpty() )
             {
                 continue;
             }
@@ -126,10 +125,10 @@ public final class MonitorWatcher
 
     private static final class PlayerUpdate
     {
-        final ServerPlayer player;
+        final ServerPlayerEntity player;
         final TileMonitor monitor;
 
-        private PlayerUpdate( ServerPlayer player, TileMonitor monitor )
+        private PlayerUpdate( ServerPlayerEntity player, TileMonitor monitor )
         {
             this.player = player;
             this.monitor = monitor;

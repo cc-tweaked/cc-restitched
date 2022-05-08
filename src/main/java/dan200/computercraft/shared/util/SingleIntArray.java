@@ -5,10 +5,10 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.screen.PropertyDelegate;
 
 @FunctionalInterface
-public interface SingleIntArray extends ContainerData
+public interface SingleIntArray extends PropertyDelegate
 {
     int get();
 
@@ -24,7 +24,7 @@ public interface SingleIntArray extends ContainerData
     }
 
     @Override
-    default int getCount()
+    default int size()
     {
         return 1;
     }

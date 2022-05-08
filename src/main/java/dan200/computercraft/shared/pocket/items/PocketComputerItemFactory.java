@@ -8,9 +8,8 @@ package dan200.computercraft.shared.pocket.items;
 import dan200.computercraft.api.pocket.IPocketUpgrade;
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
 
 public final class PocketComputerItemFactory
 {

@@ -7,13 +7,13 @@ package dan200.computercraft.client.util;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import net.minecraft.Util;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL45C;
-
+import org.lwjgl.opengl.GLCapabilities;
 import java.nio.ByteBuffer;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.util.Util;
 
 /**
  * Provides utilities to interact with OpenGL's buffer objects, either using direct state access or binding/unbinding
@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 public class DirectBuffers
 {
     public static final boolean HAS_DSA;
-    static final boolean ON_LINUX = Util.getPlatform() == Util.OS.LINUX;
+    static final boolean ON_LINUX = Util.getOperatingSystem() == Util.OperatingSystem.LINUX;
 
     static
     {
@@ -39,7 +39,7 @@ public class DirectBuffers
      * Delete a previously created buffer.
      *
      * On Linux, {@link GlStateManager#_glDeleteBuffers(int)} clears a buffer before deleting it. However, this involves
-     * binding and unbinding the buffer, conflicting with {@link BufferUploader}'s cache. This deletion method uses
+     * binding and unbinding the buffer, conflicting with {@link BufferRenderer}'s cache. This deletion method uses
      * our existing {@link #setEmptyBufferData(int, int, int)}, which correctly handles clearing the buffer.
      *
      * @param type The buffer's type.
@@ -60,7 +60,7 @@ public class DirectBuffers
         }
         else
         {
-            if( type == GL15C.GL_ARRAY_BUFFER ) BufferUploader.reset();
+            if( type == GL15C.GL_ARRAY_BUFFER ) BufferRenderer.unbindAll();
             GlStateManager._glBindBuffer( type, id );
             GlStateManager._glBufferData( type, buffer, flags );
             GlStateManager._glBindBuffer( type, 0 );
@@ -75,7 +75,7 @@ public class DirectBuffers
         }
         else
         {
-            if( type == GL15C.GL_ARRAY_BUFFER ) BufferUploader.reset();
+            if( type == GL15C.GL_ARRAY_BUFFER ) BufferRenderer.unbindAll();
             GlStateManager._glBindBuffer( type, id );
             GlStateManager._glBufferData( type, 0, flags );
             GlStateManager._glBindBuffer( type, 0 );

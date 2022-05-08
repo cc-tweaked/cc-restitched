@@ -9,10 +9,9 @@ import dan200.computercraft.api.ComputerCraftAPI;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import dan200.computercraft.api.peripheral.IPeripheralProvider;
 import dan200.computercraft.core.asm.LuaMethod;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.util.Identifier;
 
 /**
  * A generic source of {@link LuaMethod} functions.
@@ -26,7 +25,7 @@ import javax.annotation.Nonnull;
  * determined by their id, rather than any peripheral provider. This will hopefully change in the future, once a suitable
  * design has been established.
  *
- * For example, the main CC: Tweaked mod defines a generic source for inventories, which works on {@link Container}s:
+ * For example, the main CC: Tweaked mod defines a generic source for inventories, which works on {@link Inventory}s:
  *
  * <pre>{@code
  * public class InventoryMethods implements GenericSource {
@@ -52,5 +51,5 @@ public interface GenericSource
      * @return This source's identifier.
      */
     @Nonnull
-    ResourceLocation id();
+    Identifier id();
 }

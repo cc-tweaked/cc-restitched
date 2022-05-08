@@ -5,14 +5,13 @@
  */
 package dan200.computercraft.shared.peripheral.generic.data;
 
+import net.minecraft.block.Block;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.item.Item;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.block.Block;
-
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -32,35 +31,35 @@ public final class DataHelpers
     @Nonnull
     public static <T> Map<String, Boolean> getTags( @Nonnull Stream<TagKey<T>> tags )
     {
-        Collection<ResourceLocation> tags = BlockTags.getAllTags().getMatchingTags( block );
+        Collection<Identifier> tags = BlockTags.getAllTags().getMatchingTags( block );
         return getTags( tags );
     }
 
     @Nonnull
     static Map<String, Boolean> getTags( @Nonnull Item item )
     {
-        Collection<ResourceLocation> tags = ItemTags.getAllTags().getMatchingTags( item );
+        Collection<Identifier> tags = ItemTags.getAllTags().getMatchingTags( item );
         return getTags( tags );
     }
 
     @Nullable
     public static String getId( @Nonnull Block block )
     {
-        ResourceLocation id = Registry.BLOCK.getKey( block );
+        Identifier id = Registry.BLOCK.getId( block );
         return id == null ? null : id.toString();
     }
 
     @Nullable
     public static String getId( @Nonnull Item item )
     {
-        ResourceLocation id = Registry.ITEM.getKey( item );
+        Identifier id = Registry.ITEM.getId( item );
         return id == null ? null : id.toString();
     }
 
     @Nullable
     public static String getId( @Nonnull Enchantment enchantment )
     {
-        ResourceLocation id = Registry.ENCHANTMENT.getKey( enchantment );
+        Identifier id = Registry.ENCHANTMENT.getId( enchantment );
         return id == null ? null : id.toString();
     }
 }

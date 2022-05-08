@@ -7,12 +7,11 @@ package dan200.computercraft.api.upgrades;
 
 import dan200.computercraft.api.pocket.IPocketUpgrade;
 import dan200.computercraft.api.turtle.ITurtleUpgrade;
-import net.minecraft.Util;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-
 import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 /**
  * Common functionality between {@link ITurtleUpgrade} and {@link IPocketUpgrade}.
@@ -29,7 +28,7 @@ public interface IUpgradeBase
      * @return The unique ID for this upgrade.
      */
     @Nonnull
-    ResourceLocation getUpgradeID();
+    Identifier getUpgradeID();
 
     /**
      * Return an unlocalised string to describe this type of computer in item names.
@@ -75,8 +74,8 @@ public interface IUpgradeBase
 
         // A more expanded form of ItemStack.areShareTagsEqual, but allowing an empty tag to be equal to a
         // null one.
-        CompoundTag shareTag = stack.getTag();
-        CompoundTag craftingShareTag = crafting.getTag();
+        NbtCompound shareTag = stack.getNbt();
+        NbtCompound craftingShareTag = crafting.getNbt();
         if( shareTag == craftingShareTag ) return true;
         if( shareTag == null ) return craftingShareTag.isEmpty();
         if( craftingShareTag == null ) return shareTag.isEmpty();
@@ -92,8 +91,8 @@ public interface IUpgradeBase
      * @see #getUnlocalisedAdjective()
      */
     @Nonnull
-    static String getDefaultAdjective( @Nonnull ResourceLocation id )
+    static String getDefaultAdjective( @Nonnull Identifier id )
     {
-        return Util.makeDescriptionId( "upgrade", id ) + ".adjective";
+        return Util.createTranslationKey( "upgrade", id ) + ".adjective";
     }
 }

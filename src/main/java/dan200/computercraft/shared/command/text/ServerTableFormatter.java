@@ -5,29 +5,29 @@
  */
 package dan200.computercraft.shared.command.text;
 
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 public class ServerTableFormatter implements TableFormatter
 {
-    private final CommandSourceStack source;
+    private final ServerCommandSource source;
 
-    public ServerTableFormatter( CommandSourceStack source )
+    public ServerTableFormatter( ServerCommandSource source )
     {
         this.source = source;
     }
 
     @Override
     @Nullable
-    public Component getPadding( Component component, int width )
+    public Text getPadding( Text component, int width )
     {
         int extraWidth = width - getWidth( component );
         if( extraWidth <= 0 ) return null;
-        return new TextComponent( StringUtils.repeat( ' ', extraWidth ) );
+        return new LiteralText( StringUtils.repeat( ' ', extraWidth ) );
     }
 
     @Override
@@ -37,14 +37,14 @@ public class ServerTableFormatter implements TableFormatter
     }
 
     @Override
-    public int getWidth( Component component )
+    public int getWidth( Text component )
     {
         return component.getString().length();
     }
 
     @Override
-    public void writeLine( int id, Component component )
+    public void writeLine( int id, Text component )
     {
-        source.sendSuccess( component, false );
+        source.sendFeedback( component, false );
     }
 }

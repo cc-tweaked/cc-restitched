@@ -7,8 +7,8 @@ package dan200.computercraft.fabric.events;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.ChunkPos;
 
 public final class CustomServerEvents
 {
@@ -25,6 +25,6 @@ public final class CustomServerEvents
     @FunctionalInterface
     public interface ServerPlayerLoadedChunk
     {
-        void onServerPlayerLoadedChunk( ServerPlayer player, ChunkPos chunkPos );
+        void onServerPlayerLoadedChunk( ServerPlayerEntity player, ChunkPos chunkPos );
     }
 }

@@ -12,15 +12,14 @@ import dan200.computercraft.shared.peripheral.modem.ModemState;
 import dan200.computercraft.shared.peripheral.modem.wireless.WirelessModemPeripheral;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.client.util.ModelIdentifier;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 
 public class TurtleModem extends AbstractTurtleUpgrade
@@ -37,17 +36,17 @@ public class TurtleModem extends AbstractTurtleUpgrade
 
         @Nonnull
         @Override
-        public Level getLevel()
+        public World getLevel()
         {
             return turtle.getLevel();
         }
 
         @Nonnull
         @Override
-        public Vec3 getPosition()
+        public Vec3d getPosition()
         {
             BlockPos turtlePos = turtle.getPosition();
-            return new Vec3(
+            return new Vec3d(
                 turtlePos.getX(),
                 turtlePos.getY(),
                 turtlePos.getZ()
@@ -64,21 +63,21 @@ public class TurtleModem extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private class Models
     {
-        private final ModelResourceLocation leftOffModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_off_left", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_off_left", "inventory" );
+        private final ModelIdentifier leftOffModel = advanced ?
+            new ModelIdentifier( "computercraft:turtle_modem_advanced_off_left", "inventory" ) :
+            new ModelIdentifier( "computercraft:turtle_modem_normal_off_left", "inventory" );
 
-        private final ModelResourceLocation rightOffModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_off_right", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_off_right", "inventory" );
+        private final ModelIdentifier rightOffModel = advanced ?
+            new ModelIdentifier( "computercraft:turtle_modem_advanced_off_right", "inventory" ) :
+            new ModelIdentifier( "computercraft:turtle_modem_normal_off_right", "inventory" );
 
-        private final ModelResourceLocation leftOnModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_on_left", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_on_left", "inventory" );
+        private final ModelIdentifier leftOnModel = advanced ?
+            new ModelIdentifier( "computercraft:turtle_modem_advanced_on_left", "inventory" ) :
+            new ModelIdentifier( "computercraft:turtle_modem_normal_on_left", "inventory" );
 
-        private final ModelResourceLocation rightOnModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_on_right", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_on_right", "inventory" );
+        private final ModelIdentifier rightOnModel = advanced ?
+            new ModelIdentifier( "computercraft:turtle_modem_advanced_on_right", "inventory" ) :
+            new ModelIdentifier( "computercraft:turtle_modem_normal_on_right", "inventory" );
     }
 
     private final boolean advanced;
@@ -86,7 +85,7 @@ public class TurtleModem extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private Models models;
 
-    public TurtleModem( ResourceLocation id, ItemStack stack, boolean advanced )
+    public TurtleModem( Identifier id, ItemStack stack, boolean advanced )
     {
         super( id, TurtleUpgradeType.PERIPHERAL, advanced ? WirelessModemPeripheral.ADVANCED_ADJECTIVE : WirelessModemPeripheral.NORMAL_ADJECTIVE, stack );
         this.advanced = advanced;
@@ -115,7 +114,7 @@ public class TurtleModem extends AbstractTurtleUpgrade
         boolean active = false;
         if( turtle != null )
         {
-            CompoundTag turtleNBT = turtle.getUpgradeNBTData( side );
+            NbtCompound turtleNBT = turtle.getUpgradeNBTData( side );
             active = turtleNBT.contains( "active" ) && turtleNBT.getBoolean( "active" );
         }
 
@@ -128,7 +127,7 @@ public class TurtleModem extends AbstractTurtleUpgrade
     public void update( @Nonnull ITurtleAccess turtle, @Nonnull TurtleSide side )
     {
         // Advance the modem
-        if( !turtle.getLevel().isClientSide )
+        if( !turtle.getLevel().isClient )
         {
             IPeripheral peripheral = turtle.getPeripheral( side );
             if( peripheral instanceof Peripheral modem )

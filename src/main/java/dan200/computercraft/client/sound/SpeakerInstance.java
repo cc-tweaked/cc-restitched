@@ -8,15 +8,16 @@ package dan200.computercraft.client.sound;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.SoundManager;
+import net.minecraft.util.Identifier;
 
 /**
  * An instance of a speaker, which is either playing a {@link DfpwmStream} stream or a normal sound.
  */
 public class SpeakerInstance
 {
-    public static final ResourceLocation DFPWM_STREAM = new ResourceLocation( ComputerCraft.MOD_ID, "speaker.dfpwm_fake_audio_should_not_be_played" );
+    public static final Identifier DFPWM_STREAM = new Identifier( ComputerCraft.MOD_ID, "speaker.dfpwm_fake_audio_should_not_be_played" );
 
     private DfpwmStream currentStream;
     private SpeakerSound sound;
@@ -38,14 +39,14 @@ public class SpeakerInstance
         if( exhausted && sound != null && sound.stream == stream && sound.channel != null )
         {
             sound.executor.execute( () -> {
-                if( !sound.channel.stopped() ) sound.channel.pumpBuffers( 1 );
+                if( !sound.channel.isStopped() ) sound.channel.read( 1 );
             } );
         }
     }
 
     public void playAudio( SpeakerPosition position, float volume )
     {
-        var soundManager = Minecraft.getInstance().getSoundManager();
+        var soundManager = MinecraftClient.getInstance().getSoundManager();
 
         if( sound != null && sound.stream != currentStream )
         {
@@ -53,7 +54,7 @@ public class SpeakerInstance
             sound = null;
         }
 
-        if( sound != null && !soundManager.isActive( sound ) ) sound = null;
+        if( sound != null && !soundManager.isPlaying( sound ) ) sound = null;
 
         if( sound == null && currentStream != null )
         {
@@ -62,9 +63,9 @@ public class SpeakerInstance
         }
     }
 
-    public void playSound( SpeakerPosition position, ResourceLocation location, float volume, float pitch )
+    public void playSound( SpeakerPosition position, Identifier location, float volume, float pitch )
     {
-        var soundManager = Minecraft.getInstance().getSoundManager();
+        var soundManager = MinecraftClient.getInstance().getSoundManager();
         currentStream = null;
 
         if( sound != null )
@@ -84,7 +85,7 @@ public class SpeakerInstance
 
     void stop()
     {
-        if( sound != null ) Minecraft.getInstance().getSoundManager().stop( sound );
+        if( sound != null ) MinecraftClient.getInstance().getSoundManager().stop( sound );
 
         currentStream = null;
         sound = null;

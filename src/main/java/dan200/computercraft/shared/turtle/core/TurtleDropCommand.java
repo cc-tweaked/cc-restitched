@@ -12,13 +12,12 @@ import dan200.computercraft.api.turtle.TurtleCommandResult;
 import dan200.computercraft.shared.util.InventoryUtil;
 import dan200.computercraft.shared.util.ItemStorage;
 import dan200.computercraft.shared.util.WorldUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public class TurtleDropCommand implements ITurtleCommand
 {
@@ -53,12 +52,12 @@ public class TurtleDropCommand implements ITurtleCommand
         }
 
         // Get inventory for thing in front
-        Level world = turtle.getLevel();
+        World world = turtle.getLevel();
         BlockPos oldPosition = turtle.getPosition();
-        BlockPos newPosition = oldPosition.relative( direction );
+        BlockPos newPosition = oldPosition.offset( direction );
         Direction side = direction.getOpposite();
 
-        Container inventory = InventoryUtil.getInventory( world, newPosition, side );
+        Inventory inventory = InventoryUtil.getInventory( world, newPosition, side );
 
         if( inventory != null )
         {
@@ -85,7 +84,7 @@ public class TurtleDropCommand implements ITurtleCommand
         {
             // Drop the item into the world
             WorldUtil.dropItemStack( stack, world, oldPosition, direction );
-            world.globalLevelEvent( 1000, newPosition, 0 );
+            world.syncGlobalEvent( 1000, newPosition, 0 );
             turtle.playAnimation( TurtleAnimation.WAIT );
             return TurtleCommandResult.success();
         }

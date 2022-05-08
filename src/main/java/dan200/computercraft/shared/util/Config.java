@@ -18,10 +18,9 @@ import dan200.computercraft.core.apis.http.options.AddressRuleConfig;
 import dan200.computercraft.fabric.mixin.LevelResourceAccess;
 import dan200.computercraft.shared.peripheral.monitor.MonitorRenderer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.storage.LevelResource;
-
+import net.minecraft.util.WorldSavePath;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -43,7 +42,7 @@ public final class Config
     public static CommentedFileConfig serverConfig;
     public static CommentedFileConfig clientConfig;
 
-    private static final LevelResource serverDir = LevelResourceAccess.create( "serverconfig" );
+    private static final WorldSavePath serverDir = LevelResourceAccess.create( "serverconfig" );
     private static final String serverFileName = "computercraft-server.toml";
 
     private static Path serverPath = null;
@@ -277,7 +276,7 @@ public final class Config
 
     public static void serverStarting( MinecraftServer server )
     {
-        serverPath = server.getWorldPath( serverDir ).resolve( serverFileName );
+        serverPath = server.getSavePath( serverDir ).resolve( serverFileName );
 
         try( CommentedFileConfig config = buildFileConfig( serverPath ) )
         {
@@ -295,7 +294,7 @@ public final class Config
         serverPath = null;
     }
 
-    public static void clientStarted( Minecraft client )
+    public static void clientStarted( MinecraftClient client )
     {
         try( CommentedFileConfig config = buildFileConfig( clientPath ) )
         {

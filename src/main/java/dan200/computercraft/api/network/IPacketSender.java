@@ -5,10 +5,9 @@
  */
 package dan200.computercraft.api.network;
 
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-
 import javax.annotation.Nonnull;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 /**
  * An object on a {@link IPacketNetwork}, capable of sending packets.
@@ -21,7 +20,7 @@ public interface IPacketSender
      * @return The sender's world.
      */
     @Nonnull
-    Level getLevel();
+    World getLevel();
 
     /**
      * Get the position in the world at which this sender exists.
@@ -29,7 +28,7 @@ public interface IPacketSender
      * @return The sender's position.
      */
     @Nonnull
-    Vec3 getPosition();
+    Vec3d getPosition();
 
     /**
      * Get some sort of identification string for this sender. This does not strictly need to be unique, but you

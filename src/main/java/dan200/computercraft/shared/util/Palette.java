@@ -6,10 +6,9 @@
 package dan200.computercraft.shared.util;
 
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-
 import javax.annotation.Nonnull;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 
 public class Palette
 {
@@ -101,7 +100,7 @@ public class Palette
         };
     }
 
-    public void write( FriendlyByteBuf buffer )
+    public void write( PacketByteBuf buffer )
     {
         for( double[] colour : colours )
         {
@@ -109,7 +108,7 @@ public class Palette
         }
     }
 
-    public void read( FriendlyByteBuf buffer )
+    public void read( PacketByteBuf buffer )
     {
         for( int i = 0; i < PALETTE_SIZE; i++ )
         {
@@ -120,7 +119,7 @@ public class Palette
         }
     }
 
-    public CompoundTag writeToNBT( CompoundTag nbt )
+    public NbtCompound writeToNBT( NbtCompound nbt )
     {
         int[] rgb8 = new int[colours.length];
 
@@ -133,7 +132,7 @@ public class Palette
         return nbt;
     }
 
-    public void readFromNBT( CompoundTag nbt )
+    public void readFromNBT( NbtCompound nbt )
     {
         if( !nbt.contains( "term_palette" ) ) return;
         int[] rgb8 = nbt.getIntArray( "term_palette" );

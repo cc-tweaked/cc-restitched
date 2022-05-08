@@ -12,27 +12,26 @@ import dan200.computercraft.api.media.IMedia;
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.common.IColouredItem;
 import dan200.computercraft.shared.util.Colour;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.client.item.TooltipContext;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.world.World;
 import java.util.List;
 
 public class ItemDisk extends Item implements IMedia, IColouredItem
 {
     private static final String NBT_ID = "DiskId";
 
-    public ItemDisk( Properties settings )
+    public ItemDisk( Settings settings )
     {
         super( settings );
     }
@@ -48,9 +47,9 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     }
 
     @Override
-    public void fillItemCategory( @Nonnull CreativeModeTab tabs, @Nonnull NonNullList<ItemStack> list )
+    public void appendStacks( @Nonnull ItemGroup tabs, @Nonnull DefaultedList<ItemStack> list )
     {
-        if( !allowdedIn( tabs ) ) return;
+        if( !isIn( tabs ) ) return;
         for( int colour = 0; colour < 16; colour++ )
         {
             list.add( createFromIDAndColour( -1, null, Colour.VALUES[colour].getHex() ) );
@@ -58,15 +57,15 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     }
 
     @Override
-    public void appendHoverText( @Nonnull ItemStack stack, @Nullable Level world, @Nonnull List<Component> list, TooltipFlag options )
+    public void appendTooltip( @Nonnull ItemStack stack, @Nullable World world, @Nonnull List<Text> list, TooltipContext options )
     {
         if( options.isAdvanced() )
         {
             int id = getDiskID( stack );
             if( id >= 0 )
             {
-                list.add( new TranslatableComponent( "gui.computercraft.tooltip.disk_id", id )
-                    .withStyle( ChatFormatting.GRAY ) );
+                list.add( new TranslatableText( "gui.computercraft.tooltip.disk_id", id )
+                    .formatted( Formatting.GRAY ) );
             }
         }
     }
@@ -74,7 +73,7 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     @Override
     public String getLabel( @Nonnull ItemStack stack )
     {
-        return stack.hasCustomHoverName() ? stack.getHoverName().getString() : null;
+        return stack.hasCustomName() ? stack.getName().getString() : null;
     }
 
     @Override
@@ -82,17 +81,17 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     {
         if( label != null )
         {
-            stack.setHoverName( new TextComponent( label ) );
+            stack.setCustomName( new LiteralText( label ) );
         }
         else
         {
-            stack.resetHoverName();
+            stack.removeCustomName();
         }
         return true;
     }
 
     @Override
-    public IMount createDataMount( @Nonnull ItemStack stack, @Nonnull Level world )
+    public IMount createDataMount( @Nonnull ItemStack stack, @Nonnull World world )
     {
         int diskID = getDiskID( stack );
         if( diskID < 0 )
@@ -105,13 +104,13 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
 
     public static int getDiskID( @Nonnull ItemStack stack )
     {
-        CompoundTag nbt = stack.getTag();
+        NbtCompound nbt = stack.getNbt();
         return nbt != null && nbt.contains( NBT_ID ) ? nbt.getInt( NBT_ID ) : -1;
     }
 
     private static void setDiskID( @Nonnull ItemStack stack, int id )
     {
-        if( id >= 0 ) stack.getOrCreateTag().putInt( NBT_ID, id );
+        if( id >= 0 ) stack.getOrCreateNbt().putInt( NBT_ID, id );
     }
 
     @Override

@@ -15,11 +15,10 @@ import dan200.computercraft.core.tracking.TrackingField;
 import dan200.computercraft.shared.peripheral.generic.data.ItemData;
 import dan200.computercraft.shared.peripheral.generic.methods.InventoryMethods;
 import dan200.computercraft.shared.turtle.core.*;
-import net.minecraft.world.item.ItemStack;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import net.minecraft.item.ItemStack;
 
 /**
  * Turtles are a robotic device, which can break and place blocks, attack mobs, and move about the world. They have
@@ -364,7 +363,7 @@ public class TurtleAPI implements ILuaAPI
     public final int getItemCount( Optional<Integer> slot ) throws LuaException
     {
         int actualSlot = checkSlot( slot ).orElse( turtle.getSelectedSlot() );
-        return turtle.getInventory().getItem( actualSlot ).getCount();
+        return turtle.getInventory().getStack( actualSlot ).getCount();
     }
 
     /**
@@ -380,8 +379,8 @@ public class TurtleAPI implements ILuaAPI
     public final int getItemSpace( Optional<Integer> slot ) throws LuaException
     {
         int actualSlot = checkSlot( slot ).orElse( turtle.getSelectedSlot() );
-        ItemStack stack = turtle.getInventory().getItem( actualSlot );
-        return stack.isEmpty() ? 64 : Math.min( stack.getMaxStackSize(), 64 ) - stack.getCount();
+        ItemStack stack = turtle.getInventory().getStack( actualSlot );
+        return stack.isEmpty() ? 64 : Math.min( stack.getMaxCount(), 64 ) - stack.getCount();
     }
 
     /**
@@ -815,7 +814,7 @@ public class TurtleAPI implements ILuaAPI
 
     private Object[] getItemDetail( int slot, boolean detailed )
     {
-        ItemStack stack = turtle.getInventory().getItem( slot );
+        ItemStack stack = turtle.getInventory().getStack( slot );
         if( stack.isEmpty() ) return new Object[] { null };
 
         Map<String, Object> table = detailed

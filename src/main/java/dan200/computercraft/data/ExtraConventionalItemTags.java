@@ -7,8 +7,8 @@ package dan200.computercraft.data;
 
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
 import net.fabricmc.fabric.impl.tag.convention.TagRegistration;
+import net.minecraft.item.Item;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
 
 /**
  * Additional conventional item tags not built in to Fabric.

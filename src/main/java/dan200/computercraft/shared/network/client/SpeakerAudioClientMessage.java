@@ -11,8 +11,7 @@ import dan200.computercraft.shared.peripheral.speaker.SpeakerPosition;
 import dan200.computercraft.shared.network.PacketContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.network.FriendlyByteBuf;
-
+import net.minecraft.network.PacketByteBuf;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -39,9 +38,9 @@ public class SpeakerAudioClientMessage implements NetworkMessage
         this.volume = volume;
     }
 
-    public SpeakerAudioClientMessage( FriendlyByteBuf buf )
+    public SpeakerAudioClientMessage( PacketByteBuf buf )
     {
-        source = buf.readUUID();
+        source = buf.readUuid();
         pos = SpeakerPosition.Message.read( buf );
         volume = buf.readFloat();
 
@@ -50,9 +49,9 @@ public class SpeakerAudioClientMessage implements NetworkMessage
     }
 
     @Override
-    public void toBytes( @Nonnull FriendlyByteBuf buf )
+    public void toBytes( @Nonnull PacketByteBuf buf )
     {
-        buf.writeUUID( source );
+        buf.writeUuid( source );
         pos.write( buf );
         buf.writeFloat( volume );
         buf.writeBytes( content.duplicate() );

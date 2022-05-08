@@ -8,47 +8,46 @@ package dan200.computercraft.shared.peripheral.modem.wireless;
 import dan200.computercraft.shared.common.BlockGeneric;
 import dan200.computercraft.shared.peripheral.modem.ModemShapes;
 import dan200.computercraft.shared.util.WaterloggableHelpers;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.VoxelShape;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
+import net.minecraft.block.Waterloggable;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
+import net.minecraft.world.WorldAccess;
+import net.minecraft.world.WorldView;
 import java.util.function.Supplier;
 
 import static dan200.computercraft.shared.util.WaterloggableHelpers.WATERLOGGED;
 import static dan200.computercraft.shared.util.WaterloggableHelpers.getFluidStateForPlacement;
 
-public class BlockWirelessModem extends BlockGeneric implements SimpleWaterloggedBlock
+public class BlockWirelessModem extends BlockGeneric implements Waterloggable
 {
-    public static final DirectionProperty FACING = BlockStateProperties.FACING;
-    public static final BooleanProperty ON = BooleanProperty.create( "on" );
+    public static final DirectionProperty FACING = Properties.FACING;
+    public static final BooleanProperty ON = BooleanProperty.of( "on" );
 
-    public BlockWirelessModem( Properties settings, Supplier<BlockEntityType<? extends TileWirelessModem>> type )
+    public BlockWirelessModem( Settings settings, Supplier<BlockEntityType<? extends TileWirelessModem>> type )
     {
         super( settings, type );
-        registerDefaultState( getStateDefinition().any()
-            .setValue( FACING, Direction.NORTH )
-            .setValue( ON, false )
-            .setValue( WATERLOGGED, false ) );
+        setDefaultState( getStateManager().getDefaultState()
+            .with( FACING, Direction.NORTH )
+            .with( ON, false )
+            .with( WATERLOGGED, false ) );
     }
 
     @Override
-    protected void createBlockStateDefinition( StateDefinition.Builder<Block, BlockState> builder )
+    protected void appendProperties( StateManager.Builder<Block, BlockState> builder )
     {
         builder.add( FACING, ON, WATERLOGGED );
     }
@@ -56,9 +55,9 @@ public class BlockWirelessModem extends BlockGeneric implements SimpleWaterlogge
     @Nonnull
     @Override
     @Deprecated
-    public VoxelShape getShape( BlockState blockState, @Nonnull BlockGetter blockView, @Nonnull BlockPos blockPos, @Nonnull CollisionContext context )
+    public VoxelShape getOutlineShape( BlockState blockState, @Nonnull BlockView blockView, @Nonnull BlockPos blockPos, @Nonnull ShapeContext context )
     {
-        return ModemShapes.getBounds( blockState.getValue( FACING ) );
+        return ModemShapes.getBounds( blockState.get( FACING ) );
     }
 
     @Nonnull
@@ -72,28 +71,28 @@ public class BlockWirelessModem extends BlockGeneric implements SimpleWaterlogge
     @Nonnull
     @Override
     @Deprecated
-    public BlockState updateShape( @Nonnull BlockState state, @Nonnull Direction side, @Nonnull BlockState otherState, @Nonnull LevelAccessor world, @Nonnull BlockPos pos, @Nonnull BlockPos otherPos )
+    public BlockState getStateForNeighborUpdate( @Nonnull BlockState state, @Nonnull Direction side, @Nonnull BlockState otherState, @Nonnull WorldAccess world, @Nonnull BlockPos pos, @Nonnull BlockPos otherPos )
     {
         WaterloggableHelpers.updateShape( state, world, pos );
-        return side == state.getValue( FACING ) && !state.canSurvive( world, pos )
-            ? state.getFluidState().createLegacyBlock()
+        return side == state.get( FACING ) && !state.canPlaceAt( world, pos )
+            ? state.getFluidState().getBlockState()
             : state;
     }
 
     @Override
     @Deprecated
-    public boolean canSurvive( BlockState state, @Nonnull LevelReader world, BlockPos pos )
+    public boolean canPlaceAt( BlockState state, @Nonnull WorldView world, BlockPos pos )
     {
-        Direction facing = state.getValue( FACING );
-        return canSupportCenter( world, pos.relative( facing ), facing.getOpposite() );
+        Direction facing = state.get( FACING );
+        return sideCoversSmallSquare( world, pos.offset( facing ), facing.getOpposite() );
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement( BlockPlaceContext placement )
+    public BlockState getPlacementState( ItemPlacementContext placement )
     {
-        return defaultBlockState()
-            .setValue( FACING, placement.getClickedFace().getOpposite() )
-            .setValue( WATERLOGGED, getFluidStateForPlacement( placement ) );
+        return getDefaultState()
+            .with( FACING, placement.getSide().getOpposite() )
+            .with( WATERLOGGED, getFluidStateForPlacement( placement ) );
     }
 }

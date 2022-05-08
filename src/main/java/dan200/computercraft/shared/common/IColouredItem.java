@@ -5,8 +5,8 @@
  */
 package dan200.computercraft.shared.common;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 
 public interface IColouredItem
 {
@@ -26,7 +26,7 @@ public interface IColouredItem
 
     static int getColourBasic( ItemStack stack )
     {
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getNbt();
         return tag != null && tag.contains( NBT_COLOUR ) ? tag.getInt( NBT_COLOUR ) : -1;
     }
 
@@ -34,12 +34,12 @@ public interface IColouredItem
     {
         if( colour == -1 )
         {
-            CompoundTag tag = stack.getTag();
+            NbtCompound tag = stack.getNbt();
             if( tag != null ) tag.remove( NBT_COLOUR );
         }
         else
         {
-            stack.getOrCreateTag().putInt( NBT_COLOUR, colour );
+            stack.getOrCreateNbt().putInt( NBT_COLOUR, colour );
         }
     }
 }

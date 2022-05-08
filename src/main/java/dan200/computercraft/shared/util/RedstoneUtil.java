@@ -5,13 +5,13 @@
  */
 package dan200.computercraft.shared.util;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.DiodeBlock;
-import net.minecraft.world.level.block.RedStoneWireBlock;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.AbstractRedstoneGateBlock;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.RedstoneWireBlock;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public final class RedstoneUtil
 {
@@ -26,25 +26,25 @@ public final class RedstoneUtil
      * @param pos   The position of the neighbour
      * @param side  The side we are reading from
      * @return The effective redstone power
-     * @see DiodeBlock#getInputSignal(Level, BlockPos, BlockState)
+     * @see AbstractRedstoneGateBlock#getPower(World, BlockPos, BlockState)
      */
-    public static int getRedstoneInput( Level world, BlockPos pos, Direction side )
+    public static int getRedstoneInput( World world, BlockPos pos, Direction side )
     {
-        int power = world.getSignal( pos, side );
+        int power = world.getEmittedRedstonePower( pos, side );
         if( power >= 15 ) return power;
 
         BlockState neighbour = world.getBlockState( pos );
         return neighbour.getBlock() == Blocks.REDSTONE_WIRE
-            ? Math.max( power, neighbour.getValue( RedStoneWireBlock.POWER ) )
+            ? Math.max( power, neighbour.get( RedstoneWireBlock.POWER ) )
             : power;
     }
 
-    public static void propagateRedstoneOutput( Level world, BlockPos pos, Direction side )
+    public static void propagateRedstoneOutput( World world, BlockPos pos, Direction side )
     {
         // Propagate ordinary output. See BlockRedstoneDiode.notifyNeighbors
         BlockState block = world.getBlockState( pos );
-        BlockPos neighbourPos = pos.relative( side );
-        world.neighborChanged( neighbourPos, block.getBlock(), pos );
-        world.updateNeighborsAtExceptFromFacing( neighbourPos, block.getBlock(), side.getOpposite() );
+        BlockPos neighbourPos = pos.offset( side );
+        world.updateNeighbor( neighbourPos, block.getBlock(), pos );
+        world.updateNeighborsExcept( neighbourPos, block.getBlock(), side.getOpposite() );
     }
 }

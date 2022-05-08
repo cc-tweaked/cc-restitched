@@ -5,27 +5,28 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.shaders.Uniform;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import dan200.computercraft.client.FrameInfo;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.server.packs.resources.ResourceProvider;
+import dan200.computercraft.shared.util.Palette;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL31;
 
 import javax.annotation.Nullable;
+import net.minecraft.client.gl.GlUniform;
+import net.minecraft.client.render.Shader;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.resource.ResourceFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.getColour;
 
-public class MonitorTextureBufferShader extends ShaderInstance
+public class MonitorTextureBufferShader extends Shader
 {
     public static final int UNIFORM_SIZE = 4 * 4 * 16 + 4 + 4 + 2 * 4 + 4;
 
@@ -36,17 +37,17 @@ public class MonitorTextureBufferShader extends ShaderInstance
     private final int monitorData;
     private int uniformBuffer = 0;
 
-    private final Uniform cursorBlink;
+    private final GlUniform cursorBlink;
 
-    public MonitorTextureBufferShader( ResourceProvider provider, String name, VertexFormat format ) throws IOException
+    public MonitorTextureBufferShader( ResourceFactory provider, String name, VertexFormat format ) throws IOException
     {
         super( provider, name, format );
-        monitorData = GL31.glGetUniformBlockIndex( getId(), "MonitorData" );
+        monitorData = GL31.glGetUniformBlockIndex( getProgramRef(), "MonitorData" );
         if( monitorData == -1 ) throw new IllegalStateException( "Could not find MonitorData uniform." );
 
         cursorBlink = getUniformChecked( "CursorBlink" );
 
-        Uniform tbo = getUniformChecked( "Tbo" );
+        GlUniform tbo = getUniformChecked( "Tbo" );
         if( tbo != null ) tbo.set( TEXTURE_INDEX - GL13.GL_TEXTURE0 );
     }
 
@@ -55,20 +56,20 @@ public class MonitorTextureBufferShader extends ShaderInstance
         uniformBuffer = buffer;
 
         int cursorAlpha = FrameInfo.getGlobalCursorBlink() ? 1 : 0;
-        if( cursorBlink != null && cursorBlink.getIntBuffer().get( 0 ) != cursorAlpha ) cursorBlink.set( cursorAlpha );
+        if( cursorBlink != null && cursorBlink.getIntData().get( 0 ) != cursorAlpha ) cursorBlink.set( cursorAlpha );
     }
 
     @Override
-    public void apply()
+    public void bind()
     {
-        super.apply();
+        super.bind();
         GL31.glBindBufferBase( GL31.GL_UNIFORM_BUFFER, monitorData, uniformBuffer );
     }
 
     @Nullable
-    private Uniform getUniformChecked( String name )
+    private GlUniform getUniformChecked( String name )
     {
-        Uniform uniform = getUniform( name );
+        GlUniform uniform = getUniform( name );
         if( uniform == null )
         {
             LOGGER.warn( "Monitor shader {} should have uniform {}, but it was not present.", getName(), name );
