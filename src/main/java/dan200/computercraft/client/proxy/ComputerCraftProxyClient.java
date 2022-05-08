@@ -12,7 +12,6 @@ import dan200.computercraft.client.gui.*;
 import dan200.computercraft.client.render.TileEntityMonitorRenderer;
 import dan200.computercraft.client.render.TileEntityTurtleRenderer;
 import dan200.computercraft.client.render.TurtleModelLoader;
-import dan200.computercraft.client.render.TurtlePlayerRenderer;
 import dan200.computercraft.client.sound.SpeakerManager;
 import dan200.computercraft.fabric.events.CustomClientEvents;
 import dan200.computercraft.shared.Registry;
@@ -36,14 +35,13 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.event.client.ClientSpriteRegistryCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.item.ClampedItemPropertyFunction;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -106,8 +104,6 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
             TurtleModelLoader.INSTANCE.loadModel(
                 name ) : null );
 
-        EntityRendererRegistry.register( Registry.ModEntities.TURTLE_PLAYER, TurtlePlayerRenderer::new );
-
         registerItemProperty( "state",
             ( stack, world, player, integer ) -> ItemPocketComputer.getState( stack )
                 .ordinal(),
@@ -125,18 +121,16 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
     // My IDE doesn't think so, but we do actually need these generics.
     private static void registerContainers()
     {
-        ScreenRegistry.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.COMPUTER, GuiComputer::create );
-        ScreenRegistry.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER,
-            GuiComputer::createPocket );
-        ScreenRegistry.<ContainerComputerBase, NoTermComputerScreen<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER_NO_TERM,
-            NoTermComputerScreen::new );
-        ScreenRegistry.<ContainerTurtle, GuiTurtle>register( Registry.ModContainers.TURTLE, GuiTurtle::new );
+        MenuScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.COMPUTER, GuiComputer::create );
+        MenuScreens.<ContainerComputerBase, GuiComputer<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER, GuiComputer::createPocket );
+        MenuScreens.<ContainerComputerBase, NoTermComputerScreen<ContainerComputerBase>>register( Registry.ModContainers.POCKET_COMPUTER_NO_TERM, NoTermComputerScreen::new );
+        MenuScreens.<ContainerTurtle, GuiTurtle>register( Registry.ModContainers.TURTLE, GuiTurtle::new );
 
-        ScreenRegistry.<ContainerPrinter, GuiPrinter>register( Registry.ModContainers.PRINTER, GuiPrinter::new );
-        ScreenRegistry.<ContainerDiskDrive, GuiDiskDrive>register( Registry.ModContainers.DISK_DRIVE, GuiDiskDrive::new );
-        ScreenRegistry.<ContainerHeldItem, GuiPrintout>register( Registry.ModContainers.PRINTOUT, GuiPrintout::new );
+        MenuScreens.<ContainerPrinter, GuiPrinter>register( Registry.ModContainers.PRINTER, GuiPrinter::new );
+        MenuScreens.<ContainerDiskDrive, GuiDiskDrive>register( Registry.ModContainers.DISK_DRIVE, GuiDiskDrive::new );
+        MenuScreens.<ContainerHeldItem, GuiPrintout>register( Registry.ModContainers.PRINTOUT, GuiPrintout::new );
 
-        ScreenRegistry.<ContainerViewComputer, GuiComputer<ContainerViewComputer>>register( Registry.ModContainers.VIEW_COMPUTER,
+        MenuScreens.<ContainerViewComputer, GuiComputer<ContainerViewComputer>>register( Registry.ModContainers.VIEW_COMPUTER,
             GuiComputer::createView );
     }
 
@@ -162,7 +156,7 @@ public final class ComputerCraftProxyClient implements ClientModInitializer
         };
         for( Supplier<? extends Item> item : items )
         {
-            FabricModelPredicateProviderRegistry.register( item.get(), id, unclampedGetter );
+            ItemProperties.register( item.get(), id, unclampedGetter );
         }
     }
 }

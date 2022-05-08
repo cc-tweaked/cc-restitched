@@ -5,44 +5,34 @@
  */
 package dan200.computercraft.shared.peripheral.generic.data;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class DataHelpers
 {
     private DataHelpers()
     {}
 
-    @Nonnull
-    public static Map<String, Boolean> getTags( @Nonnull Collection<ResourceLocation> tags )
+    public static <T> Map<String, Boolean> getTags( Holder.Reference<T> object )
     {
-        Map<String, Boolean> result = new HashMap<>( tags.size() );
-        for( ResourceLocation location : tags ) result.put( location.toString(), true );
-        return result;
+        return getTags( object.tags() );
     }
 
     @Nonnull
-    static Map<String, Boolean> getTags( @Nonnull Block block )
+    public static <T> Map<String, Boolean> getTags( @Nonnull Stream<TagKey<T>> tags )
     {
-        Collection<ResourceLocation> tags = block.builtInRegistryHolder().tags().map( tag -> tag.location() ).collect( Collectors.toList() );
-        return getTags( tags );
-    }
-
-    @Nonnull
-    static Map<String, Boolean> getTags( @Nonnull Item item )
-    {
-        Collection<ResourceLocation> tags = item.builtInRegistryHolder().tags().map( tag -> tag.location() ).collect( Collectors.toList() );
-        return getTags( tags );
+        return tags.collect( Collectors.toMap( x -> x.location().toString(), x -> true ) );
     }
 
     @Nullable

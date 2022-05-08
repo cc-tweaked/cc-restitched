@@ -26,6 +26,7 @@ public class BlockData
             stateTable.put( property.getName(), getPropertyValue( property, entry.getValue() ) );
         }
         data.put( "state", stateTable );
+        data.put( "tags", DataHelpers.getTags( state.getTags() ) );
 
         return data;
     }

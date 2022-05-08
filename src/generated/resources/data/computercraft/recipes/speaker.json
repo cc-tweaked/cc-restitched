@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "#N#",
+    "#R#"
+  ],
+  "key": {
+    "#": {
+      "tag": "c:stones"
+    },
+    "N": {
+      "item": "minecraft:note_block"
+    },
+    "R": {
+      "tag": "c:redstone_dusts"
+    }
+  },
+  "result": {
+    "item": "computercraft:speaker"
+  }
+}

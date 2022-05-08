@@ -21,11 +21,13 @@ public class MixinSoundEngine
 {
     // Used to capture the SoundInstance argument passed to SoundEngine#play and the SoundEngine instance.
     // Not a thread-safe way to do it but this code is only called from the render thread as far as I can tell.
-    @Unique private static SoundInstance soundInstanceCapture;
-    @Unique private static SoundEngine thisCapture;
+    @Unique
+    private static SoundInstance soundInstanceCapture;
+    @Unique
+    private static SoundEngine thisCapture;
 
     @Inject(
-        method = "lambda$play$8(Lnet/minecraft/client/sounds/AudioStream;Lcom/mojang/blaze3d/audio/Channel;)V",
+        method = "method_19755(Lnet/minecraft/client/sounds/AudioStream;Lcom/mojang/blaze3d/audio/Channel;)V",
         at = @At( "HEAD" ),
         cancellable = true
     )

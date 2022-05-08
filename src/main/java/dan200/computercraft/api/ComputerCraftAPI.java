@@ -283,6 +283,7 @@ public final class ComputerCraftAPI
         int getBundledRedstoneOutput( @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull Direction side );
 
         void registerMediaProvider( @Nonnull IMediaProvider provider );
+
         @Nonnull
         IPacketNetwork getWirelessNetwork();
 

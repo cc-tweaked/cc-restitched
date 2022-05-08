@@ -5,16 +5,16 @@
  */
 package dan200.computercraft.fabric.mixin;
 
-import dan200.computercraft.fabric.util.ServerTranslationEntry;
-import net.minecraft.util.StringDecomposer;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.Style;
-import net.minecraft.locale.Language;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonParseException;
+import dan200.computercraft.fabric.util.ServerTranslationEntry;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.StringDecomposer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -28,14 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -60,14 +53,14 @@ public class MixinLanguage
 
     private static void loadModLangFile( ModContainer modContainer, BiConsumer<String, String> biConsumer )
     {
-        Path path = modContainer.getPath( "assets/" + modContainer.getMetadata().getId() + "/lang/" + DEFAULT + ".json" );
-        if ( !Files.exists( path ) ) return;
+        Optional<Path> path = modContainer.findPath( "assets/" + modContainer.getMetadata().getId() + "/lang/" + DEFAULT + ".json" );
+        if( path.isEmpty() ) return;
 
-        try ( InputStream inputStream = Files.newInputStream( path ) )
+        try( InputStream inputStream = Files.newInputStream( path.get() ) )
         {
             loadFromJson( inputStream, biConsumer );
         }
-        catch ( JsonParseException | IOException e )
+        catch( JsonParseException | IOException e )
         {
             LOGGER.error( "Couldn't read strings from " + path, e );
         }
@@ -78,19 +71,19 @@ public class MixinLanguage
     {
         Map<String, List<ServerTranslationEntry>> translations = new HashMap<>();
 
-        for ( ModContainer mod : FabricLoader.getInstance().getAllMods() )
+        for( ModContainer mod : FabricLoader.getInstance().getAllMods() )
         {
             loadModLangFile( mod, ( k, v ) -> {
-                if ( !translations.containsKey( k ) ) translations.put( k, new ArrayList<>() );
+                if( !translations.containsKey( k ) ) translations.put( k, new ArrayList<>() );
                 translations.get( k ).add( new ServerTranslationEntry( mod.getMetadata(), k, v ) );
             } );
         }
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-        for ( Map.Entry<String, List<ServerTranslationEntry>> keyEntry : translations.entrySet() )
+        for( Map.Entry<String, List<ServerTranslationEntry>> keyEntry : translations.entrySet() )
         {
-            if ( keyEntry.getValue().size() == 1 )
+            if( keyEntry.getValue().size() == 1 )
             {
                 // Only one value provided for this key
                 builder.put( keyEntry.getKey(), keyEntry.getValue().get( 0 ).value() );

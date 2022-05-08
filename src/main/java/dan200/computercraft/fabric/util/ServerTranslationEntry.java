@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 // A utility class for holding translation mappings prior collision resolution.
-public record ServerTranslationEntry(ModMetadata providingModMetadata, String key, String value )
+public record ServerTranslationEntry(ModMetadata providingModMetadata, String key, String value)
 {
     public String getModId()
     {
@@ -21,9 +21,9 @@ public record ServerTranslationEntry(ModMetadata providingModMetadata, String ke
 
     public Set<String> getDependencyIds()
     {
-        Set<String> deps = providingModMetadata.getDependencies().stream().map( ModDependency::getModId ) .collect( Collectors.toSet() );
+        Set<String> deps = providingModMetadata.getDependencies().stream().map( ModDependency::getModId ).collect( Collectors.toSet() );
         // For the purposes of handling key collisions, all mods should depend on minecraft
-        if ( !getModId().equals( "minecraft" ) ) deps.add( "minecraft" );
+        if( !getModId().equals( "minecraft" ) ) deps.add( "minecraft" );
         return deps;
     }
 
