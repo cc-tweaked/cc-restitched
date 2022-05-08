@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "#A#",
+    "#G#"
+  ],
+  "key": {
+    "#": {
+      "tag": "c:gold_ingots"
+    },
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "G": {
+      "tag": "c:glass_panes"
+    }
+  },
+  "result": {
+    "item": "computercraft:pocket_computer_advanced"
+  }
+}

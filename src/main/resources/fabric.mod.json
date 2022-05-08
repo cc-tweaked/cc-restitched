@@ -21,9 +21,9 @@
         "3prm3"
     ],
     "depends": {
-        "minecraft": "1.18.x",
-        "fabricloader": ">=0.12.9",
-        "fabric": "*"
+        "minecraft": ">=1.18.2-rc.1 <1.19",
+        "fabricloader": ">=0.13.3",
+        "fabric": ">=0.51.1"
     },
     "suggests": {
         "modmenu": "*"
@@ -32,13 +32,16 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "dan200.computercraft.ComputerCraft"
+            "dan200.computercraft.ComputerCraft::onInitialize"
         ],
         "client": [
             "dan200.computercraft.client.proxy.ComputerCraftProxyClient"
         ],
         "modmenu": [
             "dan200.computercraft.shared.integration.ModMenuIntegration"
+        ],
+        "fabric-datagen": [
+            "dan200.computercraft.data.Generators"
         ]
     },
     "mixins": [

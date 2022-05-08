@@ -5,7 +5,8 @@
  */
 package dan200.computercraft.shared.network.container;
 
-import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -40,21 +41,21 @@ public interface ContainerData
         C create( MenuType<C> type, int id, @Nonnull Inventory inventory, T data );
     }
 
-    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType( ResourceLocation identifier, Function<FriendlyByteBuf, T> reader,
-                                                                                          Factory<C, T> factory )
+    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType(
+        ResourceLocation identifier, Function<FriendlyByteBuf, T> reader, Factory<C, T> factory
+    )
     {
-        return ScreenHandlerRegistry.registerExtended( identifier,
-            ( id, playerInventory, packetByteBuf ) -> factory.create( id,
-                playerInventory,
-                reader.apply( packetByteBuf ) ) );
+        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+            factory.create( id, playerInventory, reader.apply( packetByteBuf ) )
+        ) );
     }
 
-    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType( ResourceLocation identifier, MenuType<C> type, Function<FriendlyByteBuf, T> reader,
-                                                                                          FixedFactory<C, T> factory )
+    static <C extends AbstractContainerMenu, T extends ContainerData> MenuType<C> toType(
+        ResourceLocation identifier, MenuType<C> type, Function<FriendlyByteBuf, T> reader, FixedFactory<C, T> factory
+    )
     {
-        return ScreenHandlerRegistry.registerExtended( identifier,
-            ( id, playerInventory, packetByteBuf ) -> factory.create( type, id,
-                playerInventory,
-                reader.apply( packetByteBuf ) ) );
+        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+            factory.create( type, id, playerInventory, reader.apply( packetByteBuf ) )
+        ) );
     }
 }

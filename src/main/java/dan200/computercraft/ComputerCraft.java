@@ -7,7 +7,6 @@ package dan200.computercraft;
 
 import dan200.computercraft.core.apis.http.options.Action;
 import dan200.computercraft.core.apis.http.options.AddressRule;
-import dan200.computercraft.shared.Registry.ModBlocks;
 import dan200.computercraft.shared.common.ColourableRecipe;
 import dan200.computercraft.shared.computer.core.ClientComputerRegistry;
 import dan200.computercraft.shared.computer.core.ServerComputerRegistry;
@@ -24,15 +23,11 @@ import dan200.computercraft.shared.turtle.recipes.TurtleRecipe;
 import dan200.computercraft.shared.turtle.recipes.TurtleUpgradeRecipe;
 import dan200.computercraft.shared.util.ImpostorRecipe;
 import dan200.computercraft.shared.util.ImpostorShapelessRecipe;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import static dan200.computercraft.shared.Registry.init;
 
-public final class ComputerCraft implements ModInitializer
+public final class ComputerCraft
 {
     public static final String MOD_ID = "computercraft";
 
@@ -104,10 +99,7 @@ public final class ComputerCraft implements ModInitializer
     // Logging
     public static final Logger log = LogManager.getLogger( MOD_ID );
 
-    public static CreativeModeTab MAIN_GROUP = FabricItemGroupBuilder.build( new ResourceLocation( MOD_ID, "main" ), () -> new ItemStack( ModBlocks.COMPUTER_NORMAL ) );
-
-    @Override
-    public void onInitialize()
+    public static void onInitialize()
     {
         ComputerCraftProxyCommon.init();
         Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "colour" ), ColourableRecipe.SERIALIZER );

@@ -104,6 +104,7 @@ public final class TurtleUpgrades
 
                 // Vanilla Minecraft upgrades
                 Registry.TurtleUpgrades.diamondPickaxe,
+                Registry.TurtleUpgrades.netheritePickaxe,
                 Registry.TurtleUpgrades.diamondAxe,
                 Registry.TurtleUpgrades.diamondSword,
                 Registry.TurtleUpgrades.diamondShovel,

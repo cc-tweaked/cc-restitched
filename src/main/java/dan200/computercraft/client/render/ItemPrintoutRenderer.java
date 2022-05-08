@@ -12,9 +12,9 @@ import dan200.computercraft.shared.media.items.ItemPrintout;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemStack;
 
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT_HEIGHT;
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.FONT_WIDTH;
 import static dan200.computercraft.client.render.PrintoutRenderer.*;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_WIDTH;
 import static dan200.computercraft.shared.media.items.ItemPrintout.LINES_PER_PAGE;
 import static dan200.computercraft.shared.media.items.ItemPrintout.LINE_MAX_LENGTH;
 

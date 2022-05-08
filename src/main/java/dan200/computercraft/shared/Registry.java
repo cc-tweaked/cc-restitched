@@ -42,32 +42,27 @@ import dan200.computercraft.shared.pocket.peripherals.PocketModem;
 import dan200.computercraft.shared.pocket.peripherals.PocketSpeaker;
 import dan200.computercraft.shared.turtle.blocks.BlockTurtle;
 import dan200.computercraft.shared.turtle.blocks.TileTurtle;
-import dan200.computercraft.shared.turtle.core.TurtlePlayer;
 import dan200.computercraft.shared.turtle.inventory.ContainerTurtle;
 import dan200.computercraft.shared.turtle.items.ItemTurtle;
 import dan200.computercraft.shared.turtle.upgrades.TurtleCraftingTable;
 import dan200.computercraft.shared.turtle.upgrades.TurtleModem;
 import dan200.computercraft.shared.turtle.upgrades.TurtleSpeaker;
 import dan200.computercraft.shared.turtle.upgrades.TurtleTool;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MaterialColor;
 
 import java.util.function.BiFunction;
 
@@ -85,7 +80,6 @@ public final class Registry
             ModBlockEntities.CABLE,
             ModBlocks.CABLE,
             ModItems.CABLE,
-            ModEntities.TURTLE_PLAYER,
             ModContainers.COMPUTER,
         };
 
@@ -116,7 +110,7 @@ public final class Registry
             register( "computer_advanced", new BlockComputer<>( properties(), ComputerFamily.ADVANCED, () -> ModBlockEntities.COMPUTER_ADVANCED ) );
 
         public static final BlockComputer<TileCommandComputer> COMPUTER_COMMAND =
-            register( "computer_command", new BlockComputer<>( FabricBlockSettings.copyOf( Blocks.STONE ).strength( -1, 6000000.0F ), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
+            register( "computer_command", new BlockComputer<>( properties().strength( -1, 6000000.0F ), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
 
         public static final BlockTurtle TURTLE_NORMAL =
             register( "turtle_normal", new BlockTurtle( turtleProperties(), ComputerFamily.NORMAL, () -> ModBlockEntities.TURTLE_NORMAL ) );
@@ -147,17 +141,17 @@ public final class Registry
 
         private static BlockBehaviour.Properties properties()
         {
-            return BlockBehaviour.Properties.of( Material.GLASS ).strength( 2F ).sound( SoundType.STONE ).noOcclusion();
+            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F ).noOcclusion();
         }
 
         private static BlockBehaviour.Properties turtleProperties()
         {
-            return FabricBlockSettings.copyOf( Blocks.STONE ).strength( 2.5f );
+            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2.5f );
         }
 
         private static BlockBehaviour.Properties modemProperties()
         {
-            return FabricBlockSettings.copyOf( Blocks.STONE ).breakByHand( true ).strength( 1.5f );
+            return BlockBehaviour.Properties.of( Material.STONE, MaterialColor.STONE ).strength( 1.5f );
         }
     }
 
@@ -214,7 +208,10 @@ public final class Registry
 
     public static final class ModItems
     {
-        private static final CreativeModeTab mainItemGroup = ComputerCraft.MAIN_GROUP;
+        private static final CreativeModeTab mainItemGroup = FabricItemGroupBuilder.build(
+            new ResourceLocation( MOD_ID, "main" ),
+            () -> new ItemStack( ModBlocks.COMPUTER_NORMAL )
+        ).setRecipeFolderName( MOD_ID );
 
         public static final ItemComputer COMPUTER_NORMAL =
             ofBlock( ModBlocks.COMPUTER_NORMAL, ItemComputer::new );
@@ -299,13 +296,6 @@ public final class Registry
         }
     }
 
-    public static class ModEntities
-    {
-        public static final EntityType<TurtlePlayer> TURTLE_PLAYER =
-            net.minecraft.core.Registry.register( net.minecraft.core.Registry.ENTITY_TYPE, new ResourceLocation( MOD_ID, "turtle_player" ),
-                EntityType.Builder.<TurtlePlayer>createNothing( MobCategory.MISC ).noSave().noSummon().sized( 0, 0 ).build( ComputerCraft.MOD_ID + ":turtle_player" ) );
-    }
-
     public static class ModContainers
     {
         public static final MenuType<ContainerComputerBase> COMPUTER =
@@ -332,9 +322,9 @@ public final class Registry
         public static final MenuType<ContainerViewComputer> VIEW_COMPUTER =
             ContainerData.toType( new ResourceLocation( MOD_ID, "view_computer" ), ViewComputerContainerData::new, ContainerViewComputer::new );
 
-        private static <T extends AbstractContainerMenu> MenuType<T> registerSimple( String id, ScreenHandlerRegistry.SimpleClientHandlerFactory<T> function )
+        private static <T extends AbstractContainerMenu> MenuType<T> registerSimple( String id, MenuType.MenuSupplier<T> function )
         {
-            return ScreenHandlerRegistry.registerSimple( new ResourceLocation( MOD_ID, id ), function );
+            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.MENU, new ResourceLocation( MOD_ID, id ), new MenuType<T>( function ) );
         }
     }
 

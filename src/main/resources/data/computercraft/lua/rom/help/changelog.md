@@ -1,3 +1,24 @@
+# New features in CC: Tweaked 1.100.5 (CC: Restitched 1.100.4)
+
+* Improve performance of monitor rendering.
+
+Several bug fixes:
+* Various documentation fixes (bclindner, Hasaabitt)
+* Speaker sounds are now correctly positioned on the centre of the speaker block.
+
+# New features in CC: Tweaked 1.100.4
+
+Several bug fixes:
+* Fix the monitor watching blocking the main thread when chunks are slow to load.
+
+# New features in CC: Tweaked 1.100.3
+
+Several bug fixes:
+* Fix client disconnect when uploading large files.
+* Correctly handling empty computer ID file.
+* Fix the normal turtle recipe not being unlocked.
+* Remove turtle fake EntityType.
+
 # New features in CC: Tweaked 1.100.2
 
 Several bug fixes:

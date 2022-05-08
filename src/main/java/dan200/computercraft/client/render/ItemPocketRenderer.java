@@ -5,12 +5,12 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix3f;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import dan200.computercraft.ComputerCraft;
-import dan200.computercraft.client.gui.FixedWidthFontRenderer;
+import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.shared.computer.core.ClientComputer;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
@@ -21,9 +21,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-import static dan200.computercraft.client.gui.FixedWidthFontRenderer.*;
 import static dan200.computercraft.client.render.ComputerBorderRenderer.*;
-import static dan200.computercraft.client.render.RenderTypes.FULL_BRIGHT_LIGHTMAP;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
+import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_WIDTH;
 
 /**
  * Emulates map rendering for pocket computers.
@@ -37,7 +37,7 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
     }
 
     @Override
-    protected void renderItem( PoseStack transform, MultiBufferSource renderer, ItemStack stack, int light )
+    protected void renderItem( PoseStack transform, MultiBufferSource bufferSource, ItemStack stack, int light )
     {
         ClientComputer computer = ItemPocketComputer.createClientComputer( stack );
         Terminal terminal = computer == null ? null : computer.getTerminal();
@@ -75,32 +75,32 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         ComputerFamily family = item.getFamily();
         int frameColour = item.getColour( stack );
 
-        renderFrame( transform, renderer, family, frameColour, light, width, height );
+        renderFrame( transform, bufferSource, family, frameColour, light, width, height );
 
         // Render the light
         int lightColour = ItemPocketComputer.getLightState( stack );
         if( lightColour == -1 ) lightColour = Colour.BLACK.getHex();
-        renderLight( transform, renderer, lightColour, width, height );
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET_TERMINAL );
+        renderLight( transform, bufferSource, lightColour, width, height );
 
         if( computer != null && terminal != null )
         {
             FixedWidthFontRenderer.drawTerminal(
-                transform, buffer,
-                MARGIN, MARGIN, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN, FULL_BRIGHT_LIGHTMAP
+                    FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.ITEM_POCKET_TERMINAL ) ),
+                MARGIN, MARGIN, terminal, !computer.isColour(), MARGIN, MARGIN, MARGIN, MARGIN
             );
         }
         else
         {
             FixedWidthFontRenderer.drawEmptyTerminal(
-                transform, buffer,
-                0, 0, width, height, 0 );
+                FixedWidthFontRenderer.toVertexConsumer( transform, bufferSource.getBuffer( RenderTypes.ITEM_POCKET_TERMINAL ) ),
+                0, 0, width, height
+            );
         }
 
         transform.popPose();
     }
 
-    private static void renderFrame( PoseStack transform, MultiBufferSource renderer, ComputerFamily family, int colour, int light, int width, int height )
+    private static void renderFrame( PoseStack transform, MultiBufferSource render, ComputerFamily family, int colour, int light, int width, int height )
     {
         ResourceLocation texture = colour != -1 ? ComputerBorderRenderer.BACKGROUND_COLOUR : ComputerBorderRenderer.getTexture( family );
 
@@ -108,23 +108,22 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         float g = ((colour >>> 8) & 0xFF) / 255.0f;
         float b = (colour & 0xFF) / 255.0f;
 
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.itemPocketBorder( texture ) );
+        VertexConsumer buffer = render.getBuffer( RenderTypes.itemPocketBorder( texture ) );
         ComputerBorderRenderer.render( transform, buffer, 0, 0, 0, light, width, height, true, r, g, b );
     }
 
-    private static void renderLight( PoseStack transform, MultiBufferSource renderer, int colour, int width, int height )
+    private static void renderLight( PoseStack transform, MultiBufferSource render, int colour, int width, int height )
     {
-        float r = ((colour >>> 16) & 0xFF) / 255.0f;
-        float g = ((colour >>> 8) & 0xFF) / 255.0f;
-        float b = (colour & 0xFF) / 255.0f;
-        float z = 0.001f;
+        byte r = (byte) ((colour >>> 16) & 0xFF);
+        byte g = (byte) ((colour >>> 8) & 0xFF);
+        byte b = (byte) (colour & 0xFF);
+        byte[] c = new byte[] { r, g, b, (byte) 255 };
 
-        VertexConsumer buffer = renderer.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
-        Matrix4f poseMatrix = transform.last().pose();
-        Matrix3f normalMatrix = transform.last().normal();
-        buffer.vertex( poseMatrix, width - LIGHT_HEIGHT * 2, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        buffer.vertex( poseMatrix, width, height + LIGHT_HEIGHT + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_START, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        buffer.vertex( poseMatrix, width, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_END ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
-        buffer.vertex( poseMatrix, width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, z ).color( r, g, b, 1.0f ).uv( BACKGROUND_END, BACKGROUND_START ).overlayCoords( OverlayTexture.NO_OVERLAY ).uv2( FULL_BRIGHT_LIGHTMAP ).normal( normalMatrix, 0f, 0f, 1f ).endVertex();
+        VertexConsumer buffer = render.getBuffer( RenderTypes.ITEM_POCKET_LIGHT );
+        FixedWidthFontRenderer.drawQuad(
+            FixedWidthFontRenderer.toVertexConsumer( transform, buffer ),
+            width - LIGHT_HEIGHT * 2, height + BORDER / 2.0f, 0.001f, LIGHT_HEIGHT * 2, LIGHT_HEIGHT,
+            c, RenderTypes.FULL_BRIGHT_LIGHTMAP
+        );
     }
 }
