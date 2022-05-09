@@ -228,22 +228,27 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                     matrix = modelViewMatrix;
                 }
 
-                // Render background geometry
+                // Setup state
                 RenderTypes.MONITOR.setupRenderState();
-                vbo.drawWithShader(
-                    matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(), monitor.backgroundVertexCount, 0
-                );
+                vbo.begin( matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
 
-                // Render foreground geometry with glPolygonOffset enabled. Note we don't care about drawing these in
-                // front to back order because it's a cutout type shader that uses discard.
-                RenderTypes.MONITOR_POLYGON_OFFSET.setupRenderState();
-                vbo.drawWithShader(
-                    matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(),
+                // Render background geometry
+                vbo.draw( monitor.backgroundVertexCount, 0 );
+
+                // Render foreground geometry with glPolygonOffset enabled.
+                GL11.glPolygonOffset( -1.0f, -10.0f );
+                GL11.glEnable( GL11.GL_POLYGON_OFFSET_FILL );
+                vbo.draw(
                     // As mentioned in an above comment, render the extra cursor quad if it is visible this frame.
                     FixedWidthFontRenderer.isCursorVisible( terminal ) && FrameInfo.getGlobalCursorBlink() ? monitor.foregroundVertexCount + 4 : monitor.foregroundVertexCount,
                     monitor.backgroundVertexCount
                 );
-                RenderTypes.MONITOR_POLYGON_OFFSET.clearRenderState();
+
+                // Clear state
+                GL11.glPolygonOffset( 0.0f, -0.0f );
+                GL11.glDisable( GL11.GL_POLYGON_OFFSET_FILL );
+                vbo.end();
+                RenderTypes.MONITOR.clearRenderState();
 
                 RenderSystem.setInverseViewRotationMatrix( popViewRotation );
                 break;

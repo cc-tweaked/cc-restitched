@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL32C;
 import java.nio.ByteBuffer;
 
 /**
- * A specialised version of {@link VertexBuffer} which allows uploading {@link ByteBuffer}s directly, and drawing from a
+ * A specialised version of {@link VertexBuffer} which allows uploading {@link ByteBuffer}s directly and drawing from a
  * vertex offset. Note this version only support sequential indices.
  */
 public class DirectVertexBuffer
@@ -31,6 +31,9 @@ public class DirectVertexBuffer
 
     private int vertexCount;
     private VertexFormat.IndexType indexType;
+
+    private ShaderInstance currentShader;
+    private boolean vaoInitialised;
 
     public DirectVertexBuffer()
     {
@@ -45,38 +48,62 @@ public class DirectVertexBuffer
         this.format = format;
         this.mode = mode;
         this.vertexCount = vertexCount;
+        vaoInitialised = false;
     }
 
-    public void drawWithShader( Matrix4f modelView, Matrix4f projection, ShaderInstance shader, int vertexCount, int baseVertex )
+    /**
+     * Call this method before calling {@link DirectVertexBuffer#draw(int, int)}. When done drawing out of the vbo, make
+     * sure to call {@link DirectVertexBuffer#end()}!
+     *
+     * @param modelView The modelView matrix.
+     * @param projection The projection matrix.
+     * @param shader The shader to use for this series of draws.
+     */
+    public void begin( Matrix4f modelView, Matrix4f projection, ShaderInstance shader )
     {
-        if ( vertexCount == 0 ) return;
-
         BufferUploader.reset();
+        bindVertexArray();
+        if( !vaoInitialised )
+        {
+            // Bind vertex buffer and setup vertex attribute pointers.
+            GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, vertexBufferId );
+            format.setupBufferState();
+            GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
+
+            // Bind index buffer (this binding is kept in the VAO state!).
+            RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
+            indexType = autoStorageIndexBuffer.type();
+            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, autoStorageIndexBuffer.name() );
+
+            vaoInitialised = true;
+        }
+
+        currentShader = shader;
         setupShader( shader, modelView, projection );
-        bind();
-        format.setupBufferState();
         shader.apply();
-        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexType.asGLType, 0L, baseVertex );
-        shader.clear();
-        format.clearBufferState();
-        unbind();
     }
 
-    private void bind()
+    public void end()
+    {
+        currentShader.clear();
+        currentShader = null;
+        unbindVertexArray();
+    }
+
+    public void draw( int vertexCount, int baseVertex )
+    {
+        if ( vertexCount == 0 || currentShader == null ) return;
+
+        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexType.asGLType, 0L, baseVertex );
+    }
+
+    private void bindVertexArray()
     {
         GL32C.glBindVertexArray( vertexArrayObjectId );
-        GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, vertexBufferId );
-
-        RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
-        indexType = autoStorageIndexBuffer.type();
-
-        GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, autoStorageIndexBuffer.name() );
     }
 
-    private static void unbind()
+    private static void unbindVertexArray()
     {
-        GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, 0 );
-        GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
         GL32C.glBindVertexArray( 0 );
     }
 
