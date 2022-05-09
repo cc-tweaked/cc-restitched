@@ -6,12 +6,3 @@ accessible method net/minecraft/client/renderer/RenderType create (Ljava/lang/St
 # SpeakerInstance/SpeakerManager
 accessible method com/mojang/blaze3d/audio/Channel pumpBuffers (I)V
 accessible field net/minecraft/client/sounds/SoundEngine executor Lnet/minecraft/client/sounds/SoundEngineExecutor;
-
-# DirectVertexBuffer
-accessible field com/mojang/blaze3d/vertex/VertexBuffer vertextBufferId I
-accessible field com/mojang/blaze3d/vertex/VertexBuffer indexType Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;
-accessible field com/mojang/blaze3d/vertex/VertexBuffer indexCount I
-accessible field com/mojang/blaze3d/vertex/VertexBuffer mode Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;
-accessible field com/mojang/blaze3d/vertex/VertexBuffer sequentialIndices Z
-accessible field com/mojang/blaze3d/vertex/VertexBuffer format Lcom/mojang/blaze3d/vertex/VertexFormat;
-accessible method com/mojang/blaze3d/vertex/VertexBuffer bindVertexArray ()V

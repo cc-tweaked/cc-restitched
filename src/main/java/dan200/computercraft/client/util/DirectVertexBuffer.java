@@ -13,134 +13,143 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL32;
-import org.lwjgl.opengl.GL45C;
+import org.lwjgl.opengl.GL32C;
 
 import java.nio.ByteBuffer;
 
 /**
- * A version of {@link VertexBuffer} which allows uploading {@link ByteBuffer}s directly.
- *
- * This should probably be its own class (rather than subclassing), but I need access to {@link VertexBuffer#drawWithShader}.
+ * A specialised version of {@link VertexBuffer} which allows uploading {@link ByteBuffer}s directly, and drawing from a
+ * vertex offset. Note this version only support sequential indices.
  */
-public class DirectVertexBuffer extends VertexBuffer
+public class DirectVertexBuffer
 {
-    private int actualIndexCount;
+    private int vertexArrayObjectId;
+    private int vertexBufferId;
+
+    private VertexFormat.Mode mode;
+    private VertexFormat format;
+
+    private int vertexCount;
+    private VertexFormat.IndexType indexType;
 
     public DirectVertexBuffer()
     {
-        if( DirectBuffers.HAS_DSA )
-        {
-            RenderSystem.glDeleteBuffers( vertextBufferId );
-            if( DirectBuffers.ON_LINUX ) BufferUploader.reset(); // See comment on DirectBuffers.deleteBuffer.
-            vertextBufferId = GL45C.glCreateBuffers();
-        }
+        vertexArrayObjectId = GL32C.glGenVertexArrays();
+        vertexBufferId = DirectBuffers.createBuffer();
     }
 
     public void upload( int vertexCount, VertexFormat.Mode mode, VertexFormat format, ByteBuffer buffer )
     {
-        RenderSystem.assertOnRenderThread();
-
-        DirectBuffers.setBufferData( GL15.GL_ARRAY_BUFFER, vertextBufferId, buffer, GL15.GL_STATIC_DRAW );
+        DirectBuffers.setBufferData( GL32C.GL_ARRAY_BUFFER, vertexBufferId, buffer, GL32C.GL_STATIC_DRAW );
 
         this.format = format;
         this.mode = mode;
-        actualIndexCount = indexCount = mode.indexCount( vertexCount );
-        indexType = VertexFormat.IndexType.SHORT;
-        sequentialIndices = true;
+        this.vertexCount = vertexCount;
     }
 
     public void drawWithShader( Matrix4f modelView, Matrix4f projection, ShaderInstance shader, int vertexCount, int baseVertex )
     {
-        indexCount = mode.indexCount( vertexCount );
-        drawWithShaderBaseVertex( modelView, projection, shader, baseVertex );
-        indexCount = actualIndexCount;
+        if ( vertexCount == 0 ) return;
+
+        BufferUploader.reset();
+        setupShader( shader, modelView, projection );
+        bind();
+        format.setupBufferState();
+        shader.apply();
+        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexType.asGLType, 0L, baseVertex );
+        shader.clear();
+        format.clearBufferState();
+        unbind();
     }
 
-    private void drawWithShaderBaseVertex( Matrix4f matrix4f, Matrix4f matrix4f2, ShaderInstance shaderInstance, int baseVertex )
+    private void bind()
     {
-        if ( indexCount == 0 )
+        GL32C.glBindVertexArray( vertexArrayObjectId );
+        GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, vertexBufferId );
+
+        RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
+        indexType = autoStorageIndexBuffer.type();
+
+        GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, autoStorageIndexBuffer.name() );
+    }
+
+    private static void unbind()
+    {
+        GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, 0 );
+        GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
+        GL32C.glBindVertexArray( 0 );
+    }
+
+    public void close()
+    {
+        if( vertexBufferId > 0 )
         {
-            return;
+            DirectBuffers.deleteBuffer( GL32C.GL_ARRAY_BUFFER, vertexBufferId );
+            vertexBufferId = 0;
         }
-        RenderSystem.assertOnRenderThread();
-        BufferUploader.reset();
+        if( vertexArrayObjectId > 0 )
+        {
+            GL32C.glDeleteVertexArrays( vertexArrayObjectId );
+            vertexArrayObjectId = 0;
+        }
+    }
+
+    private void setupShader( ShaderInstance shader, Matrix4f modelView, Matrix4f projection )
+    {
         for ( int i = 0; i < 12; ++i )
         {
             int j = RenderSystem.getShaderTexture( i );
-            shaderInstance.setSampler( "Sampler" + i, j );
+            shader.setSampler( "Sampler" + i, j );
         }
-        if ( shaderInstance.MODEL_VIEW_MATRIX != null )
+        if ( shader.MODEL_VIEW_MATRIX != null )
         {
-            shaderInstance.MODEL_VIEW_MATRIX.set( matrix4f );
+            shader.MODEL_VIEW_MATRIX.set( modelView );
         }
-        if ( shaderInstance.PROJECTION_MATRIX != null )
+        if ( shader.PROJECTION_MATRIX != null )
         {
-            shaderInstance.PROJECTION_MATRIX.set( matrix4f2 );
+            shader.PROJECTION_MATRIX.set( projection );
         }
-        if ( shaderInstance.INVERSE_VIEW_ROTATION_MATRIX != null )
+        if ( shader.INVERSE_VIEW_ROTATION_MATRIX != null )
         {
-            shaderInstance.INVERSE_VIEW_ROTATION_MATRIX.set( RenderSystem.getInverseViewRotationMatrix() );
+            shader.INVERSE_VIEW_ROTATION_MATRIX.set( RenderSystem.getInverseViewRotationMatrix() );
         }
-        if ( shaderInstance.COLOR_MODULATOR != null )
+        if ( shader.COLOR_MODULATOR != null )
         {
-            shaderInstance.COLOR_MODULATOR.set( RenderSystem.getShaderColor() );
+            shader.COLOR_MODULATOR.set( RenderSystem.getShaderColor() );
         }
-        if ( shaderInstance.FOG_START != null )
+        if ( shader.FOG_START != null )
         {
-            shaderInstance.FOG_START.set( RenderSystem.getShaderFogStart() );
+            shader.FOG_START.set( RenderSystem.getShaderFogStart() );
         }
-        if ( shaderInstance.FOG_END != null )
+        if ( shader.FOG_END != null )
         {
-            shaderInstance.FOG_END.set( RenderSystem.getShaderFogEnd() );
+            shader.FOG_END.set( RenderSystem.getShaderFogEnd() );
         }
-        if ( shaderInstance.FOG_COLOR != null )
+        if ( shader.FOG_COLOR != null )
         {
-            shaderInstance.FOG_COLOR.set( RenderSystem.getShaderFogColor() );
+            shader.FOG_COLOR.set( RenderSystem.getShaderFogColor() );
         }
-        if ( shaderInstance.FOG_SHAPE != null )
+        if ( shader.FOG_SHAPE != null )
         {
-            shaderInstance.FOG_SHAPE.set( RenderSystem.getShaderFogShape().getIndex() );
+            shader.FOG_SHAPE.set( RenderSystem.getShaderFogShape().getIndex() );
         }
-        if ( shaderInstance.TEXTURE_MATRIX != null )
+        if ( shader.TEXTURE_MATRIX != null )
         {
-            shaderInstance.TEXTURE_MATRIX.set( RenderSystem.getTextureMatrix() );
+            shader.TEXTURE_MATRIX.set( RenderSystem.getTextureMatrix() );
         }
-        if ( shaderInstance.GAME_TIME != null )
+        if ( shader.GAME_TIME != null )
         {
-            shaderInstance.GAME_TIME.set( RenderSystem.getShaderGameTime() );
+            shader.GAME_TIME.set( RenderSystem.getShaderGameTime() );
         }
-        if ( shaderInstance.SCREEN_SIZE != null )
+        if ( shader.SCREEN_SIZE != null )
         {
             Window window = Minecraft.getInstance().getWindow();
-            shaderInstance.SCREEN_SIZE.set( (float)window.getWidth(), (float)window.getHeight() );
+            shader.SCREEN_SIZE.set( window.getWidth(), window.getHeight() );
         }
-        if ( shaderInstance.LINE_WIDTH != null && (mode == VertexFormat.Mode.LINES || mode == VertexFormat.Mode.LINE_STRIP) )
+        if ( shader.LINE_WIDTH != null && (mode == VertexFormat.Mode.LINES || mode == VertexFormat.Mode.LINE_STRIP) )
         {
-            shaderInstance.LINE_WIDTH.set( RenderSystem.getShaderLineWidth() );
+            shader.LINE_WIDTH.set( RenderSystem.getShaderLineWidth() );
         }
-        RenderSystem.setupShaderLights( shaderInstance );
-        bindVertexArray();
-        bind();
-        getFormat().setupBufferState();
-        shaderInstance.apply();
-        GL32.glDrawElementsBaseVertex( mode.asGLMode, indexCount, indexType.asGLType, 0L, baseVertex );
-        shaderInstance.clear();
-        getFormat().clearBufferState();
-        VertexBuffer.unbind();
-        VertexBuffer.unbindVertexArray();
-    }
-
-    public int getIndexCount()
-    {
-        return actualIndexCount;
-    }
-
-    @Override
-    public void close()
-    {
-        super.close();
-        if( DirectBuffers.ON_LINUX ) BufferUploader.reset(); // See comment on DirectBuffers.deleteBuffer.
+        RenderSystem.setupShaderLights( shader );
     }
 }
