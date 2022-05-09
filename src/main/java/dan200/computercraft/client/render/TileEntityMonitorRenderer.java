@@ -180,6 +180,9 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 tboVertex( buffer, matrix, pixelWidth + xMargin, -yMargin );
                 tboVertex( buffer, matrix, pixelWidth + xMargin, pixelHeight + yMargin );
 
+                // Force a flush of the buffer. WorldRenderer.updateCameraAndRender will "finish" all the built-in buffers
+                // before calling renderer.finish, which means our TBO quad won't be rendered yet!
+                bufferSource.getBuffer( RenderType.solid() );
                 break;
             }
 
@@ -254,10 +257,6 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 break;
             }
         }
-
-        // Force a flush of the buffer. WorldRenderer.updateCameraAndRender will "finish" all the built-in buffers
-        // before calling renderer.finish, which means our TBO quad or depth blocker won't be rendered yet!
-        bufferSource.getBuffer( RenderType.solid() );
     }
 
     private static void tboVertex( VertexConsumer builder, Matrix4f matrix, float x, float y )
