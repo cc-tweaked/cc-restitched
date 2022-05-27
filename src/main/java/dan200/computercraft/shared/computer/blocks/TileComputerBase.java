@@ -31,10 +31,12 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.LockCode;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -57,6 +59,8 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
     private boolean fresh = false;
 
     private int invalidSides = 0;
+
+    private LockCode lockCode = LockCode.NO_LOCK;
 
     private final ComputerFamily family;
 
@@ -105,6 +109,12 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         return false;
     }
 
+    @Override
+    public boolean isUsable( Player player )
+    {
+        return super.isUsable( player ) && BaseContainerBlockEntity.canUnlock( player, lockCode, getDisplayName() );
+    }
+
     @Nonnull
     @Override
     public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
@@ -123,7 +133,7 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         else if( !player.isCrouching() )
         {
             // Regular right click to activate computer
-            if( !getLevel().isClientSide && isUsable( player, false ) )
+            if( !getLevel().isClientSide && isUsable( player ) )
             {
                 createServerComputer().turnOn();
                 createServerComputer().sendTerminalState( player );
@@ -191,6 +201,8 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         if( label != null ) nbt.putString( NBT_LABEL, label );
         nbt.putBoolean( NBT_ON, on );
 
+        lockCode.addToTag( nbt );
+
         super.saveAdditional( nbt );
     }
 
@@ -203,6 +215,8 @@ public abstract class TileComputerBase extends TileGeneric implements IComputerT
         computerID = nbt.contains( NBT_ID ) ? nbt.getInt( NBT_ID ) : -1;
         label = nbt.contains( NBT_LABEL ) ? nbt.getString( NBT_LABEL ) : null;
         on = startOn = nbt.getBoolean( NBT_ON );
+
+        lockCode = LockCode.fromTag( nbt );
     }
 
     //    @Override
