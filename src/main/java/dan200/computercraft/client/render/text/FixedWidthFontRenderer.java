@@ -151,9 +151,27 @@ public final class FixedWidthFontRenderer
 
     }
 
-    public static void drawTerminalWithoutCursor(
-        @Nonnull QuadEmitter emitter, float x, float y,
-        @Nonnull Terminal terminal, boolean greyscale,
+    public static void drawTerminalForeground(
+        @Nonnull QuadEmitter emitter, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+    )
+    {
+        Palette palette = terminal.getPalette();
+        int height = terminal.getHeight();
+
+        // The main text
+        for( int i = 0; i < height; i++ )
+        {
+            float rowY = y + FONT_HEIGHT * i;
+            drawString(
+                emitter, x, rowY, terminal.getLine( i ), terminal.getTextColourLine( i ),
+                palette, greyscale, FULL_BRIGHT_LIGHTMAP
+            );
+        }
+    }
+
+    public static void drawTerminalBackground(
+        @Nonnull QuadEmitter emitter, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
@@ -174,16 +192,27 @@ public final class FixedWidthFontRenderer
         // The main text
         for( int i = 0; i < height; i++ )
         {
-            float rowY = y + FixedWidthFontRenderer.FONT_HEIGHT * i;
+            float rowY = y + FONT_HEIGHT * i;
             drawBackground(
                 emitter, x, rowY, terminal.getBackgroundColourLine( i ), palette, greyscale,
                 leftMarginSize, rightMarginSize, FONT_HEIGHT, FULL_BRIGHT_LIGHTMAP
             );
-            drawString(
-                emitter, x, rowY, terminal.getLine( i ), terminal.getTextColourLine( i ),
-                palette, greyscale, FULL_BRIGHT_LIGHTMAP
-            );
         }
+    }
+
+    public static void drawTerminalWithoutCursor(
+        @Nonnull QuadEmitter emitter, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+    )
+    {
+        drawTerminalForeground(
+            emitter, x, y, terminal, greyscale,
+            topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
+        );
+        drawTerminalBackground(
+            emitter, x, y, terminal, greyscale,
+            topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
+        );
     }
 
     public static boolean isCursorVisible( Terminal terminal )

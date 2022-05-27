@@ -55,7 +55,7 @@ public final class DirectFixedWidthFontRenderer
         int yStart = 1 + row * (FONT_HEIGHT + 2);
 
         quad(
-            buffer, x, y, x + FONT_WIDTH, y + FONT_HEIGHT, Z_EPSILON, colour,
+            buffer, x, y, x + FONT_WIDTH, y + FONT_HEIGHT, 0f, colour,
             xStart / WIDTH, yStart / WIDTH, (xStart + FONT_WIDTH) / WIDTH, (yStart + FONT_HEIGHT) / WIDTH
         );
     }
@@ -116,7 +116,26 @@ public final class DirectFixedWidthFontRenderer
         }
     }
 
-    public static void drawTerminalWithoutCursor(
+    public static void drawTerminalForeground(
+        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+    )
+    {
+        Palette palette = terminal.getPalette();
+        int height = terminal.getHeight();
+
+        // The main text
+        for( int i = 0; i < height; i++ )
+        {
+            float rowY = y + FONT_HEIGHT * i;
+            drawString(
+                buffer, x, rowY, terminal.getLine( i ), terminal.getTextColourLine( i ),
+                palette, greyscale
+            );
+        }
+    }
+
+    public static void drawTerminalBackground(
         @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
@@ -143,11 +162,22 @@ public final class DirectFixedWidthFontRenderer
                 buffer, x, rowY, terminal.getBackgroundColourLine( i ), palette, greyscale,
                 leftMarginSize, rightMarginSize, FONT_HEIGHT
             );
-            drawString(
-                buffer, x, rowY, terminal.getLine( i ), terminal.getTextColourLine( i ),
-                palette, greyscale
-            );
         }
+    }
+
+    public static void drawTerminalWithoutCursor(
+        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
+    )
+    {
+        drawTerminalBackground(
+            buffer, x, y, terminal, greyscale,
+            topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
+        );
+        drawTerminalForeground(
+            buffer, x, y, terminal, greyscale,
+            topMarginSize, bottomMarginSize, leftMarginSize, rightMarginSize
+        );
     }
 
     public static void drawCursor( @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale )
@@ -161,7 +191,7 @@ public final class DirectFixedWidthFontRenderer
 
     public static int getVertexCount( Terminal terminal )
     {
-        return (1 + (terminal.getHeight() + 2) * terminal.getWidth() * 2) * 4;
+        return (terminal.getHeight() + 2) * (terminal.getWidth() + 2) * 2 * 4;
     }
 
     private static void quad( ByteBuffer buffer, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )

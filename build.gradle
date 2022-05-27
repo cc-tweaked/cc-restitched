@@ -61,6 +61,14 @@ repositories {
         url "https://squiddev.cc/maven"
     }
 
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+
     // TODO: Limit these to a set of groups.
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
@@ -99,6 +107,7 @@ dependencies {
 
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-api-fabric:6.0.254-alpha"
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:6.0.254-alpha"
+    modCompileOnly 'maven.modrinth:iris:1.18.x-v1.2.4'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'

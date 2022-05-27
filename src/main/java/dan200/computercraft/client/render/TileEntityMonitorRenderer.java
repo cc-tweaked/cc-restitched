@@ -19,6 +19,7 @@ import dan200.computercraft.client.render.text.DirectFixedWidthFontRenderer;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.client.util.DirectBuffers;
 import dan200.computercraft.core.terminal.Terminal;
+import dan200.computercraft.shared.integration.IrisCompat;
 import dan200.computercraft.shared.peripheral.monitor.ClientMonitor;
 import dan200.computercraft.shared.peripheral.monitor.MonitorRenderer;
 import dan200.computercraft.shared.peripheral.monitor.TileMonitor;
@@ -111,7 +112,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
 
         // Draw the contents
         Terminal terminal = originTerminal.getTerminal();
-        if( terminal != null )
+        if( terminal != null && !IrisCompat.INSTANCE.isRenderingShadowPass() )
         {
             // Draw a terminal
             int width = terminal.getWidth(), height = terminal.getHeight();
@@ -179,6 +180,9 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 tboVertex( buffer, matrix, pixelWidth + xMargin, -yMargin );
                 tboVertex( buffer, matrix, pixelWidth + xMargin, pixelHeight + yMargin );
 
+                // Force a flush of the buffer. WorldRenderer.updateCameraAndRender will "finish" all the built-in buffers
+                // before calling renderer.finish, which means our TBO quad won't be rendered yet!
+                bufferSource.getBuffer( RenderType.solid() );
                 break;
             }
 
@@ -188,30 +192,38 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 if( redraw )
                 {
                     int vertexSize = RenderTypes.MONITOR.format().getVertexSize();
+
+                    // Draw the background contents of the terminal into one vbo.
                     ByteBuffer buffer = getBuffer( DirectFixedWidthFontRenderer.getVertexCount( terminal ) * vertexSize );
 
-                    // Draw the main terminal and store how many vertices it has.
-                    DirectFixedWidthFontRenderer.drawTerminalWithoutCursor(
+                    DirectFixedWidthFontRenderer.drawTerminalBackground(
                         buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
                     );
-                    int termIndexes = buffer.position() / vertexSize;
+                    int backgroundBytes = buffer.position();
+                    DirectFixedWidthFontRenderer.drawTerminalForeground(
+                        buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
+                    );
+                    int termVertices = buffer.position() / vertexSize;
+                    monitor.backgroundVertexCount = backgroundBytes / vertexSize;
+                    monitor.foregroundVertexCount = termVertices - monitor.backgroundVertexCount;
 
                     // If the cursor is visible, we append it to the end of our buffer. When rendering, we can either
                     // render n or n+1 quads and so toggle the cursor on and off.
                     DirectFixedWidthFontRenderer.drawCursor( buffer, 0, 0, terminal, !monitor.isColour() );
 
                     buffer.flip();
-
-                    vbo.upload( termIndexes, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), buffer );
+                    vbo.upload( termVertices, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), buffer );
                 }
 
+                // TODO Figure out how to setup the inverse view rotation matrix properly.
+                // This weird hack makes the VBO geometry interact with fog at the correct distance, although the fog
+                // shape doesn't look quite right.
                 Matrix3f popViewRotation = RenderSystem.getInverseViewRotationMatrix();
                 RenderSystem.setInverseViewRotationMatrix( IDENTITY );
 
-                bufferSource.getBuffer( RenderTypes.MONITOR );
-                RenderTypes.MONITOR.setupRenderState();
-
                 var matrix = transform.last().pose();
+
+                // For some reason, if Canvas is present we need to do this matrix multiplication ourselves.
                 if( MonitorRenderer.canvasModPresent )
                 {
                     var modelViewMatrix = RenderSystem.getModelViewMatrix().copy();
@@ -219,21 +231,32 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                     matrix = modelViewMatrix;
                 }
 
-                vbo.drawWithShader(
-                    matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader(),
-                    // As mentioned in the above comment, render the extra cursor quad if it is visible this frame. Each
-                    // quad has an index count of 6.
-                    FixedWidthFontRenderer.isCursorVisible( terminal ) && FrameInfo.getGlobalCursorBlink() ? vbo.getIndexCount() + 6 : vbo.getIndexCount()
+                // Setup state
+                RenderTypes.MONITOR.setupRenderState();
+                vbo.begin( matrix, RenderSystem.getProjectionMatrix(), RenderTypes.getMonitorShader() );
+
+                // Render background geometry
+                vbo.draw( monitor.backgroundVertexCount, 0 );
+
+                // Render foreground geometry with glPolygonOffset enabled.
+                GL11.glPolygonOffset( -1.0f, -10.0f );
+                GL11.glEnable( GL11.GL_POLYGON_OFFSET_FILL );
+                vbo.draw(
+                    // As mentioned in an above comment, render the extra cursor quad if it is visible this frame.
+                    FixedWidthFontRenderer.isCursorVisible( terminal ) && FrameInfo.getGlobalCursorBlink() ? monitor.foregroundVertexCount + 4 : monitor.foregroundVertexCount,
+                    monitor.backgroundVertexCount
                 );
+
+                // Clear state
+                GL11.glPolygonOffset( 0.0f, -0.0f );
+                GL11.glDisable( GL11.GL_POLYGON_OFFSET_FILL );
+                vbo.end();
+                RenderTypes.MONITOR.clearRenderState();
 
                 RenderSystem.setInverseViewRotationMatrix( popViewRotation );
                 break;
             }
         }
-
-        // Force a flush of the buffer. WorldRenderer.updateCameraAndRender will "finish" all the built-in buffers
-        // before calling renderer.finish, which means our TBO quad or depth blocker won't be rendered yet!
-        bufferSource.getBuffer( RenderType.solid() );
     }
 
     private static void tboVertex( VertexConsumer builder, Matrix4f matrix, float x, float y )
