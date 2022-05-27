@@ -5,6 +5,8 @@
  */
 package dan200.computercraft.api;
 
+import dan200.computercraft.api.detail.BlockReference;
+import dan200.computercraft.api.detail.IDetailProvider;
 import dan200.computercraft.api.filesystem.IMount;
 import dan200.computercraft.api.filesystem.IWritableMount;
 import dan200.computercraft.api.lua.GenericSource;
@@ -22,6 +24,7 @@ import dan200.computercraft.api.redstone.IBundledRedstoneProvider;
 import dan200.computercraft.api.turtle.ITurtleUpgrade;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 
@@ -212,6 +215,20 @@ public final class ComputerCraftAPI
     }
 
     /**
+     * Registers a detail provider to provide additional details for blocks, fluids and items when inspected by methods
+     * such as {@code turtle.getItemDetail()} or {@code turtle.inspect()}.
+     *
+     * @param type     The type of object that this provider can provide details for. Should be {@link BlockReference}
+     *                 or {@link ItemStack}.
+     * @param provider The detail provider to register.
+     * @param <T>      The type of object that this provider can provide details for.
+     */
+    public static <T> void registerDetailProvider( @Nonnull Class<T> type, @Nonnull IDetailProvider<T> provider )
+    {
+        getInstance().registerDetailProvider( type, provider );
+    }
+
+    /**
      * Construct a new wired node for a given wired element.
      *
      * @param element The element to construct it for
@@ -288,6 +305,8 @@ public final class ComputerCraftAPI
         IPacketNetwork getWirelessNetwork();
 
         void registerAPIFactory( @Nonnull ILuaAPIFactory factory );
+
+        <T> void registerDetailProvider( @Nonnull Class<T> type, @Nonnull IDetailProvider<T> provider );
 
         @Nonnull
         IWiredNode createWiredNodeForElement( @Nonnull IWiredElement element );

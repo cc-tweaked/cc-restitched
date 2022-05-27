@@ -22,15 +22,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.Nameable;
+import net.minecraft.world.*;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -53,6 +51,7 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
     }
 
     Component customName;
+    private LockCode lockCode;
 
     private final Map<IComputerAccess, MountInfo> computers = new HashMap<>();
 
@@ -78,6 +77,12 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
         if( recordPlaying ) stopRecord();
     }
 
+    @Override
+    public boolean isUsable( Player player )
+    {
+        return super.isUsable( player ) && BaseContainerBlockEntity.canUnlock( player, lockCode, getDisplayName() );
+    }
+
     @Nonnull
     @Override
     public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
@@ -97,7 +102,7 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
         else
         {
             // Open the GUI
-            if( !getLevel().isClientSide ) player.openMenu( this );
+            if( !getLevel().isClientSide && isUsable( player ) ) player.openMenu( this );
             return InteractionResult.SUCCESS;
         }
     }
@@ -118,6 +123,8 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
             diskStack = ItemStack.of( item );
             diskMount = null;
         }
+
+        lockCode = LockCode.fromTag( nbt );
     }
 
     @Override
@@ -131,6 +138,9 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
             diskStack.save( item );
             nbt.put( NBT_ITEM, item );
         }
+
+        lockCode.addToTag( nbt );
+
         super.saveAdditional( nbt );
     }
 
@@ -281,7 +291,7 @@ public final class TileDiskDrive extends TileGeneric implements IPeripheralTile,
     @Override
     public boolean stillValid( @Nonnull Player player )
     {
-        return isUsable( player, false );
+        return isUsable( player );
     }
 
     @Override
