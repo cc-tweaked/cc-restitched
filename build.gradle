@@ -313,7 +313,7 @@ if (System.getenv("MODRINTH")) {
         finalizedBy project.tasks.modrinth
     }
 }
-
+/*
 if (System.getenv("CURSEFORGE")) {
     curseforge {
         apiKey = System.getenv("CURSEFORGE")
@@ -343,3 +343,4 @@ if (System.getenv("CURSEFORGE")) {
         finalizedBy project.tasks.curseforge
     }
 }
+*/
