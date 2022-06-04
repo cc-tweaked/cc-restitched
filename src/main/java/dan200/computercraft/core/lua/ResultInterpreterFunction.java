@@ -6,7 +6,10 @@
 package dan200.computercraft.core.lua;
 
 import dan200.computercraft.ComputerCraft;
-import dan200.computercraft.api.lua.*;
+import dan200.computercraft.api.lua.ILuaCallback;
+import dan200.computercraft.api.lua.ILuaContext;
+import dan200.computercraft.api.lua.LuaException;
+import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.core.asm.LuaMethod;
 import org.squiddev.cobalt.*;
 import org.squiddev.cobalt.debug.DebugFrame;
@@ -51,7 +54,7 @@ class ResultInterpreterFunction extends ResumableVarArgFunction<ResultInterprete
     @Override
     protected Varargs invoke( LuaState state, DebugFrame debugFrame, Varargs args ) throws LuaError, UnwindThrowable
     {
-        IArguments arguments = CobaltLuaMachine.toArguments( args );
+        VarargArguments arguments = VarargArguments.of( args );
         MethodResult results;
         try
         {
@@ -71,7 +74,7 @@ class ResultInterpreterFunction extends ResumableVarArgFunction<ResultInterprete
         }
         finally
         {
-            arguments.releaseImmediate();
+            arguments.close();
         }
 
         ILuaCallback callback = results.getCallback();

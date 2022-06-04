@@ -31,14 +31,16 @@ jobs:
             - name: Grant execute permission for gradlew
               run: chmod +x gradlew
 
-            - name: Build and publish with Gradle
-              run: ./gradlew build publish
-              env:
-                  CURSEFORGE: ${{ secrets.CURSEFORGE }}
-                  MODRINTH: ${{ secrets.MODRINTH }}
-                  CHANGELOG: ${{ github.event.release.body }}
             - name: Upload GitHub release
               uses: AButler/upload-release-assets@v2.0
               with:
                   files: 'build/libs/*.jar;!build/libs/*-sources.jar;!build/libs/*-dev.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+
+            - name: Build and publish with Gradle
+              run: ./gradlew build publish
+              env:
+                  #CURSEFORGE: ${{ secrets.CURSEFORGE }}
+                  MODRINTH: ${{ secrets.MODRINTH }}
+                  CHANGELOG: ${{ github.event.release.body }}

@@ -34,6 +34,8 @@ public final class ClientMonitor extends ClientTerminal
     public int tboTexture;
     public int tboUniform;
     public DirectVertexBuffer buffer;
+    public int backgroundVertexCount;
+    public int foregroundVertexCount;
 
     public ClientMonitor( boolean colour, TileMonitor origin )
     {
@@ -125,6 +127,9 @@ public final class ClientMonitor extends ClientTerminal
             buffer.close();
             buffer = null;
         }
+
+        backgroundVertexCount = 0;
+        foregroundVertexCount = 0;
     }
 
     @Environment( EnvType.CLIENT )

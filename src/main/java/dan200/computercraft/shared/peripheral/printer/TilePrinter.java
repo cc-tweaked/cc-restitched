@@ -27,6 +27,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -48,6 +49,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
     private static final int[] SIDE_SLOTS = new int[] { 0 };
 
     Component customName;
+    private LockCode lockCode;
 
     private final NonNullList<ItemStack> inventory = NonNullList.withSize( SLOTS, ItemStack.EMPTY );
     private PrinterPeripheral peripheral;
@@ -67,13 +69,19 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
         ejectContents();
     }
 
+    @Override
+    public boolean isUsable( Player player )
+    {
+        return super.isUsable( player ) && BaseContainerBlockEntity.canUnlock( player, lockCode, getDisplayName() );
+    }
+
     @Nonnull
     @Override
     public InteractionResult onActivate( Player player, InteractionHand hand, BlockHitResult hit )
     {
         if( player.isCrouching() ) return InteractionResult.PASS;
 
-        if( !getLevel().isClientSide ) player.openMenu( this );
+        if( !getLevel().isClientSide && isUsable( player ) ) player.openMenu( this );
         return InteractionResult.SUCCESS;
     }
 
@@ -94,6 +102,8 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
         // Read inventory
         ContainerHelper.loadAllItems( nbt, inventory );
+
+        lockCode = LockCode.fromTag( nbt );
     }
 
     @Override
@@ -111,6 +121,8 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
 
         // Write inventory
         ContainerHelper.saveAllItems( nbt, inventory );
+
+        lockCode.addToTag( nbt );
 
         super.saveAdditional( nbt );
     }
@@ -214,7 +226,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
     @Override
     public boolean stillValid( @Nonnull Player playerEntity )
     {
-        return isUsable( playerEntity, false );
+        return isUsable( playerEntity );
     }
 
     // ISidedInventory implementation
@@ -291,7 +303,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
         return ColourUtils.getStackColour( stack ) != null;
     }
 
-    private static boolean isPaper( @Nonnull ItemStack stack )
+    static boolean isPaper( @Nonnull ItemStack stack )
     {
         Item item = stack.getItem();
         return item == Items.PAPER
