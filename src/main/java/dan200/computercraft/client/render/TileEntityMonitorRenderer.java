@@ -191,28 +191,27 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 var vbo = monitor.buffer;
                 if( redraw )
                 {
-                    int vertexSize = RenderTypes.MONITOR.format().getVertexSize();
-
                     // Draw the background contents of the terminal into one vbo.
-                    ByteBuffer buffer = getBuffer( DirectFixedWidthFontRenderer.getVertexCount( terminal ) * vertexSize );
+                    var sink = IrisCompat.INSTANCE.getVertexSink(
+                        DirectFixedWidthFontRenderer.getVertexCount( terminal ),
+                        TileEntityMonitorRenderer::getBuffer
+                    );
+                    int vertexSize = sink.getFormat().getVertexSize();
+                    var buffer = sink.buffer();
 
-                    DirectFixedWidthFontRenderer.drawTerminalBackground(
-                        buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
-                    );
+                    DirectFixedWidthFontRenderer.drawTerminalBackground( sink, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin );
                     int backgroundBytes = buffer.position();
-                    DirectFixedWidthFontRenderer.drawTerminalForeground(
-                        buffer, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin
-                    );
+                    DirectFixedWidthFontRenderer.drawTerminalForeground( sink, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin );
                     int termVertices = buffer.position() / vertexSize;
                     monitor.backgroundVertexCount = backgroundBytes / vertexSize;
                     monitor.foregroundVertexCount = termVertices - monitor.backgroundVertexCount;
 
                     // If the cursor is visible, we append it to the end of our buffer. When rendering, we can either
                     // render n or n+1 quads and so toggle the cursor on and off.
-                    DirectFixedWidthFontRenderer.drawCursor( buffer, 0, 0, terminal, !monitor.isColour() );
+                    DirectFixedWidthFontRenderer.drawCursor( sink, 0, 0, terminal, !monitor.isColour() );
 
                     buffer.flip();
-                    vbo.upload( termVertices, RenderTypes.MONITOR.mode(), RenderTypes.MONITOR.format(), buffer );
+                    vbo.upload( buffer.position() / vertexSize, RenderTypes.MONITOR.mode(), sink.getFormat(), buffer );
                 }
 
                 // TODO Figure out how to setup the inverse view rotation matrix properly.
