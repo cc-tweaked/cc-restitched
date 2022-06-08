@@ -29,8 +29,7 @@ public class DirectVertexBuffer
     private VertexFormat.Mode mode;
     private VertexFormat format;
 
-    private int vertexCount;
-    private VertexFormat.IndexType indexType;
+    private RenderSystem.AutoStorageIndexBuffer indexBuffer;
 
     private ShaderInstance currentShader;
     private boolean vaoInitialised;
@@ -47,7 +46,8 @@ public class DirectVertexBuffer
 
         this.format = format;
         this.mode = mode;
-        this.vertexCount = vertexCount;
+        indexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
+
         vaoInitialised = false;
     }
 
@@ -71,9 +71,7 @@ public class DirectVertexBuffer
             GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
 
             // Bind index buffer (this binding is kept in the VAO state!).
-            RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
-            indexType = autoStorageIndexBuffer.type();
-            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, autoStorageIndexBuffer.name() );
+            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, indexBuffer.name() );
 
             vaoInitialised = true;
         }
@@ -95,7 +93,7 @@ public class DirectVertexBuffer
         if( vertexCount == 0 || currentShader == null ) return;
 
         if( vertexCount < 0 ) throw new IllegalStateException( "Rendering negative elements?" );
-        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexType.asGLType, 0L, baseVertex );
+        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexBuffer.type().asGLType, 0L, baseVertex );
     }
 
     private void bindVertexArray()
