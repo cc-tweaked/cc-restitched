@@ -200,18 +200,17 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                     var buffer = sink.buffer();
 
                     DirectFixedWidthFontRenderer.drawTerminalBackground( sink, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin );
-                    int backgroundBytes = buffer.position();
+                    monitor.backgroundVertexCount = buffer.position() / vertexSize;
+
                     DirectFixedWidthFontRenderer.drawTerminalForeground( sink, 0, 0, terminal, !monitor.isColour(), yMargin, yMargin, xMargin, xMargin );
-                    int termVertices = buffer.position() / vertexSize;
-                    monitor.backgroundVertexCount = backgroundBytes / vertexSize;
-                    monitor.foregroundVertexCount = termVertices - monitor.backgroundVertexCount;
+                    monitor.foregroundVertexCount = (buffer.position() / vertexSize) - monitor.backgroundVertexCount;
 
                     // If the cursor is visible, we append it to the end of our buffer. When rendering, we can either
                     // render n or n+1 quads and so toggle the cursor on and off.
                     DirectFixedWidthFontRenderer.drawCursor( sink, 0, 0, terminal, !monitor.isColour() );
 
                     buffer.flip();
-                    vbo.upload( buffer.position() / vertexSize, RenderTypes.MONITOR.mode(), sink.getFormat(), buffer );
+                    vbo.upload( buffer.limit() / vertexSize, RenderTypes.MONITOR.mode(), sink.getFormat(), buffer );
                 }
 
                 // TODO Figure out how to setup the inverse view rotation matrix properly.
