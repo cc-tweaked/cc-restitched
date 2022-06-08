@@ -92,7 +92,6 @@ public class DirectVertexBuffer
     {
         if( vertexCount == 0 || currentShader == null ) return;
 
-        if( vertexCount < 0 ) throw new IllegalStateException( "Rendering negative elements?" );
         GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexBuffer.type().asGLType, 0L, baseVertex );
     }
 
