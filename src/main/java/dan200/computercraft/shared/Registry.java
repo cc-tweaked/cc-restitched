@@ -98,10 +98,10 @@ public final class Registry
         }
 
         public static final BlockMonitor MONITOR_NORMAL =
-            register( "monitor_normal", new BlockMonitor( properties(), () -> ModBlockEntities.MONITOR_NORMAL ) );
+            register( "monitor_normal", new BlockMonitor( monitorProperties(), () -> ModBlockEntities.MONITOR_NORMAL ) );
 
         public static final BlockMonitor MONITOR_ADVANCED =
-            register( "monitor_advanced", new BlockMonitor( properties(), () -> ModBlockEntities.MONITOR_ADVANCED ) );
+            register( "monitor_advanced", new BlockMonitor( monitorProperties(), () -> ModBlockEntities.MONITOR_ADVANCED ) );
 
         public static final BlockComputer<TileComputer> COMPUTER_NORMAL =
             register( "computer_normal", new BlockComputer<>( properties(), ComputerFamily.NORMAL, () -> ModBlockEntities.COMPUTER_NORMAL ) );
@@ -142,6 +142,11 @@ public final class Registry
         private static BlockBehaviour.Properties properties()
         {
             return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F ).noOcclusion();
+        }
+
+        private static BlockBehaviour.Properties monitorProperties()
+        {
+            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F );
         }
 
         private static BlockBehaviour.Properties turtleProperties()
