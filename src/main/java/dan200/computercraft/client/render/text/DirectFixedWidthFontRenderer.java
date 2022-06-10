@@ -8,6 +8,8 @@ package dan200.computercraft.client.render.text;
 import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import dan200.computercraft.client.render.RenderTypes;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
 import dan200.computercraft.shared.util.Colour;
@@ -21,7 +23,7 @@ import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 /**
- * An optimised copy of {@link FixedWidthFontRenderer} emitter emits directly to a {@link ByteBuffer} rather than
+ * An optimised copy of {@link FixedWidthFontRenderer} emitter emits directly to a {@link QuadSink} rather than
  * emitting to {@link VertexConsumer}. This allows us to emit vertices very quickly, when using the VBO renderer.
  *
  * There are some limitations here:
@@ -43,7 +45,7 @@ public final class DirectFixedWidthFontRenderer
     {
     }
 
-    private static void drawChar( ByteBuffer buffer, float x, float y, int index, byte[] colour )
+    private static void drawChar( QuadSink buffer, float x, float y, int index, byte[] colour )
     {
         // Short circuit to avoid the common case - the texture should be blank here after all.
         if( index == '\0' || index == ' ' ) return;
@@ -60,14 +62,14 @@ public final class DirectFixedWidthFontRenderer
         );
     }
 
-    private static void drawQuad( ByteBuffer emitter, float x, float y, float width, float height, Palette palette, boolean greyscale, char colourIndex )
+    private static void drawQuad( QuadSink emitter, float x, float y, float width, float height, Palette palette, boolean greyscale, char colourIndex )
     {
         byte[] colour = palette.getByteColour( getColour( colourIndex, Colour.BLACK ), greyscale );
         quad( emitter, x, y, x + width, y + height, 0f, colour, BACKGROUND_START, BACKGROUND_START, BACKGROUND_END, BACKGROUND_END );
     }
 
     private static void drawBackground(
-        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull TextBuffer backgroundColour, @Nonnull Palette palette, boolean greyscale,
+        @Nonnull QuadSink buffer, float x, float y, @Nonnull TextBuffer backgroundColour, @Nonnull Palette palette, boolean greyscale,
         float leftMarginSize, float rightMarginSize, float height
     )
     {
@@ -104,7 +106,7 @@ public final class DirectFixedWidthFontRenderer
         }
     }
 
-    private static void drawString( @Nonnull ByteBuffer buffer, float x, float y, @Nonnull TextBuffer text, @Nonnull TextBuffer textColour, @Nonnull Palette palette, boolean greyscale )
+    private static void drawString( @Nonnull QuadSink buffer, float x, float y, @Nonnull TextBuffer text, @Nonnull TextBuffer textColour, @Nonnull Palette palette, boolean greyscale )
     {
         for( int i = 0; i < text.length(); i++ )
         {
@@ -117,7 +119,7 @@ public final class DirectFixedWidthFontRenderer
     }
 
     public static void drawTerminalForeground(
-        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        @Nonnull QuadSink buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
@@ -136,7 +138,7 @@ public final class DirectFixedWidthFontRenderer
     }
 
     public static void drawTerminalBackground(
-        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        @Nonnull QuadSink buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
@@ -166,7 +168,7 @@ public final class DirectFixedWidthFontRenderer
     }
 
     public static void drawTerminalWithoutCursor(
-        @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
+        @Nonnull QuadSink buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale,
         float topMarginSize, float bottomMarginSize, float leftMarginSize, float rightMarginSize
     )
     {
@@ -180,7 +182,7 @@ public final class DirectFixedWidthFontRenderer
         );
     }
 
-    public static void drawCursor( @Nonnull ByteBuffer buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale )
+    public static void drawCursor( @Nonnull QuadSink buffer, float x, float y, @Nonnull Terminal terminal, boolean greyscale )
     {
         if( isCursorVisible( terminal ) )
         {
@@ -191,10 +193,39 @@ public final class DirectFixedWidthFontRenderer
 
     public static int getVertexCount( Terminal terminal )
     {
-        return (terminal.getHeight() + 2) * (terminal.getWidth() + 2) * 2 * 4;
+        return (terminal.getHeight() + 2) * (terminal.getWidth() + 2) * 2;
     }
 
-    private static void quad( ByteBuffer buffer, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )
+    private static void quad( QuadSink buffer, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )
+    {
+        buffer.quad( x1, y1, x2, y2, z, rgba, u1, v1, u2, v2 );
+    }
+
+    public interface QuadSink
+    {
+        VertexFormat getFormat();
+
+        ByteBuffer buffer();
+
+        void quad( float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 );
+    }
+
+    public record ByteBufferSink(ByteBuffer buffer) implements QuadSink
+    {
+        @Override
+        public VertexFormat getFormat()
+        {
+            return RenderTypes.MONITOR.format();
+        }
+
+        @Override
+        public void quad( float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )
+        {
+            DirectFixedWidthFontRenderer.quad( buffer, x1, y1, x2, y2, z, rgba, u1, v1, u2, v2 );
+        }
+    }
+
+    static void quad( ByteBuffer buffer, float x1, float y1, float x2, float y2, float z, byte[] rgba, float u1, float v1, float u2, float v2 )
     {
         // Emit a single quad to our buffer. This uses Unsafe (well, LWJGL's MemoryUtil) to directly blit bytes to the
         // underlying buffer. This allows us to have a single bounds check up-front, rather than one for every write.

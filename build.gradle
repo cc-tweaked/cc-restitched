@@ -107,7 +107,13 @@ dependencies {
 
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-api-fabric:6.0.254-alpha"
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:6.0.254-alpha"
-    modCompileOnly 'maven.modrinth:iris:1.18.x-v1.2.4'
+
+    modCompileOnly "maven.modrinth:iris:1.18.x-v1.2.5"
+
+    // For running with Iris. Can be ignored most of the time.
+    // modRuntimeOnly "maven.modrinth:sodium:mc1.18.2-0.4.1"
+    // runtimeOnly "org.joml:joml:1.10.2"
+    // runtimeOnly "org.anarres:jcpp:1.4.14"
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
