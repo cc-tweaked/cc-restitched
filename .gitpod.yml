@@ -7,13 +7,10 @@ ports:
 
 vscode:
   extensions:
-    - eamodio.gitlens
-    - github.vscode-pull-request-github
-    - ms-azuretools.vscode-docker
     - redhat.java
     - richardwillis.vscode-gradle
     - vscjava.vscode-java-debug
-    - vscode.github
+
 
 tasks:
   - name: Setup pre-commit hool

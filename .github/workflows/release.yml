@@ -37,7 +37,6 @@ jobs:
                   files: 'build/libs/*.jar;!build/libs/*-sources.jar;!build/libs/*-dev.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-
             - name: Build and publish with Gradle
               run: ./gradlew build publish
               env:

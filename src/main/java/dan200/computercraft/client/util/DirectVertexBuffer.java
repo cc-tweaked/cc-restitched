@@ -29,8 +29,7 @@ public class DirectVertexBuffer
     private VertexFormat.Mode mode;
     private VertexFormat format;
 
-    private int vertexCount;
-    private VertexFormat.IndexType indexType;
+    private RenderSystem.AutoStorageIndexBuffer indexBuffer;
 
     private ShaderInstance currentShader;
     private boolean vaoInitialised;
@@ -47,7 +46,8 @@ public class DirectVertexBuffer
 
         this.format = format;
         this.mode = mode;
-        this.vertexCount = vertexCount;
+        indexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
+
         vaoInitialised = false;
     }
 
@@ -55,9 +55,9 @@ public class DirectVertexBuffer
      * Call this method before calling {@link DirectVertexBuffer#draw(int, int)}. When done drawing out of the vbo, make
      * sure to call {@link DirectVertexBuffer#end()}!
      *
-     * @param modelView The modelView matrix.
+     * @param modelView  The modelView matrix.
      * @param projection The projection matrix.
-     * @param shader The shader to use for this series of draws.
+     * @param shader     The shader to use for this series of draws.
      */
     public void begin( Matrix4f modelView, Matrix4f projection, ShaderInstance shader )
     {
@@ -71,9 +71,7 @@ public class DirectVertexBuffer
             GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
 
             // Bind index buffer (this binding is kept in the VAO state!).
-            RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
-            indexType = autoStorageIndexBuffer.type();
-            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, autoStorageIndexBuffer.name() );
+            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, indexBuffer.name() );
 
             vaoInitialised = true;
         }
@@ -92,9 +90,9 @@ public class DirectVertexBuffer
 
     public void draw( int vertexCount, int baseVertex )
     {
-        if ( vertexCount == 0 || currentShader == null ) return;
+        if( vertexCount == 0 || currentShader == null ) return;
 
-        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexType.asGLType, 0L, baseVertex );
+        GL32C.glDrawElementsBaseVertex( mode.asGLMode, mode.indexCount( vertexCount ), indexBuffer.type().asGLType, 0L, baseVertex );
     }
 
     private void bindVertexArray()
@@ -123,57 +121,30 @@ public class DirectVertexBuffer
 
     private void setupShader( ShaderInstance shader, Matrix4f modelView, Matrix4f projection )
     {
-        for ( int i = 0; i < 12; ++i )
+        for( int i = 0; i < 12; ++i )
         {
             int j = RenderSystem.getShaderTexture( i );
             shader.setSampler( "Sampler" + i, j );
         }
-        if ( shader.MODEL_VIEW_MATRIX != null )
-        {
-            shader.MODEL_VIEW_MATRIX.set( modelView );
-        }
-        if ( shader.PROJECTION_MATRIX != null )
-        {
-            shader.PROJECTION_MATRIX.set( projection );
-        }
-        if ( shader.INVERSE_VIEW_ROTATION_MATRIX != null )
+        if( shader.MODEL_VIEW_MATRIX != null ) shader.MODEL_VIEW_MATRIX.set( modelView );
+        if( shader.PROJECTION_MATRIX != null ) shader.PROJECTION_MATRIX.set( projection );
+        if( shader.INVERSE_VIEW_ROTATION_MATRIX != null )
         {
             shader.INVERSE_VIEW_ROTATION_MATRIX.set( RenderSystem.getInverseViewRotationMatrix() );
         }
-        if ( shader.COLOR_MODULATOR != null )
-        {
-            shader.COLOR_MODULATOR.set( RenderSystem.getShaderColor() );
-        }
-        if ( shader.FOG_START != null )
-        {
-            shader.FOG_START.set( RenderSystem.getShaderFogStart() );
-        }
-        if ( shader.FOG_END != null )
-        {
-            shader.FOG_END.set( RenderSystem.getShaderFogEnd() );
-        }
-        if ( shader.FOG_COLOR != null )
-        {
-            shader.FOG_COLOR.set( RenderSystem.getShaderFogColor() );
-        }
-        if ( shader.FOG_SHAPE != null )
-        {
-            shader.FOG_SHAPE.set( RenderSystem.getShaderFogShape().getIndex() );
-        }
-        if ( shader.TEXTURE_MATRIX != null )
-        {
-            shader.TEXTURE_MATRIX.set( RenderSystem.getTextureMatrix() );
-        }
-        if ( shader.GAME_TIME != null )
-        {
-            shader.GAME_TIME.set( RenderSystem.getShaderGameTime() );
-        }
-        if ( shader.SCREEN_SIZE != null )
+        if( shader.COLOR_MODULATOR != null ) shader.COLOR_MODULATOR.set( RenderSystem.getShaderColor() );
+        if( shader.FOG_START != null ) shader.FOG_START.set( RenderSystem.getShaderFogStart() );
+        if( shader.FOG_END != null ) shader.FOG_END.set( RenderSystem.getShaderFogEnd() );
+        if( shader.FOG_COLOR != null ) shader.FOG_COLOR.set( RenderSystem.getShaderFogColor() );
+        if( shader.FOG_SHAPE != null ) shader.FOG_SHAPE.set( RenderSystem.getShaderFogShape().getIndex() );
+        if( shader.TEXTURE_MATRIX != null ) shader.TEXTURE_MATRIX.set( RenderSystem.getTextureMatrix() );
+        if( shader.GAME_TIME != null ) shader.GAME_TIME.set( RenderSystem.getShaderGameTime() );
+        if( shader.SCREEN_SIZE != null )
         {
             Window window = Minecraft.getInstance().getWindow();
             shader.SCREEN_SIZE.set( window.getWidth(), window.getHeight() );
         }
-        if ( shader.LINE_WIDTH != null && (mode == VertexFormat.Mode.LINES || mode == VertexFormat.Mode.LINE_STRIP) )
+        if( shader.LINE_WIDTH != null && (mode == VertexFormat.Mode.LINES || mode == VertexFormat.Mode.LINE_STRIP) )
         {
             shader.LINE_WIDTH.set( RenderSystem.getShaderLineWidth() );
         }
