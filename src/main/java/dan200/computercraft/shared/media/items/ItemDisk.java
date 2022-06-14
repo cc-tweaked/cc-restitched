@@ -16,8 +16,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -50,7 +48,7 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     @Override
     public void fillItemCategory( @Nonnull CreativeModeTab tabs, @Nonnull NonNullList<ItemStack> list )
     {
-        if( !allowdedIn( tabs ) ) return;
+        if( !allowedIn( tabs ) ) return;
         for( int colour = 0; colour < 16; colour++ )
         {
             list.add( createFromIDAndColour( -1, null, Colour.VALUES[colour].getHex() ) );
@@ -65,7 +63,7 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
             int id = getDiskID( stack );
             if( id >= 0 )
             {
-                list.add( new TranslatableComponent( "gui.computercraft.tooltip.disk_id", id )
+                list.add( Component.translatable( "gui.computercraft.tooltip.disk_id", id )
                     .withStyle( ChatFormatting.GRAY ) );
             }
         }
@@ -82,7 +80,7 @@ public class ItemDisk extends Item implements IMedia, IColouredItem
     {
         if( label != null )
         {
-            stack.setHoverName( new TextComponent( label ) );
+            stack.setHoverName( Component.literal( label ) );
         }
         else
         {

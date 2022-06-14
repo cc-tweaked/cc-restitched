@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -29,8 +30,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
-
 /**
  * Provides custom block breaking progress for modems, so it only applies to the current part.
  *
@@ -40,13 +39,13 @@ import java.util.Random;
 public class BlockRenderDispatcherMixin
 {
     @Shadow
-    private final Random random;
+    private final RandomSource random;
     @Shadow
     private final BlockModelShaper blockModelShaper;
     @Shadow
     private final ModelBlockRenderer modelRenderer;
 
-    public BlockRenderDispatcherMixin( Random random, BlockModelShaper blockModelShaper, ModelBlockRenderer modelRenderer )
+    public BlockRenderDispatcherMixin( RandomSource random, BlockModelShaper blockModelShaper, ModelBlockRenderer modelRenderer )
     {
         this.random = random;
         this.blockModelShaper = blockModelShaper;

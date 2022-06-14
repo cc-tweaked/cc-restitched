@@ -15,7 +15,6 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 // A poor mod menu integration just for testing the monitor rendering changes we've been making :)
 
@@ -27,20 +26,20 @@ public class ModMenuIntegration implements ModMenuApi
     {
         return parent -> {
             ConfigBuilder builder = ConfigBuilder.create().setParentScreen( parent )
-                .setTitle( new TextComponent( "Computer Craft" ) )
+                .setTitle( Component.literal( "Computer Craft" ) )
                 .setSavingRunnable( () -> {
                     Config.clientSpec.correct( Config.clientConfig );
                     Config.sync();
                     Config.save();
                 } );
 
-            ConfigCategory client = builder.getOrCreateCategory( new TextComponent( "Client" ) );
+            ConfigCategory client = builder.getOrCreateCategory( Component.literal( "Client" ) );
 
             ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
             client.addEntry( entryBuilder
                 .startEnumSelector(
-                    new TextComponent( "Monitor Renderer" ),
+                    Component.literal( "Monitor Renderer" ),
                     MonitorRenderer.class,
                     Config.clientConfig.getEnum( "monitor_renderer", MonitorRenderer.class )
                 )

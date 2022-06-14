@@ -40,13 +40,13 @@ public class DirectVertexBuffer
         vertexBufferId = DirectBuffers.createBuffer();
     }
 
-    public void upload( int vertexCount, VertexFormat.Mode mode, VertexFormat format, ByteBuffer buffer )
+    public void upload( VertexFormat.Mode mode, VertexFormat format, ByteBuffer buffer )
     {
         DirectBuffers.setBufferData( GL32C.GL_ARRAY_BUFFER, vertexBufferId, buffer, GL32C.GL_STATIC_DRAW );
 
         this.format = format;
         this.mode = mode;
-        indexBuffer = RenderSystem.getSequentialBuffer( mode, mode.indexCount( vertexCount ) );
+        indexBuffer = RenderSystem.getSequentialBuffer( mode );
 
         vaoInitialised = false;
     }
@@ -71,7 +71,7 @@ public class DirectVertexBuffer
             GL32C.glBindBuffer( GL32C.GL_ARRAY_BUFFER, 0 );
 
             // Bind index buffer (this binding is kept in the VAO state!).
-            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, indexBuffer.name() );
+            GL32C.glBindBuffer( GL32C.GL_ELEMENT_ARRAY_BUFFER, indexBuffer.type().asGLType );
 
             vaoInitialised = true;
         }

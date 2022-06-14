@@ -17,7 +17,8 @@ import dan200.computercraft.shared.util.ItemStorage;
 import dan200.computercraft.shared.util.WorldUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -263,7 +264,7 @@ public class TurtlePlaceCommand implements ITurtleCommand
         if( useResult != InteractionResult.PASS ) return useResult;
 
         Item item = stack.getItem();
-        if( item instanceof BucketItem || item instanceof BoatItem || item instanceof WaterLilyBlockItem || item instanceof BottleItem )
+        if( item instanceof BucketItem || item instanceof BoatItem || item instanceof PlaceOnWaterBlockItem || item instanceof BottleItem )
         {
             InteractionResultHolder<ItemStack> result = stack.use( context.getLevel(), turtlePlayer, InteractionHand.MAIN_HAND );
             if( result.getResult().consumesAction() && !ItemStack.matches( stack, result.getObject() ) )
@@ -287,13 +288,13 @@ public class TurtlePlaceCommand implements ITurtleCommand
             {
                 String line = split[i - firstLine];
                 signTile.setMessage( i, line.length() > 15
-                    ? new TextComponent( line.substring( 0, 15 ) )
-                    : new TextComponent( line )
+                    ? Component.literal( line.substring( 0, 15 ) )
+                    : Component.literal( line )
                 );
             }
             else
             {
-                signTile.setMessage( i, new TextComponent( "" ) );
+                signTile.setMessage( i, Component.literal( "" ) );
             }
         }
         signTile.setChanged();

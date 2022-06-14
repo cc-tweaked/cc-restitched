@@ -46,6 +46,12 @@ public class ContainerHeldItem extends AbstractContainerMenu
     }
 
     @Override
+    public ItemStack quickMoveStack( Player player, int i )
+    {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
     public boolean stillValid( @Nonnull Player player )
     {
         if( !player.isAlive() ) return false;

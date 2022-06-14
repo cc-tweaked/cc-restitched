@@ -18,7 +18,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -466,7 +465,7 @@ public final class TilePrinter extends TileGeneric implements IPeripheralTile, D
     @Override
     public Component getName()
     {
-        return customName != null ? customName : new TranslatableComponent( getBlockState().getBlock().getDescriptionId() );
+        return customName != null ? customName : Component.translatable( getBlockState().getBlock().getDescriptionId() );
     }
 
     @Nonnull

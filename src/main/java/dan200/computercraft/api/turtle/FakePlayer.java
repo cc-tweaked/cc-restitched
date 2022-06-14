@@ -8,9 +8,12 @@ package dan200.computercraft.api.turtle;
 import com.mojang.authlib.GameProfile;
 import dan200.computercraft.shared.util.FakeNetHandler;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.network.chat.ChatSender;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -33,7 +36,6 @@ import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.OptionalInt;
-import java.util.UUID;
 
 /**
  * A wrapper for {@link ServerPlayer} which denotes a "fake" player.
@@ -44,7 +46,7 @@ public abstract class FakePlayer extends ServerPlayer
 {
     public FakePlayer( ServerLevel world, GameProfile gameProfile )
     {
-        super( world.getServer(), world, gameProfile );
+        super( world.getServer(), world, gameProfile, null );
         connection = new FakeNetHandler( this );
     }
 
@@ -211,10 +213,15 @@ public abstract class FakePlayer extends ServerPlayer
     //    {
     //    }
 
-    @Override
-    public void sendMessage( Component message, ChatType type, UUID senderUuid )
-    {
 
+    @Override
+    public void sendChatMessage( PlayerChatMessage playerChatMessage, ChatSender chatSender, ResourceKey<ChatType> resourceKey )
+    {
+    }
+
+    @Override
+    public void sendSystemMessage( Component component )
+    {
     }
 
     @Override

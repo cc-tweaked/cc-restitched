@@ -84,7 +84,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
                 lastPlayTime = clock;
                 server.getPlayerList().broadcast(
                     null, pos.x, pos.y, pos.z, sound.volume * 16, level.dimension(),
-                    new ClientboundCustomSoundPacket( sound.location, SoundSource.RECORDS, pos, sound.volume, sound.pitch )
+                    new ClientboundCustomSoundPacket( sound.location, SoundSource.RECORDS, pos, sound.volume, sound.pitch, 0 )
                 );
             }
             pendingNotes.clear();

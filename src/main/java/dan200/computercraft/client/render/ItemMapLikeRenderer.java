@@ -75,7 +75,7 @@ public abstract class ItemMapLikeRenderer
         {
             transform.pushPose();
             transform.mulPose( Vector3f.ZP.rotationDegrees( offset * 10f ) );
-            ((ItemInHandRendererAccess) minecraft.getItemInHandRenderer()).callRenderPlayerArm( transform, render, combinedLight, equipProgress, swingProgress, side );
+            ((ItemInHandRendererAccess) minecraft.getEntityRenderDispatcher().getItemInHandRenderer()).callRenderPlayerArm( transform, render, combinedLight, equipProgress, swingProgress, side );
             transform.popPose();
         }
 
@@ -112,7 +112,7 @@ public abstract class ItemMapLikeRenderer
     private void renderItemFirstPersonCenter( PoseStack transform, MultiBufferSource render, int combinedLight, float pitch, float equipProgress, float swingProgress, ItemStack stack )
     {
         Minecraft minecraft = Minecraft.getInstance();
-        ItemInHandRenderer renderer = minecraft.getItemInHandRenderer();
+        ItemInHandRenderer renderer = minecraft.getEntityRenderDispatcher().getItemInHandRenderer();
 
         // Setup the appropriate transformations. This is just copied from the
         // corresponding method in ItemRenderer.

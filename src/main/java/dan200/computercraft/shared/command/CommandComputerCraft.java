@@ -23,13 +23,13 @@ import dan200.computercraft.shared.computer.inventory.ContainerViewComputer;
 import dan200.computercraft.shared.network.container.ViewComputerContainerData;
 import dan200.computercraft.shared.util.IDAssigner;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -67,7 +67,7 @@ public final class CommandComputerCraft
     {
     }
 
-    public static void register( CommandDispatcher<CommandSourceStack> dispatcher, Boolean dedicated )
+    public static void register( CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext commandBuildContext, Commands.CommandSelection commandSelection )
     {
         dispatcher.register( choice( "computercraft" )
             .then( literal( "dump" )
@@ -240,7 +240,7 @@ public final class CommandComputerCraft
                         @Override
                         public Component getDisplayName()
                         {
-                            return new TranslatableComponent( "gui.computercraft.view_computer" );
+                            return Component.translatable( "gui.computercraft.view_computer" );
                         }
 
                         @Nonnull
@@ -296,7 +296,7 @@ public final class CommandComputerCraft
 
     private static Component linkComputer( CommandSourceStack source, ServerComputer serverComputer, int computerId )
     {
-        MutableComponent out = new TextComponent( "" );
+        MutableComponent out = Component.literal( "" );
 
         // Append the computer instance
         if( serverComputer == null )

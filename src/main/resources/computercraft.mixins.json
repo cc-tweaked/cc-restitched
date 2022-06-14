@@ -1,34 +1,34 @@
 {
-    "required": true,
-    "package": "dan200.computercraft.fabric.mixin",
-    "compatibilityLevel": "JAVA_17",
-    "mixins": [
-        "ConnectionAccess",
-        "LevelResourceAccess",
-        "MixinBlock",
-        "MixinChunkMap",
-        "MixinEntity",
-        "MixinItemEntity",
-        "MixinMatrix4f",
-        "MixinServerLevel",
-        "MixinServerPlayerGameMode"
-    ],
-    "client": [
-        "ChatComponentAccess",
-        "ItemInHandRendererAccess",
-        "MixinGameRenderer",
-        "MixinItemFrameRenderer",
-        "MixinItemInHandRenderer",
-        "MixinLevelRenderer",
-        "MixinMinecraft",
-        "MixinScreen",
-        "MixinSoundEngine",
-        "BlockRenderDispatcherMixin"
-    ],
-    "server": [
-        "MixinLanguage"
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    }
+  "required": true,
+  "package": "dan200.computercraft.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ArgumentTypeInfosAccessor",
+    "ConnectionAccess",
+    "LevelResourceAccess",
+    "MixinBlock",
+    "MixinChunkMap",
+    "MixinEntity",
+    "MixinItemEntity",
+    "MixinMatrix4f",
+    "MixinServerLevel",
+    "MixinServerPlayerGameMode"
+  ],
+  "client": [
+    "BlockRenderDispatcherMixin",
+    "ChatComponentAccess",
+    "ItemInHandRendererAccess",
+    "MixinGameRenderer",
+    "MixinItemFrameRenderer",
+    "MixinItemInHandRenderer",
+    "MixinLevelRenderer",
+    "MixinMinecraft",
+    "MixinSoundEngine"
+  ],
+  "server": [
+    "MixinLanguage"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

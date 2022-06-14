@@ -11,7 +11,6 @@ import dan200.computercraft.shared.util.NonNullSupplier;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
@@ -53,7 +52,7 @@ public class DynamicImageButton extends Button
         OnPress onPress, NonNullSupplier<List<Component>> tooltip
     )
     {
-        super( x, y, width, height, TextComponent.EMPTY, onPress );
+        super( x, y, width, height, Component.empty(), onPress );
         this.screen = screen;
         this.textureWidth = textureWidth;
         this.textureHeight = textureHeight;
@@ -84,7 +83,7 @@ public class DynamicImageButton extends Button
     public Component getMessage()
     {
         List<Component> tooltip = this.tooltip.get();
-        return tooltip.isEmpty() ? TextComponent.EMPTY : tooltip.get( 0 );
+        return tooltip.isEmpty() ? Component.empty() : tooltip.get( 0 );
     }
 
     @Override

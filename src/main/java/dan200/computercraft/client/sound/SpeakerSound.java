@@ -11,6 +11,7 @@ import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 
 import java.util.concurrent.Executor;
@@ -27,7 +28,7 @@ public class SpeakerSound extends AbstractSoundInstance implements TickableSound
 
     SpeakerSound( ResourceLocation sound, DfpwmStream stream, SpeakerPosition position, float volume, float pitch )
     {
-        super( sound, SoundSource.RECORDS );
+        super( sound, SoundSource.RECORDS, RandomSource.create() );
         setPosition( position );
         this.stream = stream;
         this.volume = volume;

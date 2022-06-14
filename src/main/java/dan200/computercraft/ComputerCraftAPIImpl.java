@@ -43,7 +43,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 public final class ComputerCraftAPIImpl implements IComputerCraftAPI
@@ -61,9 +60,9 @@ public final class ComputerCraftAPIImpl implements IComputerCraftAPI
         ResourceManager manager = GameInstanceUtils.getServer().getResourceManager();
         try
         {
-            return manager.getResource( new ResourceLocation( domain, subPath ) ).getInputStream();
+            return manager.getResource( new ResourceLocation( domain, subPath ) ).get().open();
         }
-        catch( IOException ignored )
+        catch( Throwable ignored )
         {
             return null;
         }

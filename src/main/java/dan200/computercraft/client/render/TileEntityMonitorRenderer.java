@@ -210,7 +210,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                     DirectFixedWidthFontRenderer.drawCursor( sink, 0, 0, terminal, !monitor.isColour() );
 
                     buffer.flip();
-                    vbo.upload( buffer.limit() / vertexSize, RenderTypes.MONITOR.mode(), sink.getFormat(), buffer );
+                    vbo.upload( RenderTypes.MONITOR.mode(), sink.getFormat(), buffer );
                 }
 
                 // TODO Figure out how to setup the inverse view rotation matrix properly.

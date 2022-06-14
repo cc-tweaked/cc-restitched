@@ -22,7 +22,6 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
@@ -30,6 +29,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +96,7 @@ public final class ResourceMount implements IMount
         String existingNamespace = null;
 
         FileEntry newRoot = new FileEntry( new ResourceLocation( namespace, subPath ) );
-        for( ResourceLocation file : manager.listResources( subPath, s -> true ) )
+        for( ResourceLocation file : manager.listResources( subPath, s -> true ).keySet() )
         {
             existingNamespace = file.getNamespace();
 
@@ -206,8 +206,14 @@ public final class ResourceMount implements IMount
 
             try
             {
-                Resource resource = manager.getResource( file.identifier );
-                InputStream s = resource.getInputStream();
+                Optional<Resource> resource = manager.getResource( file.identifier );
+
+                if ( resource.isEmpty() )
+                {
+                    return file.size = 0;
+                }
+
+                InputStream s = resource.get().open();
                 int total = 0, read = 0;
                 do
                 {
@@ -238,7 +244,7 @@ public final class ResourceMount implements IMount
 
             try
             {
-                InputStream stream = manager.getResource( file.identifier ).getInputStream();
+                InputStream stream = manager.getResource( file.identifier ).get().open();
                 if( stream.available() > MAX_CACHED_SIZE ) return Channels.newChannel( stream );
 
                 try
@@ -253,7 +259,7 @@ public final class ResourceMount implements IMount
                 CONTENTS_CACHE.put( file, contents );
                 return new ArrayByteChannel( contents );
             }
-            catch( FileNotFoundException ignored )
+            catch( Throwable ignored )
             {
             }
         }

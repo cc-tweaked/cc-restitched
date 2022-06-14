@@ -14,11 +14,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.commands.synchronization.ArgumentSerializer;
-import net.minecraft.commands.synchronization.ArgumentTypes;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -45,9 +46,11 @@ public final class RepeatArgumentType<T, U> implements ArgumentType<List<T>>
     private final BiConsumer<List<T>, U> appender;
     private final boolean flatten;
     private final SimpleCommandExceptionType some;
+    private final ArgumentTypeInfo<ArgumentType<U>, ?> serializer;
 
-    private RepeatArgumentType( ArgumentType<U> child, BiConsumer<List<T>, U> appender, boolean flatten, SimpleCommandExceptionType some )
+    private RepeatArgumentType( ArgumentTypeInfo<ArgumentType<U>, ?> serializer, ArgumentType<U> child, BiConsumer<List<T>, U> appender, boolean flatten, SimpleCommandExceptionType some )
     {
+        this.serializer = serializer;
         this.child = child;
         this.appender = appender;
         this.flatten = flatten;
@@ -56,12 +59,12 @@ public final class RepeatArgumentType<T, U> implements ArgumentType<List<T>>
 
     public static <T> RepeatArgumentType<T, T> some( ArgumentType<T> appender, SimpleCommandExceptionType missing )
     {
-        return new RepeatArgumentType<>( appender, List::add, false, missing );
+        return new RepeatArgumentType<>( ArgumentTypeInfos.byClass( appender ), appender, List::add, false, missing );
     }
 
     public static <T> RepeatArgumentType<T, List<T>> someFlat( ArgumentType<List<T>> appender, SimpleCommandExceptionType missing )
     {
-        return new RepeatArgumentType<>( appender, List::addAll, true, missing );
+        return new RepeatArgumentType<>( ArgumentTypeInfos.byClass( appender ), appender, List::addAll, true, missing );
     }
 
     @Override
@@ -125,41 +128,77 @@ public final class RepeatArgumentType<T, U> implements ArgumentType<List<T>>
         return child.getExamples();
     }
 
-    public static class Serializer implements ArgumentSerializer<RepeatArgumentType<?, ?>>
+    public static class Serializer implements ArgumentTypeInfo<RepeatArgumentType<?, ?>, Serializer.Template>
     {
         @Override
-        public void serializeToNetwork( @Nonnull RepeatArgumentType<?, ?> arg, @Nonnull FriendlyByteBuf buf )
+        public void serializeToNetwork( @Nonnull Template arg, @Nonnull FriendlyByteBuf buf )
         {
             buf.writeBoolean( arg.flatten );
-            ArgumentTypes.serialize( buf, arg.child );
+            buf.writeId( Registry.COMMAND_ARGUMENT_TYPE, arg.child.type() );
+            arg.child.type().serializeToNetwork( arg.child, buf );
             buf.writeComponent( getMessage( arg ) );
         }
 
         @Nonnull
         @Override
         @SuppressWarnings( { "unchecked", "rawtypes" } )
-        public RepeatArgumentType<?, ?> deserializeFromNetwork( @Nonnull FriendlyByteBuf buf )
+        public Template deserializeFromNetwork( @Nonnull FriendlyByteBuf buf )
         {
             boolean isList = buf.readBoolean();
-            ArgumentType<?> child = ArgumentTypes.deserialize( buf );
+
+            ArgumentTypeInfo serializer = buf.readById( Registry.COMMAND_ARGUMENT_TYPE );
+
+            ArgumentTypeInfo.Template child = serializer.deserializeFromNetwork( buf );
             Component message = buf.readComponent();
-            BiConsumer<List<Object>, ?> appender = isList ? ( list, x ) -> list.addAll( (Collection) x ) : List::add;
-            return new RepeatArgumentType( child, appender, isList, new SimpleCommandExceptionType( message ) );
+            BiConsumer<List<?>, ?> appender = isList ? ( list, x ) -> list.addAll( (Collection) x ) : List::of;
+            return new Template( child, appender, isList, new SimpleCommandExceptionType( message ) );
         }
 
         @Override
-        public void serializeToJson( @Nonnull RepeatArgumentType<?, ?> arg, @Nonnull JsonObject json )
+        public void serializeToJson( @Nonnull Template arg, @Nonnull JsonObject json )
         {
             json.addProperty( "flatten", arg.flatten );
             json.addProperty( "child", "<<cannot serialize>>" ); // TODO: Potentially serialize this using reflection.
             json.addProperty( "error", Component.Serializer.toJson( getMessage( arg ) ) );
         }
 
-        private static Component getMessage( RepeatArgumentType<?, ?> arg )
+        private static Component getMessage( Template arg )
         {
             Message message = arg.some.create().getRawMessage();
             if( message instanceof Component ) return (Component) message;
-            return new TextComponent( message.getString() );
+            return Component.literal( message.getString() );
+        }
+
+        @Override
+        public RepeatArgumentType.Serializer.Template unpack( RepeatArgumentType argumentType )
+        {
+            return new Template( argumentType.serializer.unpack( argumentType.child ), argumentType.appender, argumentType.flatten, argumentType.some );
+        }
+
+        public final class Template implements ArgumentTypeInfo.Template<RepeatArgumentType<?, ?>>
+        {
+            private final ArgumentTypeInfo.Template child;
+            private final BiConsumer<List<?>, ?> appender;
+            private final boolean flatten;
+            private final SimpleCommandExceptionType some;
+
+            protected Template( ArgumentTypeInfo.Template child, BiConsumer<List<?>, ?> appender, boolean flatten, SimpleCommandExceptionType some )
+            {
+                this.child = child;
+                this.appender = appender;
+                this.flatten = flatten;
+                this.some = some;
+            }
+
+            public RepeatArgumentType<?, ?> instantiate( CommandBuildContext commandBuildContext )
+            {
+                return new RepeatArgumentType( this.child.type(), this.child.instantiate( commandBuildContext ), this.appender, this.flatten, this.some );
+            }
+
+            public ArgumentTypeInfo<RepeatArgumentType<?, ?>, ?> type()
+            {
+                return RepeatArgumentType.Serializer.this;
+            }
         }
     }
 }

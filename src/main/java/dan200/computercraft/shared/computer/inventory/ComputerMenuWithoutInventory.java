@@ -12,6 +12,7 @@ import dan200.computercraft.shared.util.InvisibleSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Predicate;
 
@@ -37,5 +38,11 @@ public class ComputerMenuWithoutInventory extends ContainerComputerBase
     private void addSlots( Inventory player )
     {
         for( int i = 0; i < 9; i++ ) addSlot( new InvisibleSlot( player, i ) );
+    }
+
+    @Override
+    public ItemStack quickMoveStack( Player player, int i )
+    {
+        return ItemStack.EMPTY;
     }
 }

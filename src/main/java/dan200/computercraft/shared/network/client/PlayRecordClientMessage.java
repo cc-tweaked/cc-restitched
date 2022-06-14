@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 
 import javax.annotation.Nonnull;
@@ -82,6 +82,6 @@ public class PlayRecordClientMessage implements NetworkMessage
     {
         Minecraft mc = Minecraft.getInstance();
         mc.levelRenderer.playStreamingMusic( soundEvent, pos );
-        if( name != null ) mc.gui.setNowPlaying( new TextComponent( name ) );
+        if( name != null ) mc.gui.setNowPlaying( Component.literal( name ) );
     }
 }

@@ -7,27 +7,28 @@ package dan200.computercraft.shared.command.arguments;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import dan200.computercraft.ComputerCraft;
-import net.minecraft.commands.synchronization.ArgumentSerializer;
-import net.minecraft.commands.synchronization.ArgumentTypes;
-import net.minecraft.commands.synchronization.EmptyArgumentSerializer;
+import dan200.computercraft.fabric.mixin.ArgumentTypeInfosAccessor;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.SingletonArgumentInfo;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 
 public final class ArgumentSerializers
 {
     @SuppressWarnings( "unchecked" )
-    private static <T extends ArgumentType<?>> void registerUnsafe( ResourceLocation id, Class<T> type, ArgumentSerializer<?> serializer )
+    private static <T extends ArgumentType<?>> void registerUnsafe( ResourceLocation id, Class type, ArgumentTypeInfo serializer )
     {
-        ArgumentTypes.register( id.toString(), type, (ArgumentSerializer<T>) serializer );
+        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
     }
 
-    private static <T extends ArgumentType<?>> void register( ResourceLocation id, Class<T> type, ArgumentSerializer<T> serializer )
+    private static <T extends ArgumentType<?>> void register( ResourceLocation id, Class<T> type, ArgumentTypeInfo<T, ?> serializer )
     {
-        ArgumentTypes.register( id.toString(), type, serializer );
+        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
     }
 
     private static <T extends ArgumentType<?>> void register( ResourceLocation id, T instance )
     {
-        registerUnsafe( id, instance.getClass(), new EmptyArgumentSerializer<>( () -> instance ) );
+        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), instance.getClass(), SingletonArgumentInfo.contextFree( () -> instance ) );
     }
 
     public static void register()

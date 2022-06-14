@@ -34,7 +34,7 @@ import dan200.computercraft.shared.peripheral.monitor.MonitorWatcher;
 import dan200.computercraft.shared.turtle.FurnaceRefuelHandler;
 import dan200.computercraft.shared.util.Config;
 import dan200.computercraft.shared.util.TickScheduler;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
