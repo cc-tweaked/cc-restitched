@@ -307,7 +307,7 @@ if (System.getenv("MODRINTH")) {
 
         projectId = "eldBwa5V"
         versionName = "[" + ((String) project.mc_version) + "] " + version
-        versionNumber = version
+        versionNumber = "" + version + "+" + ((String) project.mc_version)
         versionType = "release"
         uploadFile = remapJar
         gameVersions = [((String) project.mc_version)]
