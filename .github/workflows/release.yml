@@ -20,6 +20,8 @@ jobs:
                   restore-keys: |
                       gradle-
             - uses: actions/checkout@v2
+              with:
+                  submodules: true
             - name: Set up JDK
               uses: actions/setup-java@v1
               with:
