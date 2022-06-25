@@ -69,6 +69,14 @@ repositories {
         }
     }
 
+    maven {
+        name = "NucleoidMC"
+        url = "https://maven.nucleoid.xyz"
+        content {
+            includeGroup "eu.pb4"
+        }
+    }
+
     // TODO: Limit these to a set of groups.
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
@@ -95,6 +103,8 @@ dependencies {
     modImplementation "me.shedaniel.cloth.api:cloth-utils-v1:${cloth_api_version}"
 
     modImplementation "io.netty:netty-codec-http:${netty_http_version}"
+
+    modCompileOnly "eu.pb4:common-protection-api:1.0.0"
 
     implementation 'com.electronwill.night-config:toml:3.6.3'
 
@@ -326,7 +336,7 @@ if (System.getenv("MODRINTH")) {
         finalizedBy project.tasks.modrinth
     }
 }
-/*
+
 if (System.getenv("CURSEFORGE")) {
     curseforge {
         apiKey = System.getenv("CURSEFORGE")
@@ -356,4 +366,3 @@ if (System.getenv("CURSEFORGE")) {
         finalizedBy project.tasks.curseforge
     }
 }
-*/
