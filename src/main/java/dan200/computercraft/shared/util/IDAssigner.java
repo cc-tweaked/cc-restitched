@@ -10,7 +10,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.fabric.mixin.LevelResourceAccess;
-import me.shedaniel.cloth.api.utils.v1.GameInstanceUtils;
+import dan200.computercraft.fabric.util.GameInstanceUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 

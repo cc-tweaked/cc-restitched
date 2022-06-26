@@ -6,7 +6,7 @@
 package dan200.computercraft.shared.command;
 
 import dan200.computercraft.shared.util.IDAssigner;
-import me.shedaniel.cloth.api.utils.v1.GameInstanceUtils;
+import dan200.computercraft.fabric.util.GameInstanceUtils;
 import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
 

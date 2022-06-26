@@ -7,6 +7,7 @@ package dan200.computercraft;
 
 import dan200.computercraft.core.apis.http.options.Action;
 import dan200.computercraft.core.apis.http.options.AddressRule;
+import dan200.computercraft.fabric.util.GameInstanceUtils;
 import dan200.computercraft.shared.common.ColourableRecipe;
 import dan200.computercraft.shared.computer.core.ClientComputerRegistry;
 import dan200.computercraft.shared.computer.core.ServerComputerRegistry;
@@ -117,6 +118,7 @@ public final class ComputerCraft
         Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "player_creative" ), PlayerCreativeLootCondition.TYPE );
         Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "has_id" ), HasComputerIdLootCondition.TYPE );
         init();
+        GameInstanceUtils.init();
         FabricLoader.getInstance().getModContainer( MOD_ID ).ifPresent( modContainer -> {
             ResourceManagerHelper.registerBuiltinResourcePack( new ResourceLocation( MOD_ID, "classic" ), modContainer, ResourcePackActivationType.NORMAL );
             ResourceManagerHelper.registerBuiltinResourcePack( new ResourceLocation( MOD_ID, "overhaul" ), modContainer, ResourcePackActivationType.NORMAL );
