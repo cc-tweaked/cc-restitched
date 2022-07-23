@@ -141,7 +141,7 @@ public final class Registry
 
         private static BlockBehaviour.Properties properties()
         {
-            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F ).noOcclusion();
+            return BlockBehaviour.Properties.of( Material.GLASS ).strength( 2F ).noOcclusion();
         }
 
         private static BlockBehaviour.Properties monitorProperties()
@@ -151,7 +151,7 @@ public final class Registry
 
         private static BlockBehaviour.Properties turtleProperties()
         {
-            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2.5f );
+            return BlockBehaviour.Properties.of( Material.GLASS ).strength( 2.5f );
         }
 
         private static BlockBehaviour.Properties modemProperties()
