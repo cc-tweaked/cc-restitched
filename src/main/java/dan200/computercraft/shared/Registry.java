@@ -56,6 +56,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -98,19 +99,19 @@ public final class Registry
         }
 
         public static final BlockMonitor MONITOR_NORMAL =
-            register( "monitor_normal", new BlockMonitor( monitorProperties(), () -> ModBlockEntities.MONITOR_NORMAL ) );
+            register( "monitor_normal", new BlockMonitor( properties(), () -> ModBlockEntities.MONITOR_NORMAL ) );
 
         public static final BlockMonitor MONITOR_ADVANCED =
-            register( "monitor_advanced", new BlockMonitor( monitorProperties(), () -> ModBlockEntities.MONITOR_ADVANCED ) );
+            register( "monitor_advanced", new BlockMonitor( properties(), () -> ModBlockEntities.MONITOR_ADVANCED ) );
 
         public static final BlockComputer<TileComputer> COMPUTER_NORMAL =
-            register( "computer_normal", new BlockComputer<>( properties(), ComputerFamily.NORMAL, () -> ModBlockEntities.COMPUTER_NORMAL ) );
+            register( "computer_normal", new BlockComputer<>( computerProperties(), ComputerFamily.NORMAL, () -> ModBlockEntities.COMPUTER_NORMAL ) );
 
         public static final BlockComputer<TileComputer> COMPUTER_ADVANCED =
-            register( "computer_advanced", new BlockComputer<>( properties(), ComputerFamily.ADVANCED, () -> ModBlockEntities.COMPUTER_ADVANCED ) );
+            register( "computer_advanced", new BlockComputer<>( computerProperties(), ComputerFamily.ADVANCED, () -> ModBlockEntities.COMPUTER_ADVANCED ) );
 
         public static final BlockComputer<TileCommandComputer> COMPUTER_COMMAND =
-            register( "computer_command", new BlockComputer<>( properties().strength( -1, 6000000.0F ), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
+            register( "computer_command", new BlockComputer<>( computerProperties().strength( -1, 6000000.0F ), ComputerFamily.COMMAND, () -> ModBlockEntities.COMPUTER_COMMAND ) );
 
         public static final BlockTurtle TURTLE_NORMAL =
             register( "turtle_normal", new BlockTurtle( turtleProperties(), ComputerFamily.NORMAL, () -> ModBlockEntities.TURTLE_NORMAL ) );
@@ -141,17 +142,18 @@ public final class Registry
 
         private static BlockBehaviour.Properties properties()
         {
-            return BlockBehaviour.Properties.of( Material.GLASS ).strength( 2F ).noOcclusion();
+            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F );
         }
 
-        private static BlockBehaviour.Properties monitorProperties()
+        private static BlockBehaviour.Properties computerProperties()
         {
-            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2F );
+            return properties().noOcclusion()
+                .isRedstoneConductor( ( BlockState state, BlockGetter getter, BlockPos pos ) -> false );
         }
 
         private static BlockBehaviour.Properties turtleProperties()
         {
-            return BlockBehaviour.Properties.of( Material.GLASS ).strength( 2.5f );
+            return BlockBehaviour.Properties.of( Material.STONE ).strength( 2.5f );
         }
 
         private static BlockBehaviour.Properties modemProperties()
