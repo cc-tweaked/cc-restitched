@@ -8,12 +8,8 @@ package dan200.computercraft.api.turtle;
 import com.mojang.authlib.GameProfile;
 import dan200.computercraft.shared.util.FakeNetHandler;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
-import net.minecraft.network.chat.ChatSender;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.*;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -215,7 +211,12 @@ public abstract class FakePlayer extends ServerPlayer
 
 
     @Override
-    public void sendChatMessage( PlayerChatMessage playerChatMessage, ChatSender chatSender, ResourceKey<ChatType> resourceKey )
+    public void sendChatMessage( OutgoingPlayerChatMessage outgoingPlayerChatMessage, boolean bl, ChatType.Bound bound )
+    {
+    }
+
+    @Override
+    public void sendSystemMessage( Component component, boolean bl )
     {
     }
 

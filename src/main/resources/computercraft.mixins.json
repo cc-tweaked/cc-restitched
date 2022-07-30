@@ -16,7 +16,6 @@
   ],
   "client": [
     "BlockRenderDispatcherMixin",
-    "ChatComponentAccess",
     "ItemInHandRendererAccess",
     "MixinGameRenderer",
     "MixinItemFrameRenderer",

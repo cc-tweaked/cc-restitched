@@ -9,11 +9,10 @@ import dan200.computercraft.api.turtle.FakePlayer;
 import dan200.computercraft.fabric.mixin.ConnectionAccess;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.PacketListener;
+import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
@@ -183,7 +182,7 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
     }
 
     @Override
-    public void send( @Nonnull Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> whenSent )
+    public void send( Packet<?> packet, @org.jetbrains.annotations.Nullable PacketSendListener packetSendListener )
     {
     }
 
@@ -325,7 +324,7 @@ public class FakeNetHandler extends ServerGamePacketListenerImpl
         }
 
         @Override
-        public void send( @Nonnull Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> whenSent )
+        public void send( Packet<?> packet, @org.jetbrains.annotations.Nullable PacketSendListener packetSendListener )
         {
         }
 
