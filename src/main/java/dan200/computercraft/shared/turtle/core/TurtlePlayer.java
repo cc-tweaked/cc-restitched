@@ -185,7 +185,7 @@ public final class TurtlePlayer extends FakePlayer
         int totalSize = getInventory().getContainerSize();
         for( int i = slots; i < totalSize; i++ )
         {
-            ItemStack remainder = InventoryUtil.storeItems( getInventory().getItem( i ), turtle.getItemHandler(), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( getInventory().getItem( i ), turtle.getItemHandler(), turtle.getSelectedSlot(), false );
             if( !remainder.isEmpty() )
             {
                 WorldUtil.dropItemStack( remainder, turtle.getLevel(), dropPosition, dropDirection );

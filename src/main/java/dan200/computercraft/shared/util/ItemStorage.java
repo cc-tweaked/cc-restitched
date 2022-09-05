@@ -197,6 +197,12 @@ public interface ItemStorage
                 return stack;
             }
         }
+
+        @Override
+        public String toString()
+        {
+            return String.format( "%s{type=%s}", getClass().getSimpleName(), inventory.getClass().getSimpleName() );
+        }
     }
 
     class SidedInventoryWrapper extends InventoryWrapper
@@ -247,6 +253,12 @@ public interface ItemStorage
                 return stack;
             }
             return super.store( mappedSlot, stack, simulate );
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format( "%s{type=%s, facing=%s}", getClass().getSimpleName(), inventory.getClass().getSimpleName(), facing );
         }
     }
 
@@ -316,6 +328,12 @@ public interface ItemStorage
         public ItemStorage view( int start, int size )
         {
             return new View( parent, this.start + start, size );
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format( "%s{parent=%s, start=%d, size=%d}", getClass().getSimpleName(), parent, start, size );
         }
     }
 }

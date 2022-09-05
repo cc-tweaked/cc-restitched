@@ -38,7 +38,7 @@ public final class FurnaceRefuelHandler implements TurtleRefuelEvent.Handler
         Item replacementStack = stack.getItem().getCraftingRemainingItem();
         if( replacementStack != null )
         {
-            ItemStack remainder = InventoryUtil.storeItems( new ItemStack( replacementStack ), turtle.getItemHandler(), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( new ItemStack( replacementStack ), turtle.getItemHandler(), turtle.getSelectedSlot(), false );
             if( !remainder.isEmpty() )
             {
                 WorldUtil.dropItemStack( remainder, turtle.getLevel(), turtle.getPosition(), turtle.getDirection().getOpposite() );

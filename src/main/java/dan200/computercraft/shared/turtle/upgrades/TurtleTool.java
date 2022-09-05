@@ -270,7 +270,7 @@ public class TurtleTool extends AbstractTurtleUpgrade
 
     private static Function<ItemStack, ItemStack> turtleDropConsumer( BlockEntity tile, ITurtleAccess turtle )
     {
-        return drop -> tile.isRemoved() ? drop : InventoryUtil.storeItems( drop, turtle.getItemHandler(), turtle.getSelectedSlot() );
+        return drop -> tile.isRemoved() ? drop : InventoryUtil.storeItems( drop, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
     }
 
     private static void stopConsuming( BlockEntity tile, ITurtleAccess turtle )

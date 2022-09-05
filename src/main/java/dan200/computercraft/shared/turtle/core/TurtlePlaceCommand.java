@@ -131,7 +131,7 @@ public class TurtlePlaceCommand implements ITurtleCommand
         Vec3 hitPos = hit.getValue();
 
         ItemStorage itemHandler = ItemStorage.wrap( turtlePlayer.getInventory() );
-        DropConsumer.set( hitEntity, drop -> InventoryUtil.storeItems( drop, itemHandler, 1 ) );
+        DropConsumer.set( hitEntity, drop -> InventoryUtil.storeItems( drop, itemHandler, 1, false ) );
 
         boolean placed = doDeployOnEntity( stack, turtlePlayer, hitEntity, hitPos );
 

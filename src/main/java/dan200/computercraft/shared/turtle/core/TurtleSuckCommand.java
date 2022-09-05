@@ -61,15 +61,15 @@ public class TurtleSuckCommand implements ITurtleCommand
             ItemStorage inventory = ItemStorage.wrap( inventoryContainer );
 
             // Take from inventory of thing in front
-            ItemStack stack = InventoryUtil.takeItems( quantity, inventory );
+            ItemStack stack = InventoryUtil.takeItems( quantity, inventory, false );
             if( stack.isEmpty() ) return TurtleCommandResult.failure( "No items to take" );
 
             // Try to place into the turtle
-            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
             if( !remainder.isEmpty() )
             {
                 // Put the remainder back in the inventory
-                InventoryUtil.storeItems( remainder, inventory );
+                InventoryUtil.storeItems( remainder, inventory, false );
             }
 
             // Return true if we consumed anything
@@ -111,7 +111,7 @@ public class TurtleSuckCommand implements ITurtleCommand
                     leaveStack = ItemStack.EMPTY;
                 }
 
-                ItemStack remainder = InventoryUtil.storeItems( storeStack, turtle.getItemHandler(), turtle.getSelectedSlot() );
+                ItemStack remainder = InventoryUtil.storeItems( storeStack, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
 
                 if( remainder != storeStack )
                 {
