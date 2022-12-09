@@ -28,7 +28,7 @@ public class MixinItemFrameRenderer
         method = "render",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lcom/mojang/math/Quaternion;)V",
+            target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionf;)V",
             ordinal = 2,
             shift = At.Shift.AFTER
         ),

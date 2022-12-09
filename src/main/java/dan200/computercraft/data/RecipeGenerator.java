@@ -21,21 +21,19 @@ import dan200.computercraft.shared.turtle.recipes.TurtleUpgradeRecipe;
 import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.ImpostorRecipe;
 import dan200.computercraft.shared.util.ImpostorShapelessRecipe;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.data.recipes.FinishedRecipe;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
-import net.minecraft.data.recipes.ShapelessRecipeBuilder;
-import net.minecraft.data.recipes.SpecialRecipeBuilder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.data.recipes.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 
@@ -48,13 +46,14 @@ import static dan200.computercraft.api.ComputerCraftTags.Items.WIRED_MODEM;
 
 class RecipeGenerator extends FabricRecipeProvider
 {
-    RecipeGenerator( FabricDataGenerator generator )
+
+    RecipeGenerator( FabricDataOutput output )
     {
-        super( generator );
+        super( output );
     }
 
     @Override
-    protected void generateRecipes( @Nonnull Consumer<FinishedRecipe> add )
+    public void buildRecipes( @Nonnull Consumer<FinishedRecipe> add )
     {
         basicRecipes( add );
         diskColours( add );
@@ -78,7 +77,7 @@ class RecipeGenerator extends FabricRecipeProvider
         for( Colour colour : Colour.VALUES )
         {
             ShapelessRecipeBuilder
-                .shapeless( Registry.ModItems.DISK )
+                .shapeless( RecipeCategory.REDSTONE, Registry.ModItems.DISK )
                 .requires( ConventionalItemTags.REDSTONE_DUSTS )
                 .requires( Items.PAPER )
                 .requires( DyeItem.byColor( ofColour( colour ) ) )
@@ -108,7 +107,7 @@ class RecipeGenerator extends FabricRecipeProvider
             TurtleUpgrades.getVanillaUpgrades().forEach( upgrade -> {
                 ItemStack result = TurtleItemFactory.create( -1, null, -1, family, null, upgrade, -1, null );
                 ShapedRecipeBuilder
-                    .shaped( result.getItem() )
+                    .shaped( RecipeCategory.REDSTONE, result.getItem() )
                     .group( String.format( "%s:turtle_%s", ComputerCraft.MOD_ID, nameId ) )
                     .pattern( "#T" )
                     .define( 'T', base.getItem() )
@@ -142,7 +141,7 @@ class RecipeGenerator extends FabricRecipeProvider
             PocketUpgrades.getVanillaUpgrades().forEach( upgrade -> {
                 ItemStack result = PocketComputerItemFactory.create( -1, null, -1, family, upgrade );
                 ShapedRecipeBuilder
-                    .shaped( result.getItem() )
+                    .shaped( RecipeCategory.REDSTONE, result.getItem() )
                     .group( String.format( "%s:pocket_%s", ComputerCraft.MOD_ID, nameId ) )
                     .pattern( "#" )
                     .pattern( "P" )
@@ -163,7 +162,7 @@ class RecipeGenerator extends FabricRecipeProvider
     private void basicRecipes( @Nonnull Consumer<FinishedRecipe> add )
     {
         ShapedRecipeBuilder
-            .shaped( Registry.ModItems.CABLE, 6 )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModItems.CABLE, 6 )
             .pattern( " # " )
             .pattern( "#R#" )
             .pattern( " # " )
@@ -174,7 +173,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_NORMAL )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.COMPUTER_NORMAL )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
@@ -185,7 +184,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_ADVANCED )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.COMPUTER_ADVANCED )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
@@ -196,7 +195,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.COMPUTER_COMMAND )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.COMPUTER_COMMAND )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#G#" )
@@ -207,7 +206,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.DISK_DRIVE )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.DISK_DRIVE )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#R#" )
@@ -217,7 +216,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.MONITOR_NORMAL )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.MONITOR_NORMAL )
             .pattern( "###" )
             .pattern( "#G#" )
             .pattern( "###" )
@@ -227,7 +226,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.MONITOR_ADVANCED, 4 )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.MONITOR_ADVANCED, 4 )
             .pattern( "###" )
             .pattern( "#G#" )
             .pattern( "###" )
@@ -237,7 +236,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModItems.POCKET_COMPUTER_NORMAL )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModItems.POCKET_COMPUTER_NORMAL )
             .pattern( "###" )
             .pattern( "#A#" )
             .pattern( "#G#" )
@@ -249,7 +248,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModItems.POCKET_COMPUTER_ADVANCED )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModItems.POCKET_COMPUTER_ADVANCED )
             .pattern( "###" )
             .pattern( "#A#" )
             .pattern( "#G#" )
@@ -261,7 +260,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.PRINTER )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.PRINTER )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "#D#" )
@@ -272,7 +271,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.SPEAKER )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.SPEAKER )
             .pattern( "###" )
             .pattern( "#N#" )
             .pattern( "#R#" )
@@ -283,7 +282,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModItems.WIRED_MODEM )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModItems.WIRED_MODEM )
             .pattern( "###" )
             .pattern( "#R#" )
             .pattern( "###" )
@@ -294,18 +293,18 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapelessRecipeBuilder
-            .shapeless( Registry.ModBlocks.WIRED_MODEM_FULL )
+            .shapeless( RecipeCategory.REDSTONE, Registry.ModBlocks.WIRED_MODEM_FULL )
             .requires( Registry.ModItems.WIRED_MODEM )
             .unlockedBy( "has_modem", inventoryChange( WIRED_MODEM ) )
             .save( add, new ResourceLocation( ComputerCraft.MOD_ID, "wired_modem_full_from" ) );
         ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.WIRED_MODEM )
+            .shapeless( RecipeCategory.REDSTONE, Registry.ModItems.WIRED_MODEM )
             .requires( Registry.ModBlocks.WIRED_MODEM_FULL )
             .unlockedBy( "has_modem", inventoryChange( WIRED_MODEM ) )
             .save( add, new ResourceLocation( ComputerCraft.MOD_ID, "wired_modem_full_to" ) );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.WIRELESS_MODEM_NORMAL )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.WIRELESS_MODEM_NORMAL )
             .pattern( "###" )
             .pattern( "#E#" )
             .pattern( "###" )
@@ -315,7 +314,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapedRecipeBuilder
-            .shaped( Registry.ModBlocks.WIRELESS_MODEM_ADVANCED )
+            .shaped( RecipeCategory.REDSTONE, Registry.ModBlocks.WIRELESS_MODEM_ADVANCED )
             .pattern( "###" )
             .pattern( "#E#" )
             .pattern( "###" )
@@ -326,7 +325,7 @@ class RecipeGenerator extends FabricRecipeProvider
             .save( add );
 
         ShapelessRecipeBuilder
-            .shapeless( Items.PLAYER_HEAD )
+            .shapeless( RecipeCategory.REDSTONE, Items.PLAYER_HEAD )
             .requires( ExtraConventionalItemTags.SKULLS )
             .requires( Registry.ModItems.MONITOR_NORMAL )
             .unlockedBy( "has_monitor", inventoryChange( Registry.ModItems.MONITOR_NORMAL ) )
@@ -336,7 +335,7 @@ class RecipeGenerator extends FabricRecipeProvider
             );
 
         ShapelessRecipeBuilder
-            .shapeless( Items.PLAYER_HEAD )
+            .shapeless( RecipeCategory.REDSTONE, Items.PLAYER_HEAD )
             .requires( ExtraConventionalItemTags.SKULLS )
             .requires( Registry.ModItems.COMPUTER_NORMAL )
             .unlockedBy( "has_computer", inventoryChange( Registry.ModItems.COMPUTER_NORMAL ) )
@@ -346,14 +345,14 @@ class RecipeGenerator extends FabricRecipeProvider
             );
 
         ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.PRINTED_PAGES )
+            .shapeless( RecipeCategory.REDSTONE, Registry.ModItems.PRINTED_PAGES )
             .requires( Registry.ModItems.PRINTED_PAGE, 2 )
             .requires( Items.STRING )
             .unlockedBy( "has_printer", inventoryChange( Registry.ModBlocks.PRINTER ) )
             .save( RecipeWrapper.wrap( ImpostorShapelessRecipe.SERIALIZER, add ) );
 
         ShapelessRecipeBuilder
-            .shapeless( Registry.ModItems.PRINTED_BOOK )
+            .shapeless( RecipeCategory.REDSTONE, Registry.ModItems.PRINTED_BOOK )
             .requires( Items.LEATHER )
             .requires( Registry.ModItems.PRINTED_PAGE, 1 )
             .requires( Items.STRING )
@@ -387,9 +386,9 @@ class RecipeGenerator extends FabricRecipeProvider
         return tag;
     }
 
-    private static void addSpecial( Consumer<FinishedRecipe> add, SimpleRecipeSerializer<?> special )
+    private static void addSpecial( Consumer<FinishedRecipe> add, SimpleCraftingRecipeSerializer<?> special )
     {
-        var key = net.minecraft.core.Registry.RECIPE_SERIALIZER.getKey( special );
+        var key = BuiltInRegistries.RECIPE_SERIALIZER.getKey( special );
         SpecialRecipeBuilder.special( special ).save( add, key.toString() );
     }
 }

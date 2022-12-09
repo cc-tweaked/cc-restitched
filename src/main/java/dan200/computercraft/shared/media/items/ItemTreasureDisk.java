@@ -11,10 +11,8 @@ import dan200.computercraft.api.media.IMedia;
 import dan200.computercraft.core.filesystem.SubMount;
 import dan200.computercraft.shared.Registry;
 import dan200.computercraft.shared.util.Colour;
-import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -34,11 +32,6 @@ public class ItemTreasureDisk extends Item implements IMedia
     public ItemTreasureDisk( Properties settings )
     {
         super( settings );
-    }
-
-    @Override
-    public void fillItemCategory( @Nonnull CreativeModeTab group, @Nonnull NonNullList<ItemStack> stacks )
-    {
     }
 
     @Override

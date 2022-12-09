@@ -9,12 +9,11 @@ import dan200.computercraft.shared.Registry;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -59,19 +58,13 @@ public abstract class ItemBlockCable extends BlockItem
         return placeAt( world, pos, correctConnections( world, pos, state ), null );
     }
 
-    @Override
-    public void fillItemCategory( @Nonnull CreativeModeTab group, @Nonnull NonNullList<ItemStack> list )
-    {
-        if( allowedIn( group ) ) list.add( new ItemStack( this ) );
-    }
-
     @Nonnull
     @Override
     public String getDescriptionId()
     {
         if( translationKey == null )
         {
-            translationKey = Util.makeDescriptionId( "block", net.minecraft.core.Registry.ITEM.getKey( this ) );
+            translationKey = Util.makeDescriptionId( "block", BuiltInRegistries.ITEM.getKey( this ) );
         }
         return translationKey;
     }

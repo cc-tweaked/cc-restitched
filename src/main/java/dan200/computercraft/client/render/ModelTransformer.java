@@ -8,11 +8,11 @@ package dan200.computercraft.client.render;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector4f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public final class ModelTransformer
     static
     {
         identity = new Matrix4f();
-        identity.setIdentity();
+        identity.identity();
     }
 
     private ModelTransformer()
@@ -73,7 +73,7 @@ public final class ModelTransformer
                         1 );
 
                     // Transform the position
-                    pos.transform( transform );
+                    pos.mulTranspose( transform );
 
                     // Insert the position
                     vertexData[start] = Float.floatToRawIntBits( pos.x() );

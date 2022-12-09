@@ -13,14 +13,10 @@ import dan200.computercraft.shared.media.items.ItemTreasureDisk;
 import dan200.computercraft.shared.pocket.items.ItemPocketComputer;
 import dan200.computercraft.shared.util.Colour;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
-import net.fabricmc.fabric.api.event.client.ClientSpriteRegistryCallback;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 
-import java.util.HashSet;
 import java.util.function.Consumer;
 
 /**
@@ -65,13 +61,6 @@ public final class ClientRegistry
 
     private ClientRegistry() {}
 
-    public static void onTextureStitchEvent( TextureAtlas atlasTexture, ClientSpriteRegistryCallback.Registry registry )
-    {
-        for( String extra : EXTRA_TEXTURES )
-        {
-            registry.register( new ResourceLocation( ComputerCraft.MOD_ID, extra ) );
-        }
-    }
 
     @SuppressWarnings( "NewExpressionSideOnly" )
     public static void onModelBakeEvent( ResourceManager manager, Consumer<ResourceLocation> out )
@@ -111,7 +100,7 @@ public final class ClientRegistry
             Registry.ModBlocks.TURTLE_ADVANCED );
     }
 
-    private static BakedModel bake( ModelBakery loader, UnbakedModel model, ResourceLocation identifier )
+    /*private static BakedModel bake( ModelBakery loader, UnbakedModel model, ResourceLocation identifier )
     {
         model.getMaterials( loader::getModel, new HashSet<>() );
         return model.bake( loader,
@@ -120,5 +109,5 @@ public final class ClientRegistry
                 .apply( spriteIdentifier.texture() ),
             BlockModelRotation.X0_Y0,
             identifier );
-    }
+    }*/
 }

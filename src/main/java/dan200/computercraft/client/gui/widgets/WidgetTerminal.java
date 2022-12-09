@@ -330,14 +330,14 @@ public class WidgetTerminal extends AbstractWidget
         }
         else
         {
-            FixedWidthFontRenderer.drawEmptyTerminal( emitter, (float) x, (float) y, (float) width, (float) height );
+            FixedWidthFontRenderer.drawEmptyTerminal( emitter, (float) getX(), (float) getY(), (float) width, (float) height );
         }
 
         bufferSource.endBatch();
     }
 
     @Override
-    public void updateNarration( @Nonnull NarrationElementOutput output )
+    protected void updateWidgetNarration( NarrationElementOutput narrationElementOutput )
     {
         // I'm not sure what the right option is here.
     }

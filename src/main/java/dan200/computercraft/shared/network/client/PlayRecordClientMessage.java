@@ -11,7 +11,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
@@ -51,7 +51,7 @@ public class PlayRecordClientMessage implements NetworkMessage
         if( buf.readBoolean() )
         {
             name = buf.readUtf( Short.MAX_VALUE );
-            soundEvent = Registry.SOUND_EVENT.get( buf.readResourceLocation() );
+            soundEvent = BuiltInRegistries.SOUND_EVENT.get( buf.readResourceLocation() );
         }
         else
         {

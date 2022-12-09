@@ -42,7 +42,7 @@ public abstract class FakePlayer extends ServerPlayer
 {
     public FakePlayer( ServerLevel world, GameProfile gameProfile )
     {
-        super( world.getServer(), world, gameProfile, null );
+        super( world.getServer(), world, gameProfile );
         connection = new FakeNetHandler( this );
     }
 
@@ -209,12 +209,6 @@ public abstract class FakePlayer extends ServerPlayer
     //    {
     //    }
 
-
-    @Override
-    public void sendChatMessage( OutgoingPlayerChatMessage outgoingPlayerChatMessage, boolean bl, ChatType.Bound bound )
-    {
-    }
-
     @Override
     public void sendSystemMessage( Component component, boolean bl )
     {
@@ -263,6 +257,11 @@ public abstract class FakePlayer extends ServerPlayer
 
     @Override
     public void playNotifySound( SoundEvent soundEvent, SoundSource soundCategory, float volume, float pitch )
+    {
+    }
+
+    @Override
+    public void sendChatMessage( OutgoingChatMessage outgoingChatMessage, boolean bl, ChatType.Bound bound )
     {
     }
 }

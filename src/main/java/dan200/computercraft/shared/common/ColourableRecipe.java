@@ -11,18 +11,19 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 
 public final class ColourableRecipe extends CustomRecipe
 {
-    private ColourableRecipe( ResourceLocation id )
+    private ColourableRecipe( ResourceLocation id, CraftingBookCategory category )
     {
-        super( id );
+        super( id, category );
     }
 
     @Override
@@ -98,5 +99,5 @@ public final class ColourableRecipe extends CustomRecipe
         return SERIALIZER;
     }
 
-    public static final SimpleRecipeSerializer<?> SERIALIZER = new SimpleRecipeSerializer<>( ColourableRecipe::new );
+    public static final SimpleCraftingRecipeSerializer<?> SERIALIZER = new SimpleCraftingRecipeSerializer<>( ColourableRecipe::new );
 }

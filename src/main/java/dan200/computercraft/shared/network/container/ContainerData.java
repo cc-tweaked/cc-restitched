@@ -7,6 +7,7 @@ package dan200.computercraft.shared.network.container;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -45,7 +46,7 @@ public interface ContainerData
         ResourceLocation identifier, Function<FriendlyByteBuf, T> reader, Factory<C, T> factory
     )
     {
-        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+        return Registry.register( BuiltInRegistries.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
             factory.create( id, playerInventory, reader.apply( packetByteBuf ) )
         ) );
     }
@@ -54,7 +55,7 @@ public interface ContainerData
         ResourceLocation identifier, MenuType<C> type, Function<FriendlyByteBuf, T> reader, FixedFactory<C, T> factory
     )
     {
-        return Registry.register( Registry.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
+        return Registry.register( BuiltInRegistries.MENU, identifier, new ExtendedScreenHandlerType<>( ( id, playerInventory, packetByteBuf ) ->
             factory.create( type, id, playerInventory, reader.apply( packetByteBuf ) )
         ) );
     }

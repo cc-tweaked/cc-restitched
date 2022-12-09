@@ -10,9 +10,7 @@ import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.client.FrameInfo;
 import dan200.computercraft.client.render.text.DirectFixedWidthFontRenderer;
@@ -30,6 +28,8 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL31;
@@ -54,7 +54,7 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
     static
     {
         Matrix3f identity = new Matrix3f();
-        identity.setIdentity();
+        identity.identity();
         IDENTITY = identity;
     }
 
@@ -100,8 +100,8 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
             originPos.getZ() - monitorPos.getZ() + 0.5
         );
 
-        transform.mulPose( Vector3f.YN.rotationDegrees( yaw ) );
-        transform.mulPose( Vector3f.XP.rotationDegrees( pitch ) );
+        transform.mulPose( Axis.YN.rotationDegrees( yaw ) );
+        transform.mulPose( Axis.XP.rotationDegrees( pitch ) );
         transform.translate(
             -0.5 + TileMonitor.RENDER_BORDER + TileMonitor.RENDER_MARGIN,
             origin.getHeight() - 0.5 - (TileMonitor.RENDER_BORDER + TileMonitor.RENDER_MARGIN) + 0,
@@ -121,7 +121,12 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
             double yScale = ySize / pixelHeight;
             transform.pushPose();
             // Avoid PoseStack#scale to preserve normal matrix.
-            transform.last().pose().multiply( Matrix4f.createScaleMatrix( (float) xScale, (float) -yScale, 1.0f ) );
+            Matrix4f scale = new Matrix4f();
+            scale.m00( (float) xScale );
+            scale.m11( (float) -yScale );
+            scale.m22( 1.0f );
+
+            transform.last().pose().mul0( scale );
 
             renderTerminal( bufferSource, transform, originTerminal, (float) (MARGIN / xScale), (float) (MARGIN / yScale) );
 
@@ -224,8 +229,8 @@ public class TileEntityMonitorRenderer implements BlockEntityRenderer<TileMonito
                 // For some reason, if Canvas is present we need to do this matrix multiplication ourselves.
                 if( MonitorRenderer.canvasModPresent )
                 {
-                    var modelViewMatrix = RenderSystem.getModelViewMatrix().copy();
-                    modelViewMatrix.multiply( matrix );
+                    var modelViewMatrix = new Matrix4f( RenderSystem.getModelViewMatrix() );
+                    modelViewMatrix.mul0( matrix );
                     matrix = modelViewMatrix;
                 }
 

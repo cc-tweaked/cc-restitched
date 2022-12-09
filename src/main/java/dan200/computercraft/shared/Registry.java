@@ -48,10 +48,12 @@ import dan200.computercraft.shared.turtle.upgrades.TurtleCraftingTable;
 import dan200.computercraft.shared.turtle.upgrades.TurtleModem;
 import dan200.computercraft.shared.turtle.upgrades.TurtleSpeaker;
 import dan200.computercraft.shared.turtle.upgrades.TurtleTool;
-import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
+import dan200.computercraft.shared.util.Colour;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.cauldron.CauldronInteraction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -67,7 +69,6 @@ import net.minecraft.world.level.material.MaterialColor;
 
 import java.util.function.BiFunction;
 
-import static net.minecraft.core.Registry.BLOCK_ENTITY_TYPE;
 
 public final class Registry
 {
@@ -95,7 +96,7 @@ public final class Registry
     {
         public static <T extends Block> T register( String id, T value )
         {
-            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.BLOCK, new ResourceLocation( MOD_ID, id ), value );
+            return net.minecraft.core.Registry.register( BuiltInRegistries.BLOCK, new ResourceLocation( MOD_ID, id ), value );
         }
 
         public static final BlockMonitor MONITOR_NORMAL =
@@ -167,7 +168,7 @@ public final class Registry
         private static <T extends BlockEntity> BlockEntityType<T> ofBlock( Block block, String id, BiFunction<BlockPos, BlockState, T> factory )
         {
             BlockEntityType<T> blockEntityType = FabricBlockEntityTypeBuilder.create( factory::apply, block ).build();
-            return net.minecraft.core.Registry.register( BLOCK_ENTITY_TYPE, new ResourceLocation( MOD_ID, id ), blockEntityType );
+            return net.minecraft.core.Registry.register( BuiltInRegistries.BLOCK_ENTITY_TYPE, new ResourceLocation( MOD_ID, id ), blockEntityType );
         }
 
         public static final BlockEntityType<TileMonitor> MONITOR_NORMAL =
@@ -215,11 +216,6 @@ public final class Registry
 
     public static final class ModItems
     {
-        private static final CreativeModeTab mainItemGroup = FabricItemGroupBuilder.build(
-            new ResourceLocation( MOD_ID, "main" ),
-            () -> new ItemStack( ModBlocks.COMPUTER_NORMAL )
-        ).setRecipeFolderName( MOD_ID );
-
         public static final ItemComputer COMPUTER_NORMAL =
             ofBlock( ModBlocks.COMPUTER_NORMAL, ItemComputer::new );
 
@@ -286,20 +282,69 @@ public final class Registry
         public static final ItemBlockCable.WiredModem WIRED_MODEM =
             register( "wired_modem", new ItemBlockCable.WiredModem( ModBlocks.CABLE, properties() ) );
 
+        private static final CreativeModeTab mainItemGroup = FabricItemGroup.builder( new ResourceLocation( MOD_ID, "main" ) )
+            .icon( () -> new ItemStack( ModBlocks.COMPUTER_NORMAL ) )
+            .displayItems( ( featureFlagSet, output, operator ) -> {
+                output.accept( COMPUTER_NORMAL );
+                output.accept( COMPUTER_ADVANCED );
+
+                if ( operator )
+                {
+                    output.accept( COMPUTER_COMMAND );
+                }
+
+                output.accept( POCKET_COMPUTER_NORMAL.create( -1, null, -1, null ) );
+                dan200.computercraft.shared.PocketUpgrades.getVanillaUpgrades().map( x -> POCKET_COMPUTER_NORMAL.create( -1, null, -1, x ) ).forEach( output::accept );
+
+                output.accept( POCKET_COMPUTER_ADVANCED.create( -1, null, -1, null ) );
+                dan200.computercraft.shared.PocketUpgrades.getVanillaUpgrades().map( x -> POCKET_COMPUTER_ADVANCED.create( -1, null, -1, x ) ).forEach( output::accept );
+
+
+                output.accept( TURTLE_NORMAL.create( -1, null, -1, null, null, 0, null ) );
+                dan200.computercraft.shared.TurtleUpgrades.getVanillaUpgrades()
+                    .map( x -> TURTLE_NORMAL.create( -1, null, -1, null, x, 0, null ) )
+                    .forEach( output::accept );
+
+                output.accept( TURTLE_ADVANCED.create( -1, null, -1, null, null, 0, null ) );
+                dan200.computercraft.shared.TurtleUpgrades.getVanillaUpgrades()
+                    .map( x -> TURTLE_ADVANCED.create( -1, null, -1, null, x, 0, null ) )
+                    .forEach( output::accept );
+
+                for( int colour = 0; colour < 16; colour++ )
+                {
+                    output.accept( DISK.createFromIDAndColour( -1, null, Colour.VALUES[colour].getHex() ) );
+                }
+
+                output.accept( PRINTED_PAGE );
+                output.accept( PRINTED_PAGES );
+                output.accept( PRINTED_BOOK );
+
+                output.accept( SPEAKER );
+                output.accept( DISK_DRIVE );
+                output.accept( PRINTER );
+                output.accept( MONITOR_NORMAL );
+                output.accept( MONITOR_ADVANCED );
+                output.accept( WIRELESS_MODEM_NORMAL );
+                output.accept( WIRELESS_MODEM_ADVANCED );
+                output.accept( WIRED_MODEM_FULL );
+                output.accept( WIRED_MODEM );
+                output.accept( CABLE );
+            } )
+            .build();
 
         private static <B extends Block, I extends Item> I ofBlock( B parent, BiFunction<B, Item.Properties, I> supplier )
         {
-            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.ITEM, net.minecraft.core.Registry.BLOCK.getKey( parent ), supplier.apply( parent, properties() ) );
+            return net.minecraft.core.Registry.register( BuiltInRegistries.ITEM, BuiltInRegistries.BLOCK.getKey( parent ), supplier.apply( parent, properties() ) );
         }
 
         private static Item.Properties properties()
         {
-            return new Item.Properties().tab( mainItemGroup );
+            return new Item.Properties();
         }
 
         private static <T extends Item> T register( String id, T item )
         {
-            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.ITEM, new ResourceLocation( MOD_ID, id ), item );
+            return net.minecraft.core.Registry.register( BuiltInRegistries.ITEM, new ResourceLocation( MOD_ID, id ), item );
         }
     }
 
@@ -331,7 +376,7 @@ public final class Registry
 
         private static <T extends AbstractContainerMenu> MenuType<T> registerSimple( String id, MenuType.MenuSupplier<T> function )
         {
-            return net.minecraft.core.Registry.register( net.minecraft.core.Registry.MENU, new ResourceLocation( MOD_ID, id ), new MenuType<T>( function ) );
+            return net.minecraft.core.Registry.register( BuiltInRegistries.MENU, new ResourceLocation( MOD_ID, id ), new MenuType<T>( function ) );
         }
     }
 

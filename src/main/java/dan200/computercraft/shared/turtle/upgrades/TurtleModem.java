@@ -65,20 +65,20 @@ public class TurtleModem extends AbstractTurtleUpgrade
     private class Models
     {
         private final ModelResourceLocation leftOffModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_off_left", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_off_left", "inventory" );
+            new ModelResourceLocation( "computercraft", "turtle_modem_advanced_off_left", "inventory" ) :
+            new ModelResourceLocation( "computercraft", "turtle_modem_normal_off_left", "inventory" );
 
         private final ModelResourceLocation rightOffModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_off_right", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_off_right", "inventory" );
+            new ModelResourceLocation( "computercraft", "turtle_modem_advanced_off_right", "inventory" ) :
+            new ModelResourceLocation( "computercraft", "turtle_modem_normal_off_right", "inventory" );
 
         private final ModelResourceLocation leftOnModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_on_left", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_on_left", "inventory" );
+            new ModelResourceLocation( "computercraft", "turtle_modem_advanced_on_left", "inventory" ) :
+            new ModelResourceLocation( "computercraft", "turtle_modem_normal_on_left", "inventory" );
 
         private final ModelResourceLocation rightOnModel = advanced ?
-            new ModelResourceLocation( "computercraft:turtle_modem_advanced_on_right", "inventory" ) :
-            new ModelResourceLocation( "computercraft:turtle_modem_normal_on_right", "inventory" );
+            new ModelResourceLocation( "computercraft", "turtle_modem_advanced_on_right", "inventory" ) :
+            new ModelResourceLocation( "computercraft", "turtle_modem_normal_on_right", "inventory" );
     }
 
     private final boolean advanced;

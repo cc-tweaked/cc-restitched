@@ -7,8 +7,6 @@ package dan200.computercraft.client.render.text;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import dan200.computercraft.client.FrameInfo;
 import dan200.computercraft.core.terminal.Terminal;
 import dan200.computercraft.core.terminal.TextBuffer;
@@ -16,6 +14,8 @@ import dan200.computercraft.shared.util.Colour;
 import dan200.computercraft.shared.util.Palette;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import javax.annotation.Nonnull;
 
@@ -248,12 +248,12 @@ public final class FixedWidthFontRenderer
         drawQuad( emitter, x, y, 0, width, height, BLACK, FULL_BRIGHT_LIGHTMAP );
     }
 
-    public record QuadEmitter(Matrix4f poseMatrix, Vector3f normal, VertexConsumer consumer ) {}
+    public record QuadEmitter( Matrix4f poseMatrix, Vector3f normal, VertexConsumer consumer ) {}
 
     public static QuadEmitter toVertexConsumer( PoseStack transform, VertexConsumer consumer )
     {
         var normal = new Vector3f( 0f, 0f, 1f );
-        normal.transform( transform.last().normal() );
+        normal.mulTranspose( transform.last().normal() );
         return new QuadEmitter( transform.last().pose(), normal, consumer );
     }
 

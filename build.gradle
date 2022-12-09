@@ -118,7 +118,7 @@ dependencies {
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-api-fabric:6.0.254-alpha"
     //modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:6.0.254-alpha"
 
-    modCompileOnly "maven.modrinth:iris:1.19.x-v1.2.5"
+    modCompileOnly "maven.modrinth:iris:1.19.3-v1.4.6"
 
     // For running with Iris. Can be ignored most of the time.
     // modRuntimeOnly "maven.modrinth:iris:1.19.x-v1.2.5"

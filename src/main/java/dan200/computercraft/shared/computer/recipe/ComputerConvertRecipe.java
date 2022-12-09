@@ -10,6 +10,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
@@ -25,7 +26,7 @@ public abstract class ComputerConvertRecipe extends ShapedRecipe
 
     public ComputerConvertRecipe( ResourceLocation identifier, String group, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result )
     {
-        super( identifier, group, width, height, ingredients, result );
+        super( identifier, group, CraftingBookCategory.REDSTONE, width, height, ingredients, result );
         this.group = group;
     }
 

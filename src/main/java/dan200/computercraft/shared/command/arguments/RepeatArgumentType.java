@@ -17,7 +17,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
@@ -134,7 +134,7 @@ public final class RepeatArgumentType<T, U> implements ArgumentType<List<T>>
         public void serializeToNetwork( @Nonnull Template arg, @Nonnull FriendlyByteBuf buf )
         {
             buf.writeBoolean( arg.flatten );
-            buf.writeId( Registry.COMMAND_ARGUMENT_TYPE, arg.child.type() );
+            buf.writeId( BuiltInRegistries.COMMAND_ARGUMENT_TYPE, arg.child.type() );
             arg.child.type().serializeToNetwork( arg.child, buf );
             buf.writeComponent( getMessage( arg ) );
         }
@@ -146,7 +146,7 @@ public final class RepeatArgumentType<T, U> implements ArgumentType<List<T>>
         {
             boolean isList = buf.readBoolean();
 
-            ArgumentTypeInfo serializer = buf.readById( Registry.COMMAND_ARGUMENT_TYPE );
+            ArgumentTypeInfo serializer = buf.readById( BuiltInRegistries.COMMAND_ARGUMENT_TYPE );
 
             ArgumentTypeInfo.Template child = serializer.deserializeFromNetwork( buf );
             Component message = buf.readComponent();

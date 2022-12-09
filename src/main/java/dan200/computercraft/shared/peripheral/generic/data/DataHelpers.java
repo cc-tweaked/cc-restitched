@@ -6,7 +6,7 @@
 package dan200.computercraft.shared.peripheral.generic.data;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -38,21 +38,21 @@ public final class DataHelpers
     @Nullable
     public static String getId( @Nonnull Block block )
     {
-        ResourceLocation id = Registry.BLOCK.getKey( block );
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey( block );
         return id == null ? null : id.toString();
     }
 
     @Nullable
     public static String getId( @Nonnull Item item )
     {
-        ResourceLocation id = Registry.ITEM.getKey( item );
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey( item );
         return id == null ? null : id.toString();
     }
 
     @Nullable
     public static String getId( @Nonnull Enchantment enchantment )
     {
-        ResourceLocation id = Registry.ENCHANTMENT.getKey( enchantment );
+        ResourceLocation id = BuiltInRegistries.ENCHANTMENT.getKey( enchantment );
         return id == null ? null : id.toString();
     }
 }

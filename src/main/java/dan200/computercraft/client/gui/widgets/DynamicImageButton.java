@@ -52,7 +52,7 @@ public class DynamicImageButton extends Button
         OnPress onPress, NonNullSupplier<List<Component>> tooltip
     )
     {
-        super( x, y, width, height, Component.empty(), onPress );
+        super( x, y, width, height, Component.empty(), onPress, DEFAULT_NARRATION );
         this.screen = screen;
         this.textureWidth = textureWidth;
         this.textureHeight = textureHeight;
@@ -72,7 +72,7 @@ public class DynamicImageButton extends Button
         int yTex = yTexStart;
         if( isHoveredOrFocused() ) yTex += yDiffTex;
 
-        blit( stack, x, y, xTexStart.getAsInt(), yTex, width, height, textureWidth, textureHeight );
+        blit( stack, getX(), getY(), xTexStart.getAsInt(), yTex, width, height, textureWidth, textureHeight );
         RenderSystem.enableDepthTest();
 
         if( isHovered ) renderToolTip( stack, mouseX, mouseY );
@@ -86,7 +86,6 @@ public class DynamicImageButton extends Button
         return tooltip.isEmpty() ? Component.empty() : tooltip.get( 0 );
     }
 
-    @Override
     public void renderToolTip( @Nonnull PoseStack stack, int mouseX, int mouseY )
     {
         List<Component> tooltip = this.tooltip.get();

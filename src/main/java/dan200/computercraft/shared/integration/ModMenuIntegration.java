@@ -21,10 +21,8 @@ import net.minecraft.client.gui.components.OptionsList;
 import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 
 import java.util.Arrays;
-import java.util.List;
 
 // A poor mod menu integration just for testing the monitor rendering changes we've been making :)
 
@@ -57,9 +55,9 @@ public class ModMenuIntegration implements ModMenuApi
 
                     this.addWidget( this.list );
 
-                    this.addRenderableWidget( new Button( this.width / 2 - 100, this.height - 27, 200, 20, CommonComponents.GUI_DONE, button -> {
+                    this.addRenderableWidget( Button.builder( CommonComponents.GUI_DONE, button -> {
                         this.minecraft.setScreen( this.lastScreen );
-                    } ) );
+                    } ).width( this.width / 2 - 100 ).pos( 200, 20 ).build() );
                 }
 
                 @Override
@@ -77,8 +75,8 @@ public class ModMenuIntegration implements ModMenuApi
                     this.list.render( poseStack, i, j, f );
                     drawCenteredString( poseStack, this.font, this.title, this.width / 2, 20, 16777215 );
                     super.render( poseStack, i, j, f );
-                    List<FormattedCharSequence> list = tooltipAt( this.list, i, j );
-                    this.renderTooltip( poseStack, list, i, j );
+                    //List<FormattedCharSequence> list = tooltipAt( this.list, i, j );
+                    //this.renderTooltip( poseStack, list, i, j );
                 }
             };
         };

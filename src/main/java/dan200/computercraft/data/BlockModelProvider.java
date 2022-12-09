@@ -13,7 +13,7 @@ import dan200.computercraft.shared.peripheral.modem.wired.BlockWiredModemFull;
 import dan200.computercraft.shared.peripheral.modem.wireless.BlockWirelessModem;
 import dan200.computercraft.shared.peripheral.monitor.BlockMonitor;
 import dan200.computercraft.shared.peripheral.monitor.MonitorEdgeState;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.data.models.BlockModelGenerators;
@@ -30,7 +30,7 @@ import java.util.Optional;
 import static net.minecraft.data.models.model.ModelLocationUtils.getModelLocation;
 import static net.minecraft.data.models.model.TextureMapping.getBlockTexture;
 
-public class BlockModelProvider extends FabricModelProvider
+class BlockModelProvider extends FabricModelProvider
 {
     private static final ModelTemplate MONITOR_BASE = new ModelTemplate(
         Optional.of( new ResourceLocation( ComputerCraft.MOD_ID, "block/monitor_base" ) ),
@@ -43,7 +43,7 @@ public class BlockModelProvider extends FabricModelProvider
         TextureSlot.FRONT, TextureSlot.BACK
     );
 
-    public BlockModelProvider( FabricDataGenerator dataGenerator )
+    BlockModelProvider( FabricDataOutput dataGenerator )
     {
         super( dataGenerator );
     }

@@ -6,7 +6,7 @@
 package dan200.computercraft.api;
 
 import dan200.computercraft.ComputerCraft;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -26,7 +26,7 @@ public class ComputerCraftTags
 
         private static TagKey<Item> make( String name )
         {
-            return TagKey.create( Registry.ITEM_REGISTRY, new ResourceLocation( ComputerCraft.MOD_ID, name ) );
+            return TagKey.create( Registries.ITEM, new ResourceLocation( ComputerCraft.MOD_ID, name ) );
         }
     }
 
@@ -59,7 +59,7 @@ public class ComputerCraftTags
 
         private static TagKey<Block> make( String name )
         {
-            return TagKey.create( Registry.BLOCK_REGISTRY, new ResourceLocation( ComputerCraft.MOD_ID, name ) );
+            return TagKey.create( Registries.BLOCK, new ResourceLocation( ComputerCraft.MOD_ID, name ) );
         }
     }
 }

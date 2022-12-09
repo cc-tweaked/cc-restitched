@@ -27,8 +27,8 @@ public class TurtleSpeaker extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private static class Models
     {
-        private static ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft:turtle_speaker_upgrade_left", "inventory" );
-        private static ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft:turtle_speaker_upgrade_right", "inventory" );
+        private static ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft", "turtle_speaker_upgrade_left", "inventory" );
+        private static ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft", "turtle_speaker_upgrade_right", "inventory" );
     }
 
     private static class Peripheral extends UpgradeSpeakerPeripheral

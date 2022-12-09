@@ -7,8 +7,8 @@ package dan200.computercraft.data;
 
 import com.google.common.collect.Multimap;
 import dan200.computercraft.ComputerCraft;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.data.CachedOutput;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -17,10 +17,10 @@ import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 /**
@@ -28,15 +28,15 @@ import java.util.function.BiConsumer;
  */
 abstract class LootTableProvider implements DataProvider
 {
-    private final DataGenerator generator;
+    private final FabricDataOutput output;
 
-    LootTableProvider( DataGenerator generator )
+    LootTableProvider( FabricDataOutput output )
     {
-        this.generator = generator;
+        this.output = output;
     }
 
     @Override
-    public void run( @Nonnull CachedOutput cache )
+    public CompletableFuture<?> run( @Nonnull CachedOutput cache )
     {
         Map<ResourceLocation, LootTable> tables = new HashMap<>();
         ValidationContext validation = new ValidationContext( LootContextParamSets.ALL_PARAMS, x -> null, tables::get );
@@ -62,11 +62,16 @@ abstract class LootTableProvider implements DataProvider
             {
                 DataProvider.saveStable( cache, LootTables.serialize( value ), path );
             }
-            catch( IOException e )
+            catch( Throwable e )
             {
                 ComputerCraft.log.error( "Couldn't save loot table {}", path, e );
             }
         } );
+
+        CompletableFuture<?> future = new CompletableFuture<>();
+        future.complete( null );
+
+        return future;
     }
 
     protected abstract void registerLoot( BiConsumer<ResourceLocation, LootTable> add );
@@ -80,7 +85,7 @@ abstract class LootTableProvider implements DataProvider
 
     private Path getPath( ResourceLocation id )
     {
-        return generator.getOutputFolder()
+        return output.getOutputFolder()
             .resolve( "data" ).resolve( id.getNamespace() ).resolve( "loot_tables" )
             .resolve( id.getPath() + ".json" );
     }

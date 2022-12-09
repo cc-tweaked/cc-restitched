@@ -15,10 +15,7 @@ import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
@@ -28,9 +25,9 @@ public class DiskRecipe extends CustomRecipe
     private final Ingredient paper = Ingredient.of( Items.PAPER );
     private final Ingredient redstone = Ingredient.of( ConventionalItemTags.REDSTONE_DUSTS );
 
-    public DiskRecipe( ResourceLocation id )
+    public DiskRecipe( ResourceLocation id, CraftingBookCategory category )
     {
-        super( id );
+        super( id, category );
     }
 
     @Override
@@ -107,5 +104,5 @@ public class DiskRecipe extends CustomRecipe
         return SERIALIZER;
     }
 
-    public static final SimpleRecipeSerializer<DiskRecipe> SERIALIZER = new SimpleRecipeSerializer<>( DiskRecipe::new );
+    public static final SimpleCraftingRecipeSerializer<DiskRecipe> SERIALIZER = new SimpleCraftingRecipeSerializer<>( DiskRecipe::new );
 }

@@ -20,9 +20,11 @@ import dan200.computercraft.shared.network.client.SpeakerStopClientMessage;
 import dan200.computercraft.shared.util.PauseAwareTimer;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket;
+import net.minecraft.core.Holder;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
@@ -84,7 +86,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
                 lastPlayTime = clock;
                 server.getPlayerList().broadcast(
                     null, pos.x, pos.y, pos.z, sound.volume * 16, level.dimension(),
-                    new ClientboundCustomSoundPacket( sound.location, SoundSource.RECORDS, pos, sound.volume, sound.pitch, 0 )
+                    new ClientboundSoundPacket( Holder.direct( SoundEvent.createFixedRangeEvent( sound.location, 16 ) ), SoundSource.RECORDS, pos.x, pos.y, pos.z, sound.volume, sound.pitch, 0 )
                 );
             }
             pendingNotes.clear();
@@ -236,7 +238,7 @@ public abstract class SpeakerPeripheral implements IPeripheral
         synchronized( pendingNotes )
         {
             if( pendingNotes.size() >= ComputerCraft.maxNotesPerTick ) return false;
-            pendingNotes.add( new PendingSound( instrument.getSoundEvent().getLocation(), volume, (float) Math.pow( 2.0, (pitch - 12.0) / 12.0 ) ) );
+            pendingNotes.add( new PendingSound( instrument.getSoundEvent().value().getLocation(), volume, (float) Math.pow( 2.0, (pitch - 12.0) / 12.0 ) ) );
         }
         return true;
     }

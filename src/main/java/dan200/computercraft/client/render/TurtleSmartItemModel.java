@@ -75,7 +75,7 @@ public class TurtleSmartItemModel implements BakedModel
         this.colourModel = colourModel;
 
         // this actually works I think, trust me
-        overrides = new ItemOverrides( null, null, null, Collections.emptyList() )
+        overrides = new ItemOverrides( null, null, Collections.emptyList() )
         {
             @Nonnull
             @Override

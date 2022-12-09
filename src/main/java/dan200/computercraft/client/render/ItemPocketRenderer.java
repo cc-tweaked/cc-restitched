@@ -7,8 +7,7 @@ package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.client.render.text.FixedWidthFontRenderer;
 import dan200.computercraft.core.terminal.Terminal;
@@ -19,6 +18,7 @@ import dan200.computercraft.shared.util.Colour;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
 
 import static dan200.computercraft.client.render.ComputerBorderRenderer.*;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
@@ -59,14 +59,19 @@ public final class ItemPocketRenderer extends ItemMapLikeRenderer
         // Setup various transformations. Note that these are partially adapted from the corresponding method
         // in ItemRenderer
         transform.pushPose();
-        transform.mulPose( Vector3f.YP.rotationDegrees( 180f ) );
-        transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
+        transform.mulPose( Axis.YP.rotationDegrees( 180f ) );
+        transform.mulPose( Axis.ZP.rotationDegrees( 180f ) );
         transform.scale( 0.5f, 0.5f, 0.5f );
 
         float scale = 0.75f / Math.max( width + BORDER * 2, height + BORDER * 2 + LIGHT_HEIGHT );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( scale, scale, -1.0f ) );
-        transform.last().normal().mul( -1.0f );
+        Matrix4f scaleMat = new Matrix4f();
+        scaleMat.m00( scale );
+        scaleMat.m11( scale );
+        scaleMat.m22( -1.0f );
+
+        transform.last().pose().mul0( scaleMat );
+        transform.last().normal().scale( -1.0f );
         transform.translate( -0.5 * width, -0.5 * height, 0 );
 
         // Render the main frame

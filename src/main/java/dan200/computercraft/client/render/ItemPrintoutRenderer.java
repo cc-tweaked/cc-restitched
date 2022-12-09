@@ -6,11 +6,11 @@
 package dan200.computercraft.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import dan200.computercraft.shared.media.items.ItemPrintout;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix4f;
 
 import static dan200.computercraft.client.render.PrintoutRenderer.*;
 import static dan200.computercraft.client.render.text.FixedWidthFontRenderer.FONT_HEIGHT;
@@ -35,10 +35,15 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
 
         // Move a little bit forward to ensure we're not clipping with the frame
         transform.translate( 0.0f, 0.0f, -0.001f );
-        transform.mulPose( Vector3f.ZP.rotationDegrees( 180f ) );
+        transform.mulPose( Axis.ZP.rotationDegrees( 180f ) );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.95f, 0.95f, -0.95f ) );
-        transform.last().normal().mul( -1.0f );
+        Matrix4f scaleMat = new Matrix4f();
+        scaleMat.m00( 0.95f );
+        scaleMat.m11( 0.95f );
+        scaleMat.m22( -0.95f );
+
+        transform.last().pose().mul0( scaleMat );
+        transform.last().normal().scale( -1.0f );
 
         //transform.last().normal().mul( -1.0f );
         transform.translate( -0.5f, -0.5f, 0.0f );
@@ -51,10 +56,15 @@ public final class ItemPrintoutRenderer extends ItemMapLikeRenderer
     @Override
     protected void renderItem( PoseStack transform, MultiBufferSource renderer, ItemStack stack, int light )
     {
-        transform.mulPose( Vector3f.XP.rotationDegrees( 180f ) );
+        transform.mulPose( Axis.XP.rotationDegrees( 180f ) );
         // Avoid PoseStack#scale to preserve normal matrix, and fix the normals ourselves.
-        transform.last().pose().multiply( Matrix4f.createScaleMatrix( 0.42f, 0.42f, -0.42f ) );
-        transform.last().normal().mul( -1.0f );
+        Matrix4f scaleMat = new Matrix4f();
+        scaleMat.m00( 0.42f );
+        scaleMat.m11( 0.42f );
+        scaleMat.m22( -0.42f );
+
+        transform.last().pose().mul0( scaleMat );
+        transform.last().normal().scale( -1.0f );
         transform.translate( -0.5f, -0.48f, 0.0f );
 
         drawPrintout( transform, renderer, stack, light );

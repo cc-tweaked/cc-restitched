@@ -12,13 +12,11 @@ import dan200.computercraft.shared.common.IColouredItem;
 import dan200.computercraft.shared.computer.core.ComputerFamily;
 import dan200.computercraft.shared.computer.items.ItemComputerBase;
 import dan200.computercraft.shared.turtle.blocks.BlockTurtle;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 
@@ -54,19 +52,6 @@ public class ItemTurtle extends ItemComputerBase implements ITurtleItem
         }
 
         return stack;
-    }
-
-    @Override
-    public void fillItemCategory( @Nonnull CreativeModeTab group, @Nonnull NonNullList<ItemStack> list )
-    {
-        if( !allowedIn( group ) ) return;
-
-        ComputerFamily family = getFamily();
-
-        list.add( create( -1, null, -1, null, null, 0, null ) );
-        TurtleUpgrades.getVanillaUpgrades()
-            .map( x -> create( -1, null, -1, null, x, 0, null ) )
-            .forEach( list::add );
     }
 
     @Nonnull

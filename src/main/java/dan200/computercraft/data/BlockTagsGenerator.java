@@ -6,25 +6,28 @@
 package dan200.computercraft.data;
 
 import dan200.computercraft.shared.Registry;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
+
 import static dan200.computercraft.api.ComputerCraftTags.Blocks.*;
 
 class BlockTagsGenerator extends FabricTagProvider.BlockTagProvider
 {
-    BlockTagsGenerator( FabricDataGenerator generator )
+    BlockTagsGenerator( FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture )
     {
-        super( generator );
+        super( output, registriesFuture );
     }
 
     @Override
-    protected void generateTags()
+    protected void addTags( HolderLookup.Provider arg )
     {
         // Items
         tag( COMPUTER ).add(
@@ -76,7 +79,7 @@ class BlockTagsGenerator extends FabricTagProvider.BlockTagProvider
     }
 
     @Override
-    protected FabricTagProvider<Block>.FabricTagBuilder<Block> tag( @NotNull TagKey<Block> tagKey )
+    protected FabricTagProvider<Block>.FabricTagBuilder tag( @NotNull TagKey<Block> tagKey )
     {
         // Fun mapping weirdness here!
         return super.getOrCreateTagBuilder( tagKey );

@@ -13,12 +13,13 @@ public class Generators implements DataGeneratorEntrypoint
     @Override
     public void onInitializeDataGenerator( FabricDataGenerator generator )
     {
-        generator.addProvider( new RecipeGenerator( generator ) );
-        generator.addProvider( new LootTableGenerator( generator ) );
-        generator.addProvider( new BlockModelProvider( generator ) );
+        FabricDataGenerator.Pack pack = generator.createPack();
 
-        BlockTagsGenerator blockTags = new BlockTagsGenerator( generator );
-        generator.addProvider( blockTags );
-        generator.addProvider( new ItemTagsGenerator( generator, blockTags ) );
+        pack.addProvider( RecipeGenerator::new );
+        pack.addProvider( LootTableGenerator::new );
+        pack.addProvider( BlockModelProvider::new );
+
+        pack.addProvider( BlockTagsGenerator::new );
+        pack.addProvider( ItemTagsGenerator::new );
     }
 }

@@ -51,7 +51,6 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
         KeyMapping.releaseAll();
 
         super.init();
-        minecraft.keyboardHandler.setSendRepeatsToGui( true );
 
         terminal = addWidget( new WidgetTerminal( (ClientComputer) menu.getComputer(), 0, 0, ComputerCraft.pocketTermWidth, ComputerCraft.pocketTermHeight ) );
         terminal.visible = false;
@@ -63,7 +62,6 @@ public class NoTermComputerScreen<T extends ContainerComputerBase> extends Scree
     public final void removed()
     {
         super.removed();
-        minecraft.keyboardHandler.setSendRepeatsToGui( false );
     }
 
     @Override

@@ -42,6 +42,7 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.packs.PackType;
@@ -168,6 +169,6 @@ public final class ComputerCraftProxyCommon
 
     private static void registerCondition( String name, LootItemConditionType serializer )
     {
-        Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, name ), serializer );
+        Registry.register( BuiltInRegistries.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, name ), serializer );
     }
 }

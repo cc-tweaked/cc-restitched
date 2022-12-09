@@ -28,6 +28,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,20 +104,20 @@ public final class ComputerCraft
     public static void onInitialize()
     {
         ComputerCraftProxyCommon.init();
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "colour" ), ColourableRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "computer_upgrade" ), ComputerUpgradeRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER,
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "colour" ), ColourableRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "computer_upgrade" ), ComputerUpgradeRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER,
             new ResourceLocation( ComputerCraft.MOD_ID, "pocket_computer_upgrade" ),
             PocketComputerUpgradeRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "disk" ), DiskRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "printout" ), PrintoutRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "turtle" ), TurtleRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "turtle_upgrade" ), TurtleUpgradeRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "impostor_shaped" ), ImpostorRecipe.SERIALIZER );
-        Registry.register( Registry.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "impostor_shapeless" ), ImpostorShapelessRecipe.SERIALIZER );
-        Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "block_named" ), BlockNamedEntityLootCondition.TYPE );
-        Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "player_creative" ), PlayerCreativeLootCondition.TYPE );
-        Registry.register( Registry.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "has_id" ), HasComputerIdLootCondition.TYPE );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "disk" ), DiskRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "printout" ), PrintoutRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "turtle" ), TurtleRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "turtle_upgrade" ), TurtleUpgradeRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "impostor_shaped" ), ImpostorRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.RECIPE_SERIALIZER, new ResourceLocation( ComputerCraft.MOD_ID, "impostor_shapeless" ), ImpostorShapelessRecipe.SERIALIZER );
+        Registry.register( BuiltInRegistries.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "block_named" ), BlockNamedEntityLootCondition.TYPE );
+        Registry.register( BuiltInRegistries.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "player_creative" ), PlayerCreativeLootCondition.TYPE );
+        Registry.register( BuiltInRegistries.LOOT_CONDITION_TYPE, new ResourceLocation( ComputerCraft.MOD_ID, "has_id" ), HasComputerIdLootCondition.TYPE );
         init();
         GameInstanceUtils.init();
         FabricLoader.getInstance().getModContainer( MOD_ID ).ifPresent( modContainer -> {

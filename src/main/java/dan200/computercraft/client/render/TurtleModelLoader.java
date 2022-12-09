@@ -5,7 +5,6 @@
  */
 package dan200.computercraft.client.render;
 
-import com.mojang.datafixers.util.Pair;
 import dan200.computercraft.ComputerCraft;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,9 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Environment( EnvType.CLIENT )
 public final class TurtleModelLoader
@@ -67,18 +64,6 @@ public final class TurtleModelLoader
             this.family = family;
         }
 
-        @Override
-        public Collection<Material> getMaterials( Function<ResourceLocation, UnbakedModel> modelGetter,
-                                                  Set<Pair<String, String>> missingTextureErrors )
-        {
-            return getDependencies()
-                .stream()
-                .flatMap( x -> modelGetter.apply( x )
-                    .getMaterials( modelGetter, missingTextureErrors )
-                    .stream() )
-                .collect( Collectors.toSet() );
-        }
-
         @Nonnull
         @Override
         public Collection<ResourceLocation> getDependencies()
@@ -87,7 +72,13 @@ public final class TurtleModelLoader
         }
 
         @Override
-        public BakedModel bake( @Nonnull ModelBakery loader, @Nonnull Function<Material, TextureAtlasSprite> spriteGetter, @Nonnull ModelState state,
+        public void resolveParents( Function<ResourceLocation, UnbakedModel> function )
+        {
+
+        }
+
+        @Override
+        public BakedModel bake( @Nonnull ModelBaker loader, @Nonnull Function<Material, TextureAtlasSprite> spriteGetter, @Nonnull ModelState state,
                                 ResourceLocation modelId )
         {
             return new TurtleSmartItemModel( loader.getModel( family )

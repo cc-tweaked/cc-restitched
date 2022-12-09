@@ -12,7 +12,7 @@ import dan200.computercraft.api.lua.MethodResult;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IDynamicPeripheral;
 import dan200.computercraft.api.peripheral.IPeripheral;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -30,7 +30,7 @@ class GenericPeripheral implements IDynamicPeripheral
 
     GenericPeripheral( BlockEntity tile, String name, Set<String> additionalTypes, List<SaturatedMethod> methods )
     {
-        ResourceLocation type = Registry.BLOCK_ENTITY_TYPE.getKey( tile.getType() );
+        ResourceLocation type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey( tile.getType() );
         this.tile = tile;
         this.type = name != null ? name : (type != null ? type.toString() : "unknown");
         this.additionalTypes = additionalTypes;

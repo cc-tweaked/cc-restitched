@@ -16,7 +16,7 @@ import dan200.computercraft.shared.util.NBTUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -278,7 +278,7 @@ public class CommandAPI implements ILuaAPI
         ResourceLocation dimensionId = ResourceLocation.tryParse( id.get() );
         if( dimensionId == null ) throw new LuaException( "Invalid dimension name" );
 
-        Level level = currentLevel.getServer().getLevel( ResourceKey.create( Registry.DIMENSION_REGISTRY, dimensionId ) );
+        Level level = currentLevel.getServer().getLevel( ResourceKey.create( Registries.DIMENSION, dimensionId ) );
         if( level == null ) throw new LuaException( "Unknown dimension" );
 
         return level;

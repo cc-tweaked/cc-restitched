@@ -24,8 +24,8 @@ public class TurtleCraftingTable extends AbstractTurtleUpgrade
     @Environment( EnvType.CLIENT )
     private static class Models
     {
-        private static final ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft:turtle_crafting_table_left", "inventory" );
-        private static final ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft:turtle_crafting_table_right", "inventory" );
+        private static final ModelResourceLocation leftModel = new ModelResourceLocation( "computercraft", "turtle_crafting_table_left", "inventory" );
+        private static final ModelResourceLocation rightModel = new ModelResourceLocation( "computercraft", "turtle_crafting_table_right", "inventory" );
     }
 
     public TurtleCraftingTable( ResourceLocation id, ItemStack stack )

@@ -10,7 +10,7 @@ import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.fabric.mixin.ArgumentTypeInfosAccessor;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 public final class ArgumentSerializers
@@ -18,17 +18,17 @@ public final class ArgumentSerializers
     @SuppressWarnings( "unchecked" )
     private static <T extends ArgumentType<?>> void registerUnsafe( ResourceLocation id, Class type, ArgumentTypeInfo serializer )
     {
-        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
+        ArgumentTypeInfosAccessor.callRegister( BuiltInRegistries.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
     }
 
     private static <T extends ArgumentType<?>> void register( ResourceLocation id, Class<T> type, ArgumentTypeInfo<T, ?> serializer )
     {
-        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
+        ArgumentTypeInfosAccessor.callRegister( BuiltInRegistries.COMMAND_ARGUMENT_TYPE, id.toString(), type, serializer );
     }
 
     private static <T extends ArgumentType<?>> void register( ResourceLocation id, T instance )
     {
-        ArgumentTypeInfosAccessor.callRegister( Registry.COMMAND_ARGUMENT_TYPE, id.toString(), instance.getClass(), SingletonArgumentInfo.contextFree( () -> instance ) );
+        ArgumentTypeInfosAccessor.callRegister( BuiltInRegistries.COMMAND_ARGUMENT_TYPE, id.toString(), instance.getClass(), SingletonArgumentInfo.contextFree( () -> instance ) );
     }
 
     public static void register()

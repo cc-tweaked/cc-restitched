@@ -78,8 +78,8 @@ public final class OptionScreen extends Screen
         int x = (width - buttonWidth) / 2;
         for( AbstractWidget button : buttons )
         {
-            button.x = x;
-            button.y = y + textHeight;
+            button.setX( x );
+            button.setY( y + textHeight );
             addRenderableWidget( button );
 
             x += BUTTON_WIDTH + PADDING;
@@ -112,7 +112,7 @@ public final class OptionScreen extends Screen
 
     public static AbstractWidget newButton( Component component, Button.OnPress clicked )
     {
-        return new Button( 0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, component, clicked );
+        return Button.builder( component, clicked ).pos( 0, 0 ).width( BUTTON_WIDTH ).build();
     }
 
     public void disable()

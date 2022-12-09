@@ -60,7 +60,6 @@ public abstract class ComputerScreenBase<T extends ContainerComputerBase> extend
     protected void init()
     {
         super.init();
-        minecraft.keyboardHandler.setSendRepeatsToGui( true );
 
         terminal = addRenderableWidget( createTerminal() );
         ComputerSidebar.addButtons( this, computer, this::addRenderableWidget, leftPos, topPos + sidebarYOffset );
@@ -71,7 +70,6 @@ public abstract class ComputerScreenBase<T extends ContainerComputerBase> extend
     public void removed()
     {
         super.removed();
-        minecraft.keyboardHandler.setSendRepeatsToGui( false );
     }
 
     @Override

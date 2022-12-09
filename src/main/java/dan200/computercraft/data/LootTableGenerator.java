@@ -12,8 +12,8 @@ import dan200.computercraft.shared.data.HasComputerIdLootCondition;
 import dan200.computercraft.shared.data.PlayerCreativeLootCondition;
 import dan200.computercraft.shared.peripheral.modem.wired.BlockCable;
 import dan200.computercraft.shared.peripheral.modem.wired.CableModemVariant;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -30,9 +30,10 @@ import java.util.function.BiConsumer;
 
 class LootTableGenerator extends LootTableProvider
 {
-    LootTableGenerator( DataGenerator generator )
+
+    LootTableGenerator( FabricDataOutput output )
     {
-        super( generator );
+        super( output );
     }
 
     @Override
