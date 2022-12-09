@@ -24,9 +24,6 @@
     "MixinMinecraft",
     "MixinSoundEngine"
   ],
-  "server": [
-    "MixinLanguage"
-  ],
   "injectors": {
     "defaultRequire": 1
   }
