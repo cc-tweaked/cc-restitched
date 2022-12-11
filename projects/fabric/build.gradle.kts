@@ -262,8 +262,6 @@ modrinth {
     uploadFile.set(tasks.remapJar as Any)
     gameVersions.add(mcVersion)
     changelog.set(System.getenv("CHANGELOG"))
-
-    syncBodyFrom.set(provider { file("doc/mod-page.md").readText() })
 }
 
 tasks.publish { dependsOn(tasks.modrinth) }
