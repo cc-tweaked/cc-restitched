@@ -38,7 +38,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: cc-restitched
-        path: build/libs
+        path: projects/fabric/build/libs
 
     - name: Parse test reports
       run: ./tools/parse-reports.py
