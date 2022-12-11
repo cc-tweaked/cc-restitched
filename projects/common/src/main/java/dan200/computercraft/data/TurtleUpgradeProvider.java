@@ -31,6 +31,7 @@ class TurtleUpgradeProvider extends TurtleUpgradeDataProvider {
 
         tool(vanilla("diamond_axe"), net.minecraft.world.item.Items.DIAMOND_AXE).damageMultiplier(6.0f).add(addUpgrade);
         tool(vanilla("diamond_pickaxe"), net.minecraft.world.item.Items.DIAMOND_PICKAXE).add(addUpgrade);
+        tool(vanilla("netherite_pickaxe"), net.minecraft.world.item.Items.NETHERITE_PICKAXE).add(addUpgrade);
         tool(vanilla("diamond_hoe"), net.minecraft.world.item.Items.DIAMOND_HOE).breakable(Blocks.TURTLE_HOE_BREAKABLE).add(addUpgrade);
         tool(vanilla("diamond_shovel"), net.minecraft.world.item.Items.DIAMOND_SHOVEL).breakable(Blocks.TURTLE_SHOVEL_BREAKABLE).add(addUpgrade);
         tool(vanilla("diamond_sword"), net.minecraft.world.item.Items.DIAMOND_SWORD).breakable(Blocks.TURTLE_SWORD_BREAKABLE).damageMultiplier(9.0f).add(addUpgrade);

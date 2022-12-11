@@ -217,5 +217,6 @@
   "upgrade.minecraft.diamond_hoe.adjective": "Farming",
   "upgrade.minecraft.diamond_pickaxe.adjective": "Mining",
   "upgrade.minecraft.diamond_shovel.adjective": "Digging",
-  "upgrade.minecraft.diamond_sword.adjective": "Melee"
+  "upgrade.minecraft.diamond_sword.adjective": "Melee",
+  "upgrade.minecraft.netherite_pickaxe.adjective": "Netherite Mining"
 }

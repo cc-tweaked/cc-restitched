@@ -104,6 +104,7 @@ public final class LanguageProvider implements DataProvider {
         add("upgrade.minecraft.diamond_sword.adjective", "Melee");
         add("upgrade.minecraft.diamond_shovel.adjective", "Digging");
         add("upgrade.minecraft.diamond_pickaxe.adjective", "Mining");
+        add("upgrade.minecraft.netherite_pickaxe.adjective", "Netherite Mining");
         add("upgrade.minecraft.diamond_axe.adjective", "Felling");
         add("upgrade.minecraft.diamond_hoe.adjective", "Farming");
         add("upgrade.minecraft.crafting_table.adjective", "Crafty");
