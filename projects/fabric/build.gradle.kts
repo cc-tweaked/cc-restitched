@@ -1,4 +1,5 @@
 import cc.tweaked.gradle.*
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
 import net.fabricmc.loom.configuration.ide.RunConfigSettings
 import java.util.*
 
@@ -6,8 +7,12 @@ plugins {
     id("cc-tweaked.fabric")
     id("cc-tweaked.gametest")
     id("cc-tweaked.publishing")
+    // Publishing
+    alias(libs.plugins.curseForgeGradle)
+    alias(libs.plugins.minotaur)
 }
 
+val isUnstable = project.properties["isUnstable"] == "true"
 val modVersion: String by extra
 val mcVersion: String by extra
 
@@ -230,6 +235,38 @@ tasks.register("checkClient") {
     description = "Runs all client-only checks."
     dependsOn(runGametestClient, runGametestClientWithSodium, runGametestClientWithIris)
 }
+
+val publishCurseForge by tasks.registering(TaskPublishCurseForge::class) {
+    group = PublishingPlugin.PUBLISH_TASK_GROUP
+    description = "Upload artifacts to CurseForge"
+
+    apiToken = System.getenv("CURSEFORGE") ?: ""
+    enabled = apiToken != ""
+
+    val mainFile = upload("462672", tasks.remapJar.get().archiveFile)
+    dependsOn(tasks.remapJar) // Ughr.
+    mainFile.changelog = System.getenv("CHANGELOG")
+    mainFile.changelogType = "markdown"
+    mainFile.releaseType = if (isUnstable) "alpha" else "release"
+    mainFile.gameVersions.add(mcVersion)
+}
+
+tasks.publish { dependsOn(publishCurseForge) }
+
+modrinth {
+    token.set(System.getenv("MODRINTH") ?: "")
+    projectId.set("eldBwa5V")
+    versionNumber.set("$mcVersion-$modVersion")
+    versionName.set(modVersion)
+    versionType.set(if (isUnstable) "alpha" else "release")
+    uploadFile.set(tasks.remapJar as Any)
+    gameVersions.add(mcVersion)
+    changelog.set(System.getenv("CHANGELOG"))
+
+    syncBodyFrom.set(provider { file("doc/mod-page.md").readText() })
+}
+
+tasks.publish { dependsOn(tasks.modrinth) }
 
 tasks.withType(GenerateModuleMetadata::class).configureEach { isEnabled = false }
 publishing {

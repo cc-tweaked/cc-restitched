@@ -13,7 +13,7 @@ repos:
   - id: check-yaml
   - id: check-toml
   - id: check-json
-    exclude: "tsconfig\\.json$"
+    exclude: "tsconfig\\.json|\\.vscode/settings\\.json$"
 
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
   rev: 2.3.54
@@ -36,13 +36,6 @@ repos:
     files: ".*\\.java$"
     language: system
     entry: ./gradlew checkstyleMain checkstyleTest
-    pass_filenames: false
-    require_serial: true
-  - id: illuaminate
-    name: Check Lua code
-    files: ".*\\.(lua|java|md)"
-    language: system
-    entry: ./gradlew lintLua
     pass_filenames: false
     require_serial: true
 
