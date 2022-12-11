@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[44,45)"
+
+issueTrackerURL="https://github.com/cc-tweaked/CC-Tweaked/issues"
+logoFile="pack.png"
+
+license="ComputerCraft Public License (https://raw.githubusercontent.com/dan200/ComputerCraft/master/LICENSE)"
+
+[[mods]]
+modId="computercraft"
+version="${file.jarVersion}"
+displayName="CC: Tweaked"
+displayURL="https://tweaked.cc"
+
+credits="Created by Daniel Ratcliffe (@DanTwoHundred)"
+authors="Daniel Ratcliffe, Aaron Mills, SquidDev"
+description='''
+CC: Tweaked is a fork of ComputerCraft, adding programmable computers, turtles and more to Minecraft.
+'''
+
+[[dependencies.computercraft]]
+    modId="forge"
+    mandatory=true
+    versionRange="[${forgeVersion},45)"
+    ordering="NONE"
+    side="BOTH"

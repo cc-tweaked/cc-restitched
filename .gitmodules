@@ -1,4 +1,4 @@
-[submodule "src/main/resources/resourcepacks/overhaul"]
-	path = src/main/resources/resourcepacks/overhaul
-	url = https://github.com/cc-orgs/cc-overhaul
-	branch = main
+[submodule "projects/common/src/main/resources/resourcepacks/overhaul"]
+	path = projects/common/src/main/resources/resourcepacks/overhaul
+	url = https://github.com/cc-orgs/cc-overhaul.git
+	branch = "main"
