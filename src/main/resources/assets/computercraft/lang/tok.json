@@ -128,7 +128,7 @@
     "gui.computercraft.upload.failed.too_many_files": "nanpa pi lipu sina li suli mute.",
     "gui.computercraft.upload.failed.overwrite_dir": "Cannot upload %s, as there is already a directory with the same name.",
     "gui.computercraft.upload.failed.generic": "pana lipu li ike (%s)",
-    "gui.computercraft.upload.failed.corrupted": "Files corrupted when uploading. o pali sin.",
+    "gui.computercraft.upload.failed.corrupted": "lipu li pakala. o pali sin.",
     "gui.computercraft.upload.overwrite": "Files would be overwritten",
     "gui.computercraft.upload.overwrite.detail": "The following files will be overwritten when uploading. Continue?%s",
     "gui.computercraft.upload.overwrite_button": "Overwrite",
