@@ -1,3 +1,33 @@
+# New features in CC: Tweaked 1.102.1
+
+Several bug fixes:
+* Fix crash on Fabric when refuelling with a non-fuel item (emmachase).
+* Fix crash when calling `pocket.equipBack()` with a wireless modem.
+* Fix turtles dropping their inventory when moving (emmachase).
+* Fix crash when inserting items into a full inventory (emmachase).
+* Simplify wired cable breaking code, fixing items sometimes not dropping.
+* Correctly handle double chests being treated as single threads under Fabric.
+* Fix `mouse_up` not being fired under Fabric.
+* Fix full-block Wired modems not connecting to adjacent cables when placed.
+* Hide the search tab from the `itemGroups` item details.
+* Fix speakers playing too loudly.
+* Change where turtles drop items from, reducing the chance that items clip through blocks.
+* Fix the `computer_threads` config option not applying under Fabric.
+* Fix stack overflow in logging code.
+
+# New features in CC: Tweaked 1.102.0
+
+* `fs.isReadOnly` now reads filesystem attributes (Lemmmy).
+* `IComputerAccess.executeMainThreadTask` no longer roundtrips values through Lua.
+* The turtle label now animates when the turtle moves.
+
+Several bug fixes:
+* Trim spaces from filesystem paths.
+* Correctly format 12AM/PM with `%I`.
+* Fix `import.lua` failing to upload a file.
+* Fix duplicated swing animations on high-ping servers (emmachase).
+* Fix several issues with sparse Lua tables (Shiranuit).
+
 # New features in CC: Tweaked 1.102.0-SNAPSHOT
 
 No user-facing changes.

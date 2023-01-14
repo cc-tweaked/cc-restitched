@@ -15,6 +15,8 @@ import dan200.computercraft.mixin.gametest.GameTestHelperAccessor
 import dan200.computercraft.mixin.gametest.GameTestInfoAccessor
 import dan200.computercraft.shared.ModRegistry
 import dan200.computercraft.shared.media.items.PrintoutItem
+import dan200.computercraft.shared.peripheral.modem.wired.CableBlock
+import dan200.computercraft.shared.peripheral.modem.wired.CableModemVariant
 import dan200.computercraft.shared.peripheral.monitor.MonitorBlock
 import dan200.computercraft.shared.peripheral.monitor.MonitorEdgeState
 import dan200.computercraft.shared.turtle.apis.TurtleAPI
@@ -89,7 +91,7 @@ class Turtle_Test {
                 .assertArrayEquals(true, message = "Placed oak fence")
         }
         thenExecute {
-            helper.assertBlockIs(BlockPos(2, 2, 2), { it.block == Blocks.OAK_FENCE && it.getValue(FenceBlock.WATERLOGGED) })
+            helper.assertBlockIs(BlockPos(2, 2, 2)) { it.block == Blocks.OAK_FENCE && it.getValue(FenceBlock.WATERLOGGED) }
         }
     }
 
@@ -121,6 +123,33 @@ class Turtle_Test {
                 .assertArrayEquals(true, message = "Dug with hoe")
         }
         thenExecute { helper.assertBlockPresent(Blocks.FARMLAND, BlockPos(1, 2, 1)) }
+    }
+
+    /**
+     * Checks turtles break cables in two parts.
+     */
+    @GameTest
+    fun Break_cable(helper: GameTestHelper) = helper.sequence {
+        thenOnComputer { turtle.dig(Optional.empty()).await() }
+        thenExecute {
+            helper.assertBlockIs(BlockPos(2, 2, 3)) {
+                it.block == ModRegistry.Blocks.CABLE.get() && !it.getValue(CableBlock.CABLE) && it.getValue(CableBlock.MODEM) == CableModemVariant.DownOff
+            }
+
+            helper.assertContainerExactly(BlockPos(2, 2, 2), listOf(ItemStack(ModRegistry.Items.CABLE.get())))
+        }
+        thenOnComputer { turtle.dig(Optional.empty()).await().assertArrayEquals(true) }
+        thenExecute {
+            helper.assertBlockPresent(Blocks.AIR, BlockPos(2, 2, 3))
+
+            helper.assertContainerExactly(
+                BlockPos(2, 2, 2),
+                listOf(
+                    ItemStack(ModRegistry.Items.CABLE.get()),
+                    ItemStack(ModRegistry.Items.WIRED_MODEM.get()),
+                ),
+            )
+        }
     }
 
     /**
@@ -290,6 +319,23 @@ class Turtle_Test {
     }
 
     /**
+     * Test calling `turtle.refuel` on non-fuels
+     */
+    @GameTest
+    fun Refuel_fail(helper: GameTestHelper) = helper.sequence {
+        val turtlePos = BlockPos(2, 2, 2)
+
+        thenOnComputer {
+            assertEquals(0, turtle.fuelLevel)
+            turtle.refuel(Optional.empty()).await().assertArrayEquals(false, "Items not combustible")
+            assertEquals(0, turtle.fuelLevel)
+        }
+        thenExecute {
+            helper.assertContainerExactly(turtlePos, listOf(ItemStack(Items.DIRT, 32)))
+        }
+    }
+
+    /**
      * Test calling `turtle.refuel` with a bucket of lava
      */
     @GameTest
@@ -304,6 +350,26 @@ class Turtle_Test {
         }
         thenExecute {
             helper.assertContainerExactly(turtlePos, listOf(ItemStack(Items.BUCKET)))
+        }
+    }
+
+    /**
+     * Test moving a turtle forwards preserves the turtle's inventory.
+     *
+     * @see [#1276](https://github.com/cc-tweaked/CC-Tweaked/pull/1276)
+     */
+    @GameTest
+    fun Move_preserves_state(helper: GameTestHelper) = helper.sequence {
+        thenOnComputer { turtle.forward().await().assertArrayEquals(true, message = "Turtle moved forward") }
+        thenExecute {
+            helper.assertContainerExactly(BlockPos(2, 2, 3), listOf(ItemStack(Items.DIRT, 32)))
+
+            val turtle = helper.getBlockEntity(BlockPos(2, 2, 3), ModRegistry.BlockEntities.TURTLE_NORMAL.get())
+            assertEquals(1, turtle.computerID)
+            assertEquals("turtle_test.move_preserves_state", turtle.label)
+            assertEquals(79, turtle.access.fuelLevel)
+
+            helper.assertEntityNotPresent(EntityType.ITEM)
         }
     }
 
@@ -329,7 +395,7 @@ class Turtle_Test {
         thenOnComputer { turtle.forward().await().assertArrayEquals(true, message = "Turtle moved forward") }
         thenExecute {
             // Assert we're no longer waterlogged and we've left a source block.
-            helper.assertBlockIs(BlockPos(2, 2, 2), { it.block == Blocks.WATER && it.fluidState.isSource })
+            helper.assertBlockIs(BlockPos(2, 2, 2)) { it.block == Blocks.WATER && it.fluidState.isSource }
             helper.assertBlockHas(BlockPos(2, 2, 3), WaterloggableHelpers.WATERLOGGED, false)
         }
     }

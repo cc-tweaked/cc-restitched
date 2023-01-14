@@ -25,14 +25,14 @@ dependencies {
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.testRuntime)
-    testRuntimeOnly(libs.logback)
+    testRuntimeOnly(libs.slf4j.simple)
 }
 
 tasks.processResources {
     inputs.property("gitHash", cct.gitHash)
 
-    filesMatching("data/computercraft/lua/rom/help/credits.txt") {
-        expand(mapOf("gitContributors" to cct.gitContributors.get()))
+    filesMatching("data/computercraft/lua/rom/help/credits.md") {
+        expand(mapOf("gitContributors" to cct.gitContributors.map { it.joinToString("\n") }.get()))
     }
 }
 

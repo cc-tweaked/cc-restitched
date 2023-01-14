@@ -518,26 +518,9 @@ local function before_each(body)
     before_each_fns[n], before_each_fns.n = body, n
 end
 
-local native_co_create, native_loadfile = coroutine.create, loadfile
+local native_loadfile = loadfile
 local line_counts = {}
 if cct_test then
-    local string_sub, debug_getinfo = string.sub, debug.getinfo
-    local function debug_hook(_, line_nr)
-        local name = debug_getinfo(2, "S").source
-        if string_sub(name, 1, 1) ~= "@" then return end
-        name = string_sub(name, 2)
-
-        local file = line_counts[name]
-        if not file then file = {} line_counts[name] = file end
-        file[line_nr] = (file[line_nr] or 0) + 1
-    end
-
-    coroutine.create = function(...)
-        local co = native_co_create(...)
-        debug.sethook(co, debug_hook, "l")
-        return co
-    end
-
     local expect = require "cc.expect".expect
     _G.native_loadfile = native_loadfile
     _G.loadfile = function(filename, mode, env)
@@ -557,8 +540,6 @@ if cct_test then
         file.close()
         return func, err
     end
-
-    debug.sethook(debug_hook, "l")
 end
 
 local arg = ...
@@ -736,8 +717,6 @@ end
 term.setTextColour(colours.white) io.write(info .. "\n")
 
 -- Restore hook stubs
-debug.sethook(nil, "l")
-coroutine.create = native_co_create
 _G.loadfile = native_loadfile
 
 if cct_test then cct_test.finish(line_counts) end

@@ -46,7 +46,7 @@ repositories {
             includeGroup("me.shedaniel.cloth")
             includeGroup("mezz.jei")
             includeModule("com.terraformersmc", "modmenu")
-            includeModule("net.minecraftforge", "forgeconfigapiport-fabric")
+            includeModule("fuzs.forgeconfigapiport", "forgeconfigapiport-fabric")
             // Until https://github.com/SpongePowered/Mixin/pull/593 is merged
             includeModule("org.spongepowered", "mixin")
         }
@@ -80,7 +80,7 @@ sourceSets.all {
             check("FutureReturnValueIgnored", CheckSeverity.OFF) // Too many false positives with Netty
 
             check("NullAway", CheckSeverity.ERROR)
-            option("NullAway:AnnotatedPackages", listOf("dan200.computercraft").joinToString(","))
+            option("NullAway:AnnotatedPackages", listOf("dan200.computercraft", "net.fabricmc.fabric.api").joinToString(","))
             option("NullAway:ExcludedFieldAnnotations", listOf("org.spongepowered.asm.mixin.Shadow").joinToString(","))
             option("NullAway:CastToNonNullMethod", "dan200.computercraft.core.util.Nullability.assertNonNull")
             option("NullAway:CheckOptionalEmptiness")
