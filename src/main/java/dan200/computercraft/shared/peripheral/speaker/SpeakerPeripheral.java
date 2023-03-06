@@ -26,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.phys.Vec3;
@@ -37,7 +38,7 @@ import static dan200.computercraft.api.lua.LuaValues.checkFinite;
 
 /**
  * The speaker peirpheral allow your computer to play notes and other sounds.
- *
+ * <p>
  * The speaker can play three kinds of sound, in increasing orders of complexity:
  * - {@link #playNote} allows you to play noteblock note.
  * - {@link #playSound} plays any built-in Minecraft sound, such as block sounds or mob noises.
@@ -46,8 +47,7 @@ import static dan200.computercraft.api.lua.LuaValues.checkFinite;
  * @cc.module speaker
  * @cc.since 1.80pr1
  */
-public abstract class SpeakerPeripheral implements IPeripheral
-{
+public abstract class SpeakerPeripheral implements IPeripheral {
     /**
      * Number of samples/s in a dfpwm1a audio track.
      */
@@ -62,31 +62,28 @@ public abstract class SpeakerPeripheral implements IPeripheral
 
     private long lastPlayTime;
 
-    private final List<PendingSound> pendingNotes = new ArrayList<>();
+    private final List<PendingSound<Holder<SoundEvent>>> pendingNotes = new ArrayList<>();
 
     private final Object lock = new Object();
     private boolean shouldStop;
-    private PendingSound pendingSound = null;
+    private PendingSound<ResourceLocation> pendingSound = null;
     private DfpwmState dfpwmState;
 
-    public void update()
-    {
+    public void update() {
         clock++;
 
         SpeakerPosition position = getPosition();
         Level level = position.level();
         Vec3 pos = position.position();
-        if( level == null ) return;
+        if (level == null) return;
         MinecraftServer server = level.getServer();
 
-        synchronized( pendingNotes )
-        {
-            for( PendingSound sound : pendingNotes )
-            {
+        synchronized (pendingNotes) {
+            for (PendingSound<Holder<SoundEvent>> sound : pendingNotes) {
                 lastPlayTime = clock;
                 server.getPlayerList().broadcast(
                     null, pos.x, pos.y, pos.z, sound.volume * 16, level.dimension(),
-                    new ClientboundSoundPacket( Holder.direct( SoundEvent.createFixedRangeEvent( sound.location, 16 ) ), SoundSource.RECORDS, pos.x, pos.y, pos.z, sound.volume, sound.pitch, 0 )
+                    new ClientboundSoundPacket(sound.sound, SoundSource.RECORDS, pos.x, pos.y, pos.z, sound.volume, sound.pitch, level.getRandom().nextLong())
                 );
             }
             pendingNotes.clear();
@@ -97,17 +94,15 @@ public abstract class SpeakerPeripheral implements IPeripheral
         // dfpwmState will only ever transition from having a buffer to not having a buffer on the main thread (so this
         // method), so we don't need to bother locking that.
         boolean shouldStop;
-        PendingSound sound;
+        PendingSound<ResourceLocation> sound;
         DfpwmState dfpwmState;
-        synchronized( lock )
-        {
+        synchronized (lock) {
             sound = pendingSound;
             dfpwmState = this.dfpwmState;
             pendingSound = null;
 
             shouldStop = this.shouldStop;
-            if( shouldStop )
-            {
+            if (shouldStop) {
                 dfpwmState = this.dfpwmState = null;
                 sound = null;
                 this.shouldStop = false;
@@ -115,39 +110,33 @@ public abstract class SpeakerPeripheral implements IPeripheral
         }
 
         // Stop the speaker and nuke the position, so we don't update it again.
-        if( shouldStop && lastPosition != null )
-        {
+        if (shouldStop && lastPosition != null) {
             lastPosition = null;
-            NetworkHandler.sendToAllPlayers( new SpeakerStopClientMessage( getSource() ) );
+            NetworkHandler.sendToAllPlayers(new SpeakerStopClientMessage(getSource()));
             return;
         }
 
         long now = PauseAwareTimer.getTime();
-        if( sound != null )
-        {
+        if (sound != null) {
             lastPlayTime = clock;
             NetworkHandler.sendToAllAround(
-                new SpeakerPlayClientMessage( getSource(), position, sound.location, sound.volume, sound.pitch ),
+                new SpeakerPlayClientMessage(getSource(), position, sound.sound, sound.volume, sound.pitch),
                 level, pos, sound.volume * 16
             );
-            syncedPosition( position );
-        }
-        else if( dfpwmState != null && dfpwmState.shouldSendPending( now ) )
-        {
+            syncedPosition(position);
+        } else if (dfpwmState != null && dfpwmState.shouldSendPending(now)) {
             // If clients need to receive another batch of audio, send it and then notify computers our internal buffer is
             // free again.
             NetworkHandler.sendToAllTracking(
-                new SpeakerAudioClientMessage( getSource(), position, dfpwmState.getVolume(), dfpwmState.pullPending( now ) ),
-                level.getChunkAt( new BlockPos( pos ) )
+                new SpeakerAudioClientMessage(getSource(), position, dfpwmState.getVolume(), dfpwmState.pullPending(now)),
+                level.getChunkAt(new BlockPos(pos))
             );
-            syncedPosition( position );
+            syncedPosition(position);
 
             // And notify computers that we have space for more audio.
-            synchronized( computers )
-            {
-                for( IComputerAccess computer : computers )
-                {
-                    computer.queueEvent( "speaker_audio_empty", computer.getAttachmentName() );
+            synchronized (computers) {
+                for (IComputerAccess computer : computers) {
+                    computer.queueEvent("speaker_audio_empty", computer.getAttachmentName());
                 }
             }
         }
@@ -155,14 +144,13 @@ public abstract class SpeakerPeripheral implements IPeripheral
         // Push position updates to any speakers which have ever played a note,
         // have moved by a non-trivial amount and haven't had a position update
         // in the last second.
-        if( lastPosition != null && (clock - lastPositionTime) >= 20 && !lastPosition.withinDistance( position, 0.1 ) )
-        {
+        if (lastPosition != null && (clock - lastPositionTime) >= 20 && !lastPosition.withinDistance(position, 0.1)) {
             // TODO: What to do when entities move away? How do we notify people left behind that they're gone.
             NetworkHandler.sendToAllTracking(
-                new SpeakerMoveClientMessage( getSource(), position ),
-                level.getChunkAt( new BlockPos( pos ) )
+                new SpeakerMoveClientMessage(getSource(), position),
+                level.getChunkAt(new BlockPos(pos))
             );
-            syncedPosition( position );
+            syncedPosition(position);
         }
     }
 
@@ -170,41 +158,38 @@ public abstract class SpeakerPeripheral implements IPeripheral
     public abstract SpeakerPosition getPosition();
 
     @Nonnull
-    public UUID getSource()
-    {
+    public UUID getSource() {
         return source;
     }
 
-    public boolean madeSound()
-    {
+    public boolean madeSound() {
         DfpwmState state = dfpwmState;
         return clock - lastPlayTime <= 20 || (state != null && state.isPlaying());
     }
 
     @Nonnull
     @Override
-    public String getType()
-    {
+    public String getType() {
         return "speaker";
     }
 
     /**
      * Plays a note block note through the speaker.
-     *
+     * <p>
      * This takes the name of a note to play, as well as optionally the volume
      * and pitch to play the note at.
-     *
+     * <p>
      * The pitch argument uses semitones as the unit. This directly maps to the
      * number of clicks on a note block. For reference, 0, 12, and 24 map to F#,
      * and 6 and 18 map to C.
-     *
+     * <p>
      * A maximum of 8 notes can be played in a single tick. If this limit is hit, this function will return
      * {@literal false}.
-     *
+     * <p>
      * ### Valid instruments
      * The speaker supports [all of Minecraft's noteblock instruments](https://minecraft.fandom.com/wiki/Note_Block#Instruments).
      * These are:
-     *
+     * <p>
      * {@code "harp"}, {@code "basedrum"}, {@code "snare"}, {@code "hat"}, {@code "bass"}, @code "flute"},
      * {@code "bell"}, {@code "guitar"}, {@code "chime"}, {@code "xylophone"}, {@code "iron_xylophone"},
      * {@code "cow_bell"}, {@code "didgeridoo"}, {@code "bit"}, {@code "banjo"} and {@code "pling"}.
@@ -217,38 +202,34 @@ public abstract class SpeakerPeripheral implements IPeripheral
      * @throws LuaException If the instrument doesn't exist.
      */
     @LuaFunction
-    public final boolean playNote( ILuaContext context, String instrumentA, Optional<Double> volumeA, Optional<Double> pitchA ) throws LuaException
-    {
-        float volume = (float) checkFinite( 1, volumeA.orElse( 1.0 ) );
-        float pitch = (float) checkFinite( 2, pitchA.orElse( 1.0 ) );
+    public final boolean playNote(ILuaContext context, String instrumentA, Optional<Double> volumeA, Optional<Double> pitchA) throws LuaException {
+        float volume = (float) clampVolume(checkFinite(1, volumeA.orElse(1.0)));
+        float pitch = (float) checkFinite(2, pitchA.orElse(1.0));
 
         NoteBlockInstrument instrument = null;
-        for( NoteBlockInstrument testInstrument : NoteBlockInstrument.values() )
-        {
-            if( testInstrument.getSerializedName().equalsIgnoreCase( instrumentA ) )
-            {
+        for (NoteBlockInstrument testInstrument : NoteBlockInstrument.values()) {
+            if (testInstrument.getSerializedName().equalsIgnoreCase(instrumentA)) {
                 instrument = testInstrument;
                 break;
             }
         }
 
         // Check if the note exists
-        if( instrument == null ) throw new LuaException( "Invalid instrument, \"" + instrument + "\"!" );
+        if (instrument == null) throw new LuaException("Invalid instrument, \"" + instrument + "\"!");
 
-        synchronized( pendingNotes )
-        {
-            if( pendingNotes.size() >= ComputerCraft.maxNotesPerTick ) return false;
-            pendingNotes.add( new PendingSound( instrument.getSoundEvent().value().getLocation(), volume, (float) Math.pow( 2.0, (pitch - 12.0) / 12.0 ) ) );
+        synchronized (pendingNotes) {
+            if (pendingNotes.size() >= ComputerCraft.maxNotesPerTick) return false;
+            pendingNotes.add(new PendingSound<>(instrument.getSoundEvent(), volume, (float) Math.pow(2.0, (pitch - 12.0) / 12.0)));
         }
         return true;
     }
 
     /**
      * Plays a Minecraft sound through the speaker.
-     *
+     * <p>
      * This takes the [name of a Minecraft sound](https://minecraft.fandom.com/wiki/Sounds.json), such as
      * {@code "minecraft:block.note_block.harp"}, as well as an optional volume and pitch.
-     *
+     * <p>
      * Only one sound can be played at once. This function will return {@literal false} if another sound was started
      * this tick, or if some {@link #playAudio audio} is still playing.
      *
@@ -266,44 +247,39 @@ public abstract class SpeakerPeripheral implements IPeripheral
      * }</pre>
      */
     @LuaFunction
-    public final boolean playSound( ILuaContext context, String name, Optional<Double> volumeA, Optional<Double> pitchA ) throws LuaException
-    {
-        float volume = (float) checkFinite( 1, volumeA.orElse( 1.0 ) );
-        float pitch = (float) checkFinite( 2, pitchA.orElse( 1.0 ) );
+    public final boolean playSound(ILuaContext context, String name, Optional<Double> volumeA, Optional<Double> pitchA) throws LuaException {
+        float volume = (float) clampVolume(checkFinite(1, volumeA.orElse(1.0)));
+        float pitch = (float) checkFinite(2, pitchA.orElse(1.0));
 
         ResourceLocation identifier;
-        try
-        {
-            identifier = new ResourceLocation( name );
-        }
-        catch( ResourceLocationException e )
-        {
-            throw new LuaException( "Malformed sound name '" + name + "' " );
+        try {
+            identifier = new ResourceLocation(name);
+        } catch (ResourceLocationException e) {
+            throw new LuaException("Malformed sound name '" + name + "' ");
         }
 
-        synchronized( lock )
-        {
-            if( dfpwmState != null && dfpwmState.isPlaying() ) return false;
+        synchronized (lock) {
+            if (dfpwmState != null && dfpwmState.isPlaying()) return false;
             dfpwmState = null;
-            pendingSound = new PendingSound( identifier, volume, pitch );
+            pendingSound = new PendingSound<>(identifier, volume, pitch);
             return true;
         }
     }
 
     /**
      * Attempt to stream some audio data to the speaker.
-     *
+     * <p>
      * This accepts a list of audio samples as amplitudes between -128 and 127. These are stored in an internal buffer
      * and played back at 48kHz. If this buffer is full, this function will return {@literal false}. You should wait for
      * a @{speaker_audio_empty} event before trying again.
-     *
+     * <p>
      * :::note
      * The speaker only buffers a single call to {@link #playAudio} at once. This means if you try to play a small
      * number of samples, you'll have a lot of stutter. You should try to play as many samples in one call as possible
      * (up to 128×1024), as this reduces the chances of audio stuttering or halting, especially when the server or
      * computer is lagging.
      * :::
-     *
+     * <p>
      * {@literal @}{speaker_audio} provides a more complete guide to using speakers
      *
      * @param context The Lua context.
@@ -334,66 +310,61 @@ public abstract class SpeakerPeripheral implements IPeripheral
      * the speaker.
      * @cc.see speaker_audio For a more complete introduction to the {@link #playAudio} function.
      */
-    @LuaFunction( unsafe = true )
-    public final boolean playAudio( ILuaContext context, LuaTable<?, ?> audio, Optional<Double> volume ) throws LuaException
-    {
-        checkFinite( 1, volume.orElse( 0.0 ) );
+    @LuaFunction(unsafe = true)
+    public final boolean playAudio(ILuaContext context, LuaTable<?, ?> audio, Optional<Double> volume) throws LuaException {
+        checkFinite(1, volume.orElse(0.0));
 
         // TODO: Use ArgumentHelpers instead?
         int length = audio.length();
-        if( length <= 0 ) throw new LuaException( "Cannot play empty audio" );
-        if( length > 128 * 1024 ) throw new LuaException( "Audio data is too large" );
+        if (length <= 0) throw new LuaException("Cannot play empty audio");
+        if (length > 128 * 1024) throw new LuaException("Audio data is too large");
 
         DfpwmState state;
-        synchronized( lock )
-        {
-            if( dfpwmState == null || !dfpwmState.isPlaying() ) dfpwmState = new DfpwmState();
+        synchronized (lock) {
+            if (dfpwmState == null || !dfpwmState.isPlaying()) dfpwmState = new DfpwmState();
             state = dfpwmState;
 
             pendingSound = null;
         }
 
-        return state.pushBuffer( audio, length, volume );
+        return state.pushBuffer(audio, length, volume);
     }
 
     /**
      * Stop all audio being played by this speaker.
-     *
+     * <p>
      * This clears any audio that {@link #playAudio} had queued and stops the latest sound played by {@link #playSound}.
      *
      * @cc.since 1.100
      */
     @LuaFunction
-    public final void stop()
-    {
+    public final void stop() {
         shouldStop = true;
     }
 
-    private void syncedPosition( SpeakerPosition position )
-    {
+    private void syncedPosition(SpeakerPosition position) {
         lastPosition = position;
         lastPositionTime = clock;
     }
 
     @Override
-    public void attach( @Nonnull IComputerAccess computer )
-    {
-        synchronized( computers )
-        {
-            computers.add( computer );
+    public void attach(@Nonnull IComputerAccess computer) {
+        synchronized (computers) {
+            computers.add(computer);
         }
     }
 
     @Override
-    public void detach( @Nonnull IComputerAccess computer )
-    {
-        synchronized( computers )
-        {
-            computers.remove( computer );
+    public void detach(@Nonnull IComputerAccess computer) {
+        synchronized (computers) {
+            computers.remove(computer);
         }
     }
 
-    private record PendingSound(ResourceLocation location, float volume, float pitch)
-    {
+    static double clampVolume(double volume) {
+        return Mth.clamp(volume, 0, 3);
+    }
+
+    private record PendingSound<T>(T sound, float volume, float pitch) {
     }
 }
