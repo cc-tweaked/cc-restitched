@@ -38,7 +38,7 @@ public class TurtleCraftCommand implements ITurtleCommand
         // Store or drop any remainders
         for( ItemStack stack : results )
         {
-            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
             if( !remainder.isEmpty() )
             {
                 WorldUtil.dropItemStack( remainder, turtle.getLevel(), turtle.getPosition(), turtle.getDirection() );

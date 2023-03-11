@@ -103,19 +103,19 @@ public final class InventoryUtil
     // Methods for placing into inventories:
 
     @Nonnull
-    public static ItemStack storeItems( @Nonnull ItemStack itemstack, ItemStorage inventory, int begin )
+    public static ItemStack storeItems( @Nonnull ItemStack itemstack, ItemStorage inventory, int begin, boolean simulate )
     {
-        return storeItems( itemstack, inventory, 0, inventory.size(), begin );
+        return storeItems( itemstack, inventory, 0, inventory.size(), begin, simulate );
     }
 
     @Nonnull
-    public static ItemStack storeItems( @Nonnull ItemStack itemstack, ItemStorage inventory )
+    public static ItemStack storeItems( @Nonnull ItemStack itemstack, ItemStorage inventory, boolean simulate )
     {
-        return storeItems( itemstack, inventory, 0, inventory.size(), 0 );
+        return storeItems( itemstack, inventory, 0, inventory.size(), 0, simulate );
     }
 
     @Nonnull
-    public static ItemStack storeItems( @Nonnull ItemStack stack, ItemStorage inventory, int start, int range, int begin )
+    public static ItemStack storeItems( @Nonnull ItemStack stack, ItemStorage inventory, int start, int range, int begin, boolean simulate )
     {
         if( stack.isEmpty() ) return ItemStack.EMPTY;
 
@@ -125,7 +125,7 @@ public final class InventoryUtil
         {
             int slot = start + (i + begin - start) % range;
             if( remainder.isEmpty() ) break;
-            remainder = inventory.store( slot, remainder, false );
+            remainder = inventory.store( slot, remainder, simulate );
         }
         return areItemsEqual( stack, remainder ) ? stack : remainder;
     }
@@ -133,19 +133,19 @@ public final class InventoryUtil
     // Methods for taking out of inventories
 
     @Nonnull
-    public static ItemStack takeItems( int count, ItemStorage inventory, int begin )
+    public static ItemStack takeItems( int count, ItemStorage inventory, int begin, boolean simulate )
     {
-        return takeItems( count, inventory, 0, inventory.size(), begin );
+        return takeItems( count, inventory, 0, inventory.size(), begin, simulate );
     }
 
     @Nonnull
-    public static ItemStack takeItems( int count, ItemStorage inventory )
+    public static ItemStack takeItems( int count, ItemStorage inventory, boolean simulate )
     {
-        return takeItems( count, inventory, 0, inventory.size(), 0 );
+        return takeItems( count, inventory, 0, inventory.size(), 0, simulate );
     }
 
     @Nonnull
-    public static ItemStack takeItems( int count, ItemStorage inventory, int start, int range, int begin )
+    public static ItemStack takeItems( int count, ItemStorage inventory, int start, int range, int begin, boolean simulate )
     {
         // Combine multiple stacks from inventory into one if necessary
         ItemStack partialStack = ItemStack.EMPTY;
@@ -157,7 +157,7 @@ public final class InventoryUtil
             if( count <= 0 ) break;
 
             // If this doesn't slot, abort.
-            ItemStack extracted = inventory.take( slot, count, partialStack, false );
+            ItemStack extracted = inventory.take( slot, count, partialStack, simulate );
             if( extracted.isEmpty() )
             {
                 continue;

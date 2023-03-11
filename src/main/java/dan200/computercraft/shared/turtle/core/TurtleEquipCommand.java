@@ -63,12 +63,12 @@ public class TurtleEquipCommand implements ITurtleCommand
         if( newUpgradeStack != null )
         {
             // Consume new upgrades item
-            InventoryUtil.takeItems( 1, ItemStorage.wrap( inventory ), turtle.getSelectedSlot(), 1, turtle.getSelectedSlot() );
+            InventoryUtil.takeItems( 1, ItemStorage.wrap( inventory ), turtle.getSelectedSlot(), 1, turtle.getSelectedSlot(), false );
         }
         if( oldUpgradeStack != null )
         {
             // Store old upgrades item
-            ItemStack remainder = InventoryUtil.storeItems( oldUpgradeStack, ItemStorage.wrap( inventory ), turtle.getSelectedSlot() );
+            ItemStack remainder = InventoryUtil.storeItems( oldUpgradeStack, ItemStorage.wrap( inventory ), turtle.getSelectedSlot(), false );
             if( !remainder.isEmpty() )
             {
                 // If there's no room for the items, drop them

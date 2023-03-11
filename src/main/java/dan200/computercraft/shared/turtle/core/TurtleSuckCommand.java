@@ -5,6 +5,7 @@
  */
 package dan200.computercraft.shared.turtle.core;
 
+import dan200.computercraft.ComputerCraft;
 import dan200.computercraft.api.turtle.ITurtleAccess;
 import dan200.computercraft.api.turtle.ITurtleCommand;
 import dan200.computercraft.api.turtle.TurtleAnimation;
@@ -60,28 +61,30 @@ public class TurtleSuckCommand implements ITurtleCommand
         {
             ItemStorage inventory = ItemStorage.wrap( inventoryContainer );
 
-            // Take from inventory of thing in front
-            ItemStack stack = InventoryUtil.takeItems( quantity, inventory );
-            if( stack.isEmpty() ) return TurtleCommandResult.failure( "No items to take" );
+            // Simulate extracting from inventory of thing in front
+            ItemStack simulatedExtraction = InventoryUtil.takeItems( quantity, inventory, true );
+            if( simulatedExtraction.isEmpty() ) return TurtleCommandResult.failure( "No items to take" );
 
-            // Try to place into the turtle
-            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot() );
+            // Simulate inserting result into turtle's inventory
+            ItemStack simulatedRemainder = InventoryUtil.storeItems( simulatedExtraction, turtle.getItemHandler(), turtle.getSelectedSlot(), true );
+            if( simulatedRemainder == simulatedExtraction ) return TurtleCommandResult.failure( "No space for items" );
+
+            // Calculate how many items successfully transferred
+            int transferCount = simulatedExtraction.getCount() - simulatedRemainder.getCount();
+
+            // Execute the transaction
+            ItemStack stack = InventoryUtil.takeItems( transferCount, inventory, false );
+            ItemStack remainder = InventoryUtil.storeItems( stack, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
+
             if( !remainder.isEmpty() )
             {
-                // Put the remainder back in the inventory
-                InventoryUtil.storeItems( remainder, inventory );
+                ComputerCraft.log.error( "Items were lost during a TurtleSuckCommand!" );
+                ComputerCraft.log.error( String.format( "from=%s quantity=%d, direction=%s", inventory, quantity, direction ) );
+                ComputerCraft.log.error( "Please report this at https://github.com/cc-tweaked/cc-restitched/issues" );
             }
 
-            // Return true if we consumed anything
-            if( remainder != stack )
-            {
-                turtle.playAnimation( TurtleAnimation.WAIT );
-                return TurtleCommandResult.success();
-            }
-            else
-            {
-                return TurtleCommandResult.failure( "No space for items" );
-            }
+            turtle.playAnimation( TurtleAnimation.WAIT );
+            return TurtleCommandResult.success();
         }
         else
         {
@@ -111,7 +114,7 @@ public class TurtleSuckCommand implements ITurtleCommand
                     leaveStack = ItemStack.EMPTY;
                 }
 
-                ItemStack remainder = InventoryUtil.storeItems( storeStack, turtle.getItemHandler(), turtle.getSelectedSlot() );
+                ItemStack remainder = InventoryUtil.storeItems( storeStack, turtle.getItemHandler(), turtle.getSelectedSlot(), false );
 
                 if( remainder != storeStack )
                 {

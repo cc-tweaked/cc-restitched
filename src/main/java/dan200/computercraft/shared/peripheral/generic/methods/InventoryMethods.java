@@ -302,39 +302,30 @@ public class InventoryMethods implements GenericPeripheral
     private static int moveItem( ItemStorage from, int fromSlot, ItemStorage to, int toSlot, final int limit )
     {
         // Moving nothing is easy
-        if( limit == 0 )
-        {
-            return 0;
-        }
+        if( limit == 0 ) return 0;
 
-        // Get stack to move
-        ItemStack stack = InventoryUtil.takeItems( limit, from, fromSlot, 1, fromSlot );
-        if( stack.isEmpty() )
-        {
-            return 0;
-        }
-        int stackCount = stack.getCount();
+        // Simulate transaction
+        ItemStack simulatedStack = InventoryUtil.takeItems( limit, from, fromSlot, 1, fromSlot, true );
+        ItemStack simulatedRemainder = toSlot < 0
+            ? InventoryUtil.storeItems( simulatedStack, to, true )
+            : InventoryUtil.storeItems( simulatedStack, to, toSlot, 1, toSlot, true );
 
-        // Move items in
-        ItemStack remainder;
-        if( toSlot < 0 )
-        {
-            remainder = InventoryUtil.storeItems( stack, to );
-        }
-        else
-        {
-            remainder = InventoryUtil.storeItems( stack, to, toSlot, 1, toSlot );
-        }
+        // Count how many items were successfully transferred
+        int transferCount = simulatedStack.getCount() - simulatedRemainder.getCount();
 
-        // Calculate items moved
-        int count = stackCount - remainder.getCount();
+        // Execute the transaction
+        ItemStack stack = InventoryUtil.takeItems( transferCount, from, fromSlot, 1, fromSlot, false );
+        ItemStack remainder = toSlot < 0
+            ? InventoryUtil.storeItems( stack, to, false )
+            : InventoryUtil.storeItems( stack, to, toSlot, 1, toSlot, false );
 
         if( !remainder.isEmpty() )
         {
-            // Put the remainder back
-            InventoryUtil.storeItems( remainder, from, fromSlot, 1, fromSlot );
+            ComputerCraft.log.error( "Items were lost during a generic inventory transfer!" );
+            ComputerCraft.log.error( String.format( "from=%s fromSlot=%d to=%s toSlot=%d limit=%d", from, fromSlot, to, toSlot, limit ) );
+            ComputerCraft.log.error( "Please report this at https://github.com/cc-tweaked/cc-restitched/issues" );
         }
 
-        return count;
+        return transferCount;
     }
 }

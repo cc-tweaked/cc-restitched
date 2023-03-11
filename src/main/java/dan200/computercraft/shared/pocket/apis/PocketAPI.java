@@ -82,7 +82,7 @@ public class PocketAPI implements ILuaAPI
             ItemStack stack = previousUpgrade.getCraftingItem();
             if( !stack.isEmpty() )
             {
-                stack = InventoryUtil.storeItems( stack, ItemStorage.wrap( inventory ), inventory.selected );
+                stack = InventoryUtil.storeItems( stack, ItemStorage.wrap( inventory ), inventory.selected, false );
                 if( !stack.isEmpty() )
                 {
                     WorldUtil.dropItemStack( stack, player.getCommandSenderWorld(), player.position() );
@@ -118,7 +118,7 @@ public class PocketAPI implements ILuaAPI
         ItemStack stack = previousUpgrade.getCraftingItem();
         if( !stack.isEmpty() )
         {
-            stack = InventoryUtil.storeItems( stack, ItemStorage.wrap( inventory ), inventory.selected );
+            stack = InventoryUtil.storeItems( stack, ItemStorage.wrap( inventory ), inventory.selected, false );
             if( stack.isEmpty() )
             {
                 WorldUtil.dropItemStack( stack, player.getCommandSenderWorld(), player.position() );
