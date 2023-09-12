@@ -191,6 +191,10 @@ public class ServerComputer extends ServerTerminal implements IComputer, IComput
 
     public void broadcastDelete()
     {
+        // We could be in the process of shutting down the server, so we can't send packets in this case.
+        MinecraftServer server = GameInstanceUtils.getServer();
+        if( server == null || server.isStopped() ) return;
+
         // Send deletion to client
         NetworkHandler.sendToAllPlayers( new ComputerDeletedClientMessage( getInstanceID() ) );
     }
